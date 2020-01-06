@@ -12,6 +12,9 @@ assignees: ''
 **Description**
 <!--A clear and concise description of what the bug is.-->
 
+
+
+
 **How To Reproduce**
 <!--Steps to reproduce the behavior:
 1. Go to '...'
@@ -20,13 +23,22 @@ assignees: ''
 4. See error
 -->
 
+
+
+
 **Screenshots**
 <!--If applicable, add screenshots to help explain your problem.-->
+
+
+
 
 **Information:**
  - Operating System: 
  - Celeste Version: 
  - Everest Version:
+
+
+
 
 **Additional context**
 <!--Add any other context about the problem here.-->
