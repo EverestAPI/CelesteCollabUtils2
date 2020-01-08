@@ -7,27 +7,40 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="Celeste" HintPath="..\..\Celeste.exe"/>
-    <Reference Include="MMHOOK_Celeste" HintPath="..\..\MMHOOK_Celeste.dll"/>
-    <Reference Include="Mono.Cecil" HintPath="..\..\Mono.Cecil.dll"/>
-    <Reference Include="MonoMod" HintPath="..\..\MonoMod.exe"/>
-    <Reference Include="MonoMod.RuntimeDetour" HintPath="..\..\MonoMod.RuntimeDetour.dll"/>
-    <Reference Include="MonoMod.Utils" HintPath="..\..\MonoMod.Utils.dll"/>
-    <Reference Include="YamlDotNet" HintPath="..\..\YamlDotNet.dll"/>
+    <PackageReference Include="MonoMod.RuntimeDetour" Version="20.1.1.4" PrivateAssets="all" ExcludeAssets="runtime" />
   </ItemGroup>
 
   <Choose>
-    <When Condition="'$(OS)' != 'Windows_NT' Or Exists('..\..\FNA.dll')">
+    <When Condition="Exists('..\..\Celeste.exe')">
       <ItemGroup>
-        <Reference Include="FNA" HintPath="..\..\FNA.dll"/>
+        <Reference Include="Celeste" HintPath="..\..\Celeste.exe" Private="false" />
+        <Reference Include="MMHOOK_Celeste" HintPath="..\..\MMHOOK_Celeste.dll" Private="false" />
+        <Reference Include="YamlDotNet" HintPath="..\..\YamlDotNet.dll" Private="false" />
       </ItemGroup>
+
+      <Choose>
+        <When Condition="'$(OS)' != 'Windows_NT' Or Exists('..\..\FNA.dll')">
+          <ItemGroup>
+            <Reference Include="FNA" HintPath="..\..\FNA.dll" Private="false" />
+          </ItemGroup>
+        </When>
+
+        <Otherwise>
+          <ItemGroup>
+            <Reference Include="Microsoft.Xna.Framework" HintPath="$(WINDIR)\Microsoft.NET\assembly\GAC_32\Microsoft.Xna.Framework\v4.0_4.0.0.0__842cf8be1de50553\Microsoft.Xna.Framework.dll" Private="false" />
+            <Reference Include="Microsoft.Xna.Framework.Game" HintPath="$(WINDIR)\Microsoft.NET\assembly\GAC_32\Microsoft.Xna.Framework.Game\v4.0_4.0.0.0__842cf8be1de50553\Microsoft.Xna.Framework.Game.dll" Private="false" />
+            <Reference Include="Microsoft.Xna.Framework.Graphics" HintPath="$(WINDIR)\Microsoft.NET\assembly\GAC_32\Microsoft.Xna.Framework.Graphics\v4.0_4.0.0.0__842cf8be1de50553\Microsoft.Xna.Framework.Graphics.dll" Private="false" />
+          </ItemGroup>
+        </Otherwise>
+      </Choose>
     </When>
 
     <Otherwise>
       <ItemGroup>
-        <Reference Include="Microsoft.Xna.Framework" HintPath="$(WINDIR)\Microsoft.NET\assembly\GAC_32\Microsoft.Xna.Framework\v4.0_4.0.0.0__842cf8be1de50553\Microsoft.Xna.Framework.dll"/>
-        <Reference Include="Microsoft.Xna.Framework.Game" HintPath="$(WINDIR)\Microsoft.NET\assembly\GAC_32\Microsoft.Xna.Framework.Game\v4.0_4.0.0.0__842cf8be1de50553\Microsoft.Xna.Framework.Game.dll"/>
-        <Reference Include="Microsoft.Xna.Framework.Graphics" HintPath="$(WINDIR)\Microsoft.NET\assembly\GAC_32\Microsoft.Xna.Framework.Graphics\v4.0_4.0.0.0__842cf8be1de50553\Microsoft.Xna.Framework.Graphics.dll"/>
+        <Reference Include="Celeste" HintPath="lib-stripped\Celeste.exe" Private="false" />
+        <Reference Include="MMHOOK_Celeste" HintPath="lib-stripped\MMHOOK_Celeste.dll" Private="false" />
+        <Reference Include="YamlDotNet" HintPath="lib-stripped\YamlDotNet.dll" Private="false" />
+        <Reference Include="FNA" HintPath="lib-stripped\FNA.dll" Private="false" />
       </ItemGroup>
     </Otherwise>
   </Choose>
