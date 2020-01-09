@@ -4,19 +4,33 @@ on: [push]
 
 jobs:
   build:
-
-    runs-on: windows-latest
-
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
+
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 2.2.108
-    - name: Build with dotnet
-      run: dotnet build --configuration Release
+
+    - name: Restore with .NET Core
+      run: dotnet restore
+
+    - name: Build using Mono
+      run: msbuild *.sln "/p:Configuration=Debug"
+
     - name: Upload artifact
       uses: actions/upload-artifact@v1.0.0
       with:
         name: main
-        path: bin/Release/net452
+        path: bin/Debug/net452
+
+    - name: Publish release
+      if: github.ref == 'refs/heads/master'
+      env:
+        ZIPNAME: CollabUtils2.zip
+        DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+      run: |
+        zip -qq -r $ZIPNAME everest.yaml bin/Debug/net452
+        url=$(curl -H 'Content-Type: multipart/form-data' -X POST -F "file=@$ZIPNAME" "$DISCORD_WEBHOOK" | grep -Po 'cdn.discordapp.com\/.*?\.zip' | tr -d '\n')
+        curl -H 'Content-Type: application/json' -X POST -d '{"embeds": [{"title": "Install '"$ZIPNAME"'", "url": "https://0x0ade.ga/twoclick/?'"$url"'"}]}' "$DISCORD_WEBHOOK"
