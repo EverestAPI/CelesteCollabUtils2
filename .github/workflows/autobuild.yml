@@ -26,11 +26,13 @@ jobs:
         path: bin/Debug/net452
 
     - name: Publish release
-      if: github.ref == 'refs/heads/master'
+      if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/gh-actions'
       env:
-        ZIPNAME: CollabUtils2.zip
+        ZIPNAME: CollabUtils2
+        GITHUB_SHA: ${{ github.sha }}
         DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
       run: |
+        ZIPNAME=$ZIPNAME-${GITHUB_SHA:0:8}.zip
         zip -qq -r $ZIPNAME everest.yaml bin/Debug/net452
         url=$(curl -H 'Content-Type: multipart/form-data' -X POST -F "file=@$ZIPNAME" "$DISCORD_WEBHOOK" | grep -Po 'cdn.discordapp.com\/.*?\.zip' | tr -d '\n')
         curl -H 'Content-Type: application/json' -X POST -d '{"embeds": [{"title": "Install '"$ZIPNAME"'", "url": "https://0x0ade.ga/twoclick/?'"$url"'"}]}' "$DISCORD_WEBHOOK"
