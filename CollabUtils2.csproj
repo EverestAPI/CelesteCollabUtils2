@@ -39,7 +39,6 @@
       <ItemGroup>
         <Reference Include="Celeste" HintPath="lib-stripped\Celeste.exe" Private="false" />
         <Reference Include="MMHOOK_Celeste" HintPath="lib-stripped\MMHOOK_Celeste.dll" Private="false" />
-        <Reference Include="YamlDotNet" HintPath="lib-stripped\YamlDotNet.dll" Private="false" />
         <Reference Include="FNA" HintPath="lib-stripped\FNA.dll" Private="false" />
       </ItemGroup>
     </Otherwise>
