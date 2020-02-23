@@ -28,12 +28,27 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
 
             Level level = SceneAs<Level>();
 
-            SceneAs<Level>().DoScreenWipe(false, () => {
+            level.DoScreenWipe(false, () => {
                 if (string.IsNullOrEmpty(room) || room == "-")
                     room = null;
+
                 if (!Enum.TryParse(side, out AreaMode mode))
                     mode = AreaMode.Normal;
-                LevelEnter.Go(new Session(AreaData.Get(map)?.ToKey(mode) ?? new AreaKey(-1), room), false);
+
+                // TODO: Keep track of where the session actually began. Don't overwrite StartCheckpoint.
+
+                Session session = level.Session;
+                session.Area = AreaData.Get(map)?.ToKey(mode) ?? new AreaKey(-1);
+                if (session.Area.ID == -1) {
+                    LevelEnter.Go(new Session(new AreaKey(-1)), false);
+                    return;
+                }
+
+                session.StartCheckpoint = room;
+                session.Level = room;
+                session.StartedFromBeginning = false;
+                session.RespawnPoint = null;
+                LevelEnter.Go(session, false);
             });
         }
 
