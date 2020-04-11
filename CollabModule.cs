@@ -13,10 +13,12 @@ namespace Celeste.Mod.CollabUtils2 {
 
         public override void Load() {
             Everest.Events.Level.OnLoadEntity += OnLoadEntity;
+            ChapterPanelTrigger.Load();
         }
 
         public override void Unload() {
             Everest.Events.Level.OnLoadEntity -= OnLoadEntity;
+            ChapterPanelTrigger.Unload();
         }
 
         private static bool OnLoadEntity(Level level, LevelData levelData, Vector2 offset, EntityData entityData) {
@@ -29,6 +31,12 @@ namespace Celeste.Mod.CollabUtils2 {
                             map = args.ElementAtOrDefault(1),
                             side = args.ElementAtOrDefault(2),
                             room = args.ElementAtOrDefault(3)
+                        });
+                        return true;
+
+                    case "chapter":
+                        level.Add(new ChapterPanelTrigger(entityData, offset) {
+                            map = args.ElementAtOrDefault(1)
                         });
                         return true;
                 }
