@@ -7,6 +7,7 @@ using MonoMod.Utils;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Celeste.Mod.CollabUtils2.UI {
     public static class InGameOverworldHelper {
@@ -25,6 +26,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.Audio.SetMusic += OnSetMusic;
             On.Celeste.Audio.SetAmbience += OnSetAmbience;
             On.Celeste.OuiChapterPanel.Reset += OnChapterPanelReset;
+            On.Celeste.OuiJournal.Enter += OnJournalEnter;
         }
 
         public static void Unload() {
@@ -32,6 +34,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.Audio.SetMusic -= OnSetMusic;
             On.Celeste.Audio.SetAmbience -= OnSetAmbience;
             On.Celeste.OuiChapterPanel.Reset -= OnChapterPanelReset;
+            On.Celeste.OuiJournal.Enter -= OnJournalEnter;
         }
 
         private static void OnPause(Level level, int startIndex, bool minimal, bool quickReset) {
@@ -81,6 +84,25 @@ namespace Celeste.Mod.CollabUtils2.UI {
             save.CurrentSession = session;
         }
 
+        private static IEnumerator OnJournalEnter(On.Celeste.OuiJournal.orig_Enter orig, OuiJournal self, Oui from) {
+            IEnumerator origc = orig(self, from);
+
+            SaveData save = SaveData.Instance;
+            AreaData forceArea = new DynData<Overworld>(self.Overworld).Get<AreaData>("areaForcedByInGameOverworldHelper");
+            if (forceArea != null) {
+                lastArea = save.LastArea;
+                save.LastArea = forceArea.ToKey();
+            }
+
+            while (origc.MoveNext())
+                yield return origc.Current;
+
+            if (forceArea != null) {
+                save.LastArea = lastArea.Value;
+                lastArea = null;
+            }
+        }
+
         private static IEnumerator UpdateIconRoutine(OuiChapterPanel panel, OuiChapterSelectIcon icon) {
             Overworld overworld = overworldWrapper?.WrappedScene;
             if (overworld == null)
@@ -92,11 +114,15 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
         }
 
-        public static void OpenChapterPanel(Player player, string map) {
-            Open(player, map, out OuiHelper_EnterChapterPanel.Start);
+        public static void OpenChapterPanel(Player player, string sid) {
+            Open(player, AreaData.Get(sid) ?? AreaData.Get(0), out OuiHelper_EnterChapterPanel.Start);
         }
 
-        public static void Open(Player player, string map, out bool opened) {
+        public static void OpenJournal(Player player, string levelset) {
+            Open(player, AreaData.Areas.FirstOrDefault(area => area.LevelSet == levelset) ?? AreaData.Get(0), out OuiHelper_EnterJournal.Start);
+        }
+
+        public static void Open(Player player, AreaData area, out bool opened) {
             opened = false;
 
             if (overworldWrapper?.Scene == Engine.Scene || player.StateMachine.State == Player.StDummy)
@@ -121,7 +147,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             };
 
             player.Scene.Add(overworldWrapper);
-            new DynData<Overworld>(overworldWrapper.WrappedScene).Set("areaForcedByInGameOverworldHelper", AreaData.Get(map) ?? AreaData.Get(0));
+            new DynData<Overworld>(overworldWrapper.WrappedScene).Set("areaForcedByInGameOverworldHelper", area);
 
             overworldWrapper.Add(new Coroutine(UpdateRoutine()));
         }
@@ -147,6 +173,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
         }
 
+        private static IEnumerator DelayedCloseRoutine(Level level) {
+            yield return null;
+            Close(level, false, true);
+        }
+
         private static IEnumerator UpdateRoutine() {
             Level level = overworldWrapper.Scene as Level;
             Overworld overworld = overworldWrapper.WrappedScene;
@@ -154,7 +185,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             while (overworldWrapper?.Scene == Engine.Scene) {
                 if (overworld.Next is OuiChapterSelect) {
                     overworld.Next.RemoveSelf();
-                    Close(level, false, true);
+                    overworldWrapper.Add(new Coroutine(DelayedCloseRoutine(level)));
                 }
 
                 overworld.Snow.ParticleAlpha = 0.25f;
@@ -163,10 +194,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     overworld.Snow.Alpha = Calc.Approach(overworld.Snow.Alpha, 1f, Engine.DeltaTime * 2f);
 
                 } else {
-                    // talkComponent.Enabled = false;
                     overworld.Snow.Alpha = Calc.Approach(overworld.Snow.Alpha, 0, Engine.DeltaTime * 2f);
                     if (overworld.Snow.Alpha <= 0.01f) {
-                        // talkComponent.Enabled = true;
                         Close(level, true, true);
                     }
                 }

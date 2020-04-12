@@ -40,6 +40,12 @@ namespace Celeste.Mod.CollabUtils2 {
                             map = args.ElementAtOrDefault(1)
                         });
                         return true;
+
+                    case "journal":
+                        level.Add(new JournalTrigger(entityData, offset) {
+                            levelset = args.ElementAtOrDefault(1)
+                        });
+                        return true;
                 }
             }
 
