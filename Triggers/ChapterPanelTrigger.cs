@@ -13,13 +13,16 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
 
         private static SceneWrappingEntity<Overworld> overworldWrapper;
 
-        private float timeout = 0f;
+        private static bool skipSetMusic;
+        private static bool skipSetAmbience;
+
+        private TalkComponent talkComponent;
 
         public ChapterPanelTrigger(EntityData data, Vector2 offset)
             : base(data, offset) {
             map = data.Attr("map");
 
-            Add(new TalkComponent(
+            Add(talkComponent = new TalkComponent(
                 new Rectangle(0, 0, data.Width, data.Height),
                 data.Nodes.Length != 0 ? (data.Nodes[0] - data.Position) : new Vector2(data.Width / 2f, data.Height / 2f),
                 Interact
@@ -28,25 +31,53 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
 
         public static void Load() {
             Everest.Events.Level.OnPause += OnPause;
+            On.Celeste.Audio.SetMusic += OnSetMusic;
+            On.Celeste.Audio.SetAmbience += OnSetAmbience;
         }
 
         public static void Unload() {
             Everest.Events.Level.OnPause -= OnPause;
+            On.Celeste.Audio.SetMusic -= OnSetMusic;
+            On.Celeste.Audio.SetAmbience -= OnSetAmbience;
         }
 
         private static void OnPause(Level level, int startIndex, bool minimal, bool quickReset) {
-            Uninteract(level);
+            Uninteract(level, true, true);
+        }
+
+        private static bool OnSetMusic(On.Celeste.Audio.orig_SetMusic orig, string path, bool startPlaying, bool allowFadeOut) {
+            if (skipSetMusic) {
+                skipSetMusic = false;
+                return false;
+            }
+
+            return orig(path, startPlaying, allowFadeOut);
+        }
+
+        private static bool OnSetAmbience(On.Celeste.Audio.orig_SetAmbience orig, string path, bool startPlaying) {
+            if (skipSetAmbience) {
+                skipSetAmbience = false;
+                return false;
+            }
+
+            return orig(path, startPlaying);
         }
 
         public void Interact(Player player) {
-            if (timeout > 0f || player.StateMachine.State == Player.StDummy)
+            if (overworldWrapper?.Scene == Engine.Scene || player.StateMachine.State == Player.StDummy)
                 return;
             player.StateMachine.State = Player.StDummy;
 
             OuiHelper_EnterChapterPanel.Start = true;
-            HiresSnow snow = new HiresSnow();
-            snow.Alpha = 0f;
-            overworldWrapper = new SceneWrappingEntity<Overworld>(new Overworld(new OverworldLoader((Overworld.StartMode) (-1), snow)));
+            skipSetMusic = true;
+            skipSetAmbience = true;
+
+            overworldWrapper = new SceneWrappingEntity<Overworld>(new Overworld(new OverworldLoader((Overworld.StartMode) (-1),
+                new HiresSnow() {
+                    Alpha = 0f,
+                    ParticleAlpha = 0.25f,
+                }
+            )));
             overworldWrapper.OnBegin += (overworld) => {
                 overworld.RendererList.Remove(overworld.RendererList.Renderers.Find(r => r is MountainRenderer));
                 overworld.RendererList.Remove(overworld.RendererList.Renderers.Find(r => r is ScreenWipe));
@@ -56,36 +87,48 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
             Scene.Add(overworldWrapper);
         }
 
-        public static void Uninteract(Level level) {
-            overworldWrapper?.RemoveSelf();
-            overworldWrapper = null;
+        public static void Uninteract(Level level, bool removeScene, bool resetPlayer) {
+            if (removeScene) {
+                overworldWrapper?.RemoveSelf();
+                overworldWrapper = null;
+            }
 
-            Player player = level.Tracker.GetEntity<Player>();
-            if (player == null || player.StateMachine.State != Player.StDummy)
-                return;
-
-            Engine.Scene.OnEndOfFrame += () => {
-                player.StateMachine.State = Player.StNormal;
-            };
+            if (resetPlayer) {
+                Player player = level.Tracker.GetEntity<Player>();
+                if (player != null && player.StateMachine.State == Player.StDummy) {
+                    Engine.Scene.OnEndOfFrame += () => {
+                        player.StateMachine.State = Player.StNormal;
+                    };
+                }
+            }
         }
 
         public override void Update() {
             base.Update();
 
+            Level level = Scene as Level;
+
             Overworld overworld = overworldWrapper?.WrappedScene;
             if (overworld != null) {
-                overworld.Snow.Alpha = Calc.Approach(overworld.Snow.Alpha, 1f, Engine.DeltaTime * 2f);
-                overworld.Snow.ParticleAlpha = Calc.Approach(overworld.Snow.Alpha, 1f, Engine.DeltaTime * 2f);
-
                 if (overworld.Next is OuiChapterSelect) {
-                    Uninteract(Scene as Level);
-                    timeout = 0.1f;
+                    overworld.Next.RemoveSelf();
+                    Uninteract(level, false, true);
+                }
+
+                overworld.Snow.ParticleAlpha = 0.25f;
+
+                if (overworld.Current != null || overworld.Next?.Scene != null) {
+                    overworld.Snow.Alpha = Calc.Approach(overworld.Snow.Alpha, 1f, Engine.DeltaTime * 2f);
+
+                } else {
+                    talkComponent.Enabled = false;
+                    overworld.Snow.Alpha = Calc.Approach(overworld.Snow.Alpha, 0, Engine.DeltaTime * 2f);
+                    if (overworld.Snow.Alpha <= 0.01f) {
+                        talkComponent.Enabled = true;
+                        Uninteract(level, true, true);
+                    }
                 }
             }
-
-            timeout -= Engine.DeltaTime;
-            if (timeout < 0f)
-                timeout = 0f;
         }
 
     }

@@ -27,6 +27,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         public override IEnumerator Enter(Oui from) {
+            Audio.Play("event:/ui/world_map/icon/select");
             Overworld.Goto<OuiChapterPanel>();
             yield break;
         }
