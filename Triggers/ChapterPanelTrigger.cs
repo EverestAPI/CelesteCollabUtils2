@@ -3,7 +3,10 @@ using Celeste.Mod.CollabUtils2.UI;
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
+using MonoMod.Utils;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace Celeste.Mod.CollabUtils2.Triggers {
     [CustomEntity("CollabUtils2/ChapterPanelTrigger")]
@@ -11,12 +14,14 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
 
         public string map;
 
+        private TalkComponent talkComponent;
+
         private static SceneWrappingEntity<Overworld> overworldWrapper;
 
         private static bool skipSetMusic;
         private static bool skipSetAmbience;
 
-        private TalkComponent talkComponent;
+        private static AreaKey? lastArea;
 
         public ChapterPanelTrigger(EntityData data, Vector2 offset)
             : base(data, offset) {
@@ -33,12 +38,14 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
             Everest.Events.Level.OnPause += OnPause;
             On.Celeste.Audio.SetMusic += OnSetMusic;
             On.Celeste.Audio.SetAmbience += OnSetAmbience;
+            On.Celeste.OuiChapterPanel.Reset += OnChapterPanelReset;
         }
 
         public static void Unload() {
             Everest.Events.Level.OnPause -= OnPause;
             On.Celeste.Audio.SetMusic -= OnSetMusic;
             On.Celeste.Audio.SetAmbience -= OnSetAmbience;
+            On.Celeste.OuiChapterPanel.Reset -= OnChapterPanelReset;
         }
 
         private static void OnPause(Level level, int startIndex, bool minimal, bool quickReset) {
@@ -63,6 +70,42 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
             return orig(path, startPlaying);
         }
 
+        private static void OnChapterPanelReset(On.Celeste.OuiChapterPanel.orig_Reset orig, OuiChapterPanel self) {
+            ChapterPanelTrigger trigger = new DynData<Overworld>(self.Overworld).Get<ChapterPanelTrigger>("collabTrigger");
+            if (trigger == null) {
+                orig(self);
+                return;
+            }
+
+            SaveData save = SaveData.Instance;
+            Session session = save.CurrentSession;
+            lastArea = save.LastArea;
+
+            save.LastArea = (AreaData.Get(trigger.map) ?? AreaData.Get(0)).ToKey();
+            save.CurrentSession = null;
+
+            List<OuiChapterSelectIcon> icons = self.Overworld.Entities.FindAll<OuiChapterSelectIcon>();
+            OuiChapterSelectIcon icon = icons[save.LastArea.ID];
+            icon.SnapToSelected();
+            icon.Add(new Coroutine(UpdateIconRoutine(self, icon)));
+
+            orig(self);
+
+            // LastArea is also checked in Render.
+            save.CurrentSession = session;
+        }
+
+        private static IEnumerator UpdateIconRoutine(OuiChapterPanel panel, OuiChapterSelectIcon icon) {
+            Overworld overworld = overworldWrapper?.WrappedScene;
+            if (overworld == null)
+                yield break;
+
+            while (overworld.Current == panel || overworld.Last == panel || overworld.Next == panel) {
+                icon.Position = panel.Position + panel.IconOffset;
+                yield return null;
+            }
+        }
+
         public void Interact(Player player) {
             if (overworldWrapper?.Scene == Engine.Scene || player.StateMachine.State == Player.StDummy)
                 return;
@@ -81,16 +124,22 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
             overworldWrapper.OnBegin += (overworld) => {
                 overworld.RendererList.Remove(overworld.RendererList.Renderers.Find(r => r is MountainRenderer));
                 overworld.RendererList.Remove(overworld.RendererList.Renderers.Find(r => r is ScreenWipe));
-                overworld.RendererList._UpdateLists();
+                overworld.RendererList.UpdateLists();
             };
 
             Scene.Add(overworldWrapper);
+            new DynData<Overworld>(overworldWrapper.WrappedScene).Set("collabTrigger", this);
         }
 
         public static void Uninteract(Level level, bool removeScene, bool resetPlayer) {
             if (removeScene) {
                 overworldWrapper?.RemoveSelf();
                 overworldWrapper = null;
+
+                if (lastArea != null && SaveData.Instance != null) {
+                    SaveData.Instance.LastArea = lastArea.Value;
+                    lastArea = null;
+                }
             }
 
             if (resetPlayer) {
