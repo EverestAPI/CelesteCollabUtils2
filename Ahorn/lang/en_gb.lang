@@ -1,0 +1,5 @@
+﻿# Chapter Panel Trigger
+placements.triggers.CollabUtils2/ChapterPanelTrigger.tooltips.map=The SID (string ID) of the map that will be entered with the trigger.
+
+# Journal Trigger
+placements.triggers.CollabUtils2/JournalTrigger.tooltips.levelset=The levelset for which the journal will be opened with the trigger.
