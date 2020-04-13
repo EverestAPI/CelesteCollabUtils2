@@ -8,6 +8,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace Celeste.Mod.CollabUtils2.UI {
     public static class InGameOverworldHelper {
@@ -20,6 +21,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private static bool skipSetAmbience;
 
         private static AreaKey? lastArea;
+
+        private static readonly Type t_OuiChapterPanelOption = typeof(OuiChapterPanel)
+            .GetNestedType("Option", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+        private static readonly ConstructorInfo c_OuiChapterPanelOption = t_OuiChapterPanelOption
+            .GetConstructor(Type.EmptyTypes);
 
         public static void Load() {
             Everest.Events.Level.OnPause += OnPause;
@@ -60,7 +66,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private static void OnChapterPanelReset(On.Celeste.OuiChapterPanel.orig_Reset orig, OuiChapterPanel self) {
-            AreaData forceArea = new DynData<Overworld>(self.Overworld).Get<AreaData>("areaForcedByInGameOverworldHelper");
+            AreaData forceArea = new DynamicData(self.Overworld).Get<AreaData>("areaForcedByInGameOverworldHelper");
             if (forceArea == null) {
                 orig(self);
                 return;
@@ -80,6 +86,15 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             orig(self);
 
+            object option = c_OuiChapterPanelOption.Invoke(new object[0]);
+            new DynamicData(option) {
+                { "Label", "Uhh" },
+                { "Icon", GFX.Gui["areas/null"] },
+                { "ID", "C" }
+            };
+
+            new DynamicData(self).Get<IList>("modes").Add(option);
+
             // LastArea is also checked in Render.
             save.CurrentSession = session;
         }
@@ -88,7 +103,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             IEnumerator origc = orig(self, from);
 
             SaveData save = SaveData.Instance;
-            AreaData forceArea = new DynData<Overworld>(self.Overworld).Get<AreaData>("areaForcedByInGameOverworldHelper");
+            AreaData forceArea = new DynamicData(self.Overworld).Get<AreaData>("areaForcedByInGameOverworldHelper");
             if (forceArea != null) {
                 lastArea = save.LastArea;
                 save.LastArea = forceArea.ToKey();
@@ -147,7 +162,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             };
 
             player.Scene.Add(overworldWrapper);
-            new DynData<Overworld>(overworldWrapper.WrappedScene).Set("areaForcedByInGameOverworldHelper", area);
+            new DynamicData(overworldWrapper.WrappedScene).Set("areaForcedByInGameOverworldHelper", area);
 
             overworldWrapper.Add(new Coroutine(UpdateRoutine()));
         }
