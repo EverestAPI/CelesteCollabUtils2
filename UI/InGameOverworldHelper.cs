@@ -86,14 +86,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             orig(self);
 
-            object option = c_OuiChapterPanelOption.Invoke(new object[0]);
-            new DynamicData(option) {
-                { "Label", "Uhh" },
-                { "Icon", GFX.Gui["areas/null"] },
-                { "ID", "C" }
-            };
-
-            new DynamicData(self).Get<IList>("modes").Add(option);
+           new DynamicData(self).Get<IList>("modes").Add(
+                new DynamicData(c_OuiChapterPanelOption.Invoke(new object[0])) {
+                    { "Label", "Uhh" },
+                    { "Icon", GFX.Gui["areas/null"] },
+                    { "ID", "C" }
+                }.Target
+            );
 
             // LastArea is also checked in Render.
             save.CurrentSession = session;

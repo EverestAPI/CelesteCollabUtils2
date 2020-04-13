@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="MonoMod.RuntimeDetour" Version="20.1.1.4" PrivateAssets="all" ExcludeAssets="runtime" />
+    <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
 
   <Choose>
