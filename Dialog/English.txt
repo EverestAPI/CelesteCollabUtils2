@@ -1,0 +1,9 @@
+# SHIP COLLAB-SPECIFIC DIALOG WITH THE COLLAB MOD, NOT THE COLLAB UTILS.
+
+area_1_collabcredits= 
+Map by Matt Thorson
+Code by Noel Berry
+Art by Pedro Medeiros
+Music by Lena Raine
+Something Something
+Totally a collab map

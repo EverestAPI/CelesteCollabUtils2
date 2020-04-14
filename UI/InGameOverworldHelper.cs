@@ -32,6 +32,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.Audio.SetMusic += OnSetMusic;
             On.Celeste.Audio.SetAmbience += OnSetAmbience;
             On.Celeste.OuiChapterPanel.Reset += OnChapterPanelReset;
+            On.Celeste.SaveData.FoundAnyCheckpoints += OnSaveDataFoundAnyCheckpoints;
+            On.Celeste.OuiChapterPanel.GetModeHeight += OnChapterPanelGetModeHeight;
+            On.Celeste.OuiChapterPanel.Swap += OnChapterPanelSwap;
+            On.Celeste.OuiChapterPanel.DrawCheckpoint += OnChapterPanelDrawCheckpoint;
             On.Celeste.OuiJournal.Enter += OnJournalEnter;
         }
 
@@ -40,6 +44,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.Audio.SetMusic -= OnSetMusic;
             On.Celeste.Audio.SetAmbience -= OnSetAmbience;
             On.Celeste.OuiChapterPanel.Reset -= OnChapterPanelReset;
+            On.Celeste.SaveData.FoundAnyCheckpoints -= OnSaveDataFoundAnyCheckpoints;
+            On.Celeste.OuiChapterPanel.GetModeHeight -= OnChapterPanelGetModeHeight;
+            On.Celeste.OuiChapterPanel.Swap -= OnChapterPanelSwap;
+            On.Celeste.OuiChapterPanel.DrawCheckpoint -= OnChapterPanelDrawCheckpoint;
             On.Celeste.OuiJournal.Enter -= OnJournalEnter;
         }
 
@@ -66,7 +74,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private static void OnChapterPanelReset(On.Celeste.OuiChapterPanel.orig_Reset orig, OuiChapterPanel self) {
-            AreaData forceArea = new DynamicData(self.Overworld).Get<AreaData>("areaForcedByInGameOverworldHelper");
+            AreaData forceArea = self.Overworld == null ? null : new DynamicData(self.Overworld).Get<AreaData>("collabInGameForcedArea");
             if (forceArea == null) {
                 orig(self);
                 return;
@@ -86,23 +94,133 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             orig(self);
 
-           new DynamicData(self).Get<IList>("modes").Add(
-                new DynamicData(c_OuiChapterPanelOption.Invoke(new object[0])) {
-                    { "Label", "Uhh" },
-                    { "Icon", GFX.Gui["areas/null"] },
-                    { "ID", "C" }
-                }.Target
+            dynamic data = new DynamicData(self);
+            data.hasCollabCredits = true;
+
+            /*
+            (data.modes as IList).Add(
+                DynamicData.New(t_OuiChapterPanelOption)(new {
+                    Label = "",
+                    BgColor = Calc.HexToColor("223022"),
+                    Icon = GFX.Gui["areas/null"],
+                    Large = false
+                })
             );
+            */
 
             // LastArea is also checked in Render.
             save.CurrentSession = session;
+        }
+
+        private static bool OnSaveDataFoundAnyCheckpoints(On.Celeste.SaveData.orig_FoundAnyCheckpoints orig, SaveData self, AreaKey area) {
+            if (Engine.Scene == overworldWrapper?.Scene)
+                return true;
+
+            return orig(self, area);
+        }
+
+        private static int OnChapterPanelGetModeHeight(On.Celeste.OuiChapterPanel.orig_GetModeHeight orig, OuiChapterPanel self) {
+            if (Engine.Scene == overworldWrapper?.Scene && (int) self.Area.Mode >= 1)
+                return 540;
+
+            return orig(self);
+        }
+
+        private static void OnChapterPanelSwap(On.Celeste.OuiChapterPanel.orig_Swap orig, OuiChapterPanel self) {
+            if (Engine.Scene != overworldWrapper?.Scene) {
+                orig(self);
+                return;
+            }
+
+            dynamic data = new DynamicData(self);
+            bool selectingMode = data.selectingMode;
+            if ((int) self.Area.Mode >= 1 && selectingMode) {
+                return;
+            }
+
+            if (!selectingMode) {
+                orig(self);
+                return;
+            }
+            
+            data.collabCredits = Dialog.Clean(new DynamicData(self.Overworld).Get<AreaData>("collabInGameForcedArea").Name + "_collabcredits");
+            self.Focused = false;
+            self.Overworld.ShowInputUI = !selectingMode;
+            self.Add(new Coroutine(ChapterPanelSwapRoutine(self, data)));
+        }
+
+        private static IEnumerator ChapterPanelSwapRoutine(OuiChapterPanel self, dynamic data) {
+            float fromHeight = data.height;
+            int toHeight = 730;
+            
+            data.resizing = true;
+            data.PlayExpandSfx(fromHeight, (float) toHeight);
+
+            float offset = 800f;
+            for (float p = 0f; p < 1f; p += Engine.DeltaTime * 4f) {
+                yield return null;
+                data.contentOffset = new Vector2(440f + offset * Ease.CubeIn(p), data.contentOffset.Y);
+                data.height = MathHelper.Lerp(fromHeight, toHeight, Ease.CubeOut(p * 0.5f));
+            }
+
+            data.selectingMode = false;
+
+            IList checkpoints = data.checkpoints;
+            checkpoints.Clear();
+
+            checkpoints.Add(DynamicData.New(t_OuiChapterPanelOption)(new {
+                Label = Dialog.Clean("overworld_start", null),
+                BgColor = Calc.HexToColor("eabe26"),
+                Icon = GFX.Gui["areaselect/startpoint"],
+                CheckpointRotation = Calc.Random.Choose(-1, 1) * Calc.Random.Range(0.05f, 0.2f),
+                CheckpointOffset = new Vector2(Calc.Random.Range(-16, 16), Calc.Random.Range(-16, 16)),
+                Large = false
+            }));
+
+            data.option = 0;
+
+            for (int i = 0; i < checkpoints.Count; i++) {
+                new DynamicData(checkpoints[i]).Invoke("SlideTowards", i, checkpoints.Count, true);
+            }
+
+            new DynamicData(checkpoints[0]).Set("Pop", 1f);
+            for (float p = 0f; p < 1f; p += Engine.DeltaTime * 4f) {
+                yield return null;
+                data.height = MathHelper.Lerp(fromHeight, toHeight, Ease.CubeOut(Math.Min(1f, 0.5f + p * 0.5f)));
+                data.contentOffset = new Vector2(440f + offset * (1f - Ease.CubeOut(p)), data.contentOffset.Y);
+            }
+
+            data.contentOffset.X = 440f;
+            data.height = (float) toHeight;
+            self.Focused = true;
+            data.resizing = false;
+        }
+
+        private static void OnChapterPanelDrawCheckpoint(On.Celeste.OuiChapterPanel.orig_DrawCheckpoint orig, OuiChapterPanel self, Vector2 center, object option, int checkpointIndex) {
+            string collabCredits = new DynamicData(self).Get<string>("collabCredits");
+            if (collabCredits == null) {
+                orig(self, center, option, checkpointIndex);
+                return;
+            }
+
+            if (checkpointIndex > 0) {
+                return;
+            }
+
+            ActiveFont.Draw(
+                collabCredits,
+                center + new Vector2(0f, 40f),
+                Vector2.One * 0.5f,
+                Vector2.One,
+                Color.Black * 0.8f
+            );
         }
 
         private static IEnumerator OnJournalEnter(On.Celeste.OuiJournal.orig_Enter orig, OuiJournal self, Oui from) {
             IEnumerator origc = orig(self, from);
 
             SaveData save = SaveData.Instance;
-            AreaData forceArea = new DynamicData(self.Overworld).Get<AreaData>("areaForcedByInGameOverworldHelper");
+            AreaData forceArea = new DynamicData(self.Overworld).Get<AreaData>("collabInGameForcedArea");
             if (forceArea != null) {
                 lastArea = save.LastArea;
                 save.LastArea = forceArea.ToKey();
@@ -148,6 +266,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
             skipSetMusic = true;
             skipSetAmbience = true;
 
+            Level level = player.Scene as Level;
+            level.Entities.FindFirst<TotalStrawberriesDisplay>().Active = false;
+
             overworldWrapper = new SceneWrappingEntity<Overworld>(new Overworld(new OverworldLoader((Overworld.StartMode) (-1),
                 new HiresSnow() {
                     Alpha = 0f,
@@ -160,8 +281,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 overworld.RendererList.UpdateLists();
             };
 
-            player.Scene.Add(overworldWrapper);
-            new DynamicData(overworldWrapper.WrappedScene).Set("areaForcedByInGameOverworldHelper", area);
+            level.Add(overworldWrapper);
+            new DynamicData(overworldWrapper.WrappedScene).Set("collabInGameForcedArea", area);
 
             overworldWrapper.Add(new Coroutine(UpdateRoutine()));
         }
@@ -174,6 +295,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 if (lastArea != null && SaveData.Instance != null) {
                     SaveData.Instance.LastArea = lastArea.Value;
                     lastArea = null;
+                    level.Entities.FindFirst<TotalStrawberriesDisplay>().Active = true;
                 }
             }
 
