@@ -101,10 +101,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             dynamic data = new DynamicData(self);
             data.hasCollabCredits = true;
 
-            string author = (new DynamicData(self.Overworld).Get<AreaData>("collabInGameForcedArea").Name + "_author").DialogCleanOrNull();
-            if (author != null) {
-                data.chapter = author;
-            }
+            data.chapter = Dialog.Clean(new DynamicData(self.Overworld).Get<AreaData>("collabInGameForcedArea").Name + "_author");
 
             /*
             (data.modes as IList).Add(
