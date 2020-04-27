@@ -213,11 +213,14 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 return;
             }
 
+            Vector2 size = ActiveFont.Measure(collabCredits);
+            float scale = Math.Min(1f, Math.Min(410f / size.Y, 800f / size.X));
+
             ActiveFont.Draw(
                 collabCredits,
                 center + new Vector2(0f, 40f),
                 Vector2.One * 0.5f,
-                Vector2.One,
+                Vector2.One * scale,
                 Color.Black * 0.8f
             );
         }
