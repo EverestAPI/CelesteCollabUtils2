@@ -2,7 +2,9 @@
 using Celeste.Mod.CollabUtils2.UI;
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
+using Mono.Cecil.Cil;
 using Monocle;
+using MonoMod.Cil;
 using MonoMod.Utils;
 using System;
 using System.Collections;
@@ -37,6 +39,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.OuiChapterPanel.Swap += OnChapterPanelSwap;
             On.Celeste.OuiChapterPanel.DrawCheckpoint += OnChapterPanelDrawCheckpoint;
             On.Celeste.OuiJournal.Enter += OnJournalEnter;
+            IL.Celeste.OuiChapterPanel.Render += ModOuiChapterPanelEnter;
         }
 
         public static void Unload() {
@@ -49,6 +52,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.OuiChapterPanel.Swap -= OnChapterPanelSwap;
             On.Celeste.OuiChapterPanel.DrawCheckpoint -= OnChapterPanelDrawCheckpoint;
             On.Celeste.OuiJournal.Enter -= OnJournalEnter;
+            IL.Celeste.OuiChapterPanel.Render -= ModOuiChapterPanelEnter;
         }
 
         private static void OnPause(Level level, int startIndex, bool minimal, bool quickReset) {
@@ -87,8 +91,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
             save.LastArea = forceArea.ToKey();
             save.CurrentSession = null;
 
-            List<OuiChapterSelectIcon> icons = self.Overworld.Entities.FindAll<OuiChapterSelectIcon>();
-            OuiChapterSelectIcon icon = icons[save.LastArea.ID];
+            dynamic ouiChapterSelect = new DynamicData(self.Overworld.GetUI<OuiChapterSelect>());
+            OuiChapterSelectIcon icon = ouiChapterSelect.icons[save.LastArea.ID];
             icon.SnapToSelected();
             icon.Add(new Coroutine(UpdateIconRoutine(self, icon)));
 
@@ -96,6 +100,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             dynamic data = new DynamicData(self);
             data.hasCollabCredits = true;
+
+            data.chapter = Dialog.Clean(new DynamicData(self.Overworld).Get<AreaData>("collabInGameForcedArea").Name + "_author");
 
             /*
             (data.modes as IList).Add(
@@ -142,7 +148,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 orig(self);
                 return;
             }
-            
+
             data.collabCredits = Dialog.Clean(new DynamicData(self.Overworld).Get<AreaData>("collabInGameForcedArea").Name + "_collabcredits");
             self.Focused = false;
             self.Overworld.ShowInputUI = !selectingMode;
@@ -152,7 +158,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private static IEnumerator ChapterPanelSwapRoutine(OuiChapterPanel self, dynamic data) {
             float fromHeight = data.height;
             int toHeight = 730;
-            
+
             data.resizing = true;
             data.PlayExpandSfx(fromHeight, (float) toHeight);
 
@@ -207,13 +213,36 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 return;
             }
 
+            Vector2 size = ActiveFont.Measure(collabCredits);
+            float scale = Math.Min(1f, Math.Min(410f / size.Y, 800f / size.X));
+
             ActiveFont.Draw(
                 collabCredits,
                 center + new Vector2(0f, 40f),
                 Vector2.One * 0.5f,
-                Vector2.One,
+                Vector2.One * scale,
                 Color.Black * 0.8f
             );
+        }
+
+        private static void ModOuiChapterPanelEnter(ILContext il) {
+            ILCursor cursor = new ILCursor(il);
+
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(-2f) || instr.MatchLdcR4(-18f))) {
+                Logger.Log("CollabUtils2/InGameOverworldHelper", $"Modding chapter panel title position at {cursor.Index} in IL for OuiChapterPanel.Render");
+
+                cursor.Emit(OpCodes.Ldarg_0);
+                cursor.EmitDelegate<Func<float, OuiChapterPanel, float>>(moveAroundPanelHeader);
+            }
+        }
+
+        private static float moveAroundPanelHeader(float orig, OuiChapterPanel self) {
+            AreaData forceArea = self.Overworld == null ? null : new DynamicData(self.Overworld).Get<AreaData>("collabInGameForcedArea");
+            if (forceArea != null) {
+                return orig == -18f ? -49f : 43f;
+            } else {
+                return orig;
+            }
         }
 
         private static IEnumerator OnJournalEnter(On.Celeste.OuiJournal.orig_Enter orig, OuiJournal self, Oui from) {
