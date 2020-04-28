@@ -31,7 +31,7 @@ namespace Celeste.Mod.CollabUtils2 {
         public override void LoadSession(int index, bool forceNew) {
             base.LoadSession(index, forceNew);
 
-            if(forceNew) {
+            if (forceNew) {
                 ReturnToLobbyHelper.OnSessionCreated();
             }
         }
