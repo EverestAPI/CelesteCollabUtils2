@@ -1,0 +1,1 @@
+﻿collabutils2_returntolobby= Retour au lobby

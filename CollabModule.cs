@@ -1,13 +1,17 @@
 ﻿using Celeste.Mod.CollabUtils2.Triggers;
 using Celeste.Mod.CollabUtils2.UI;
 using Microsoft.Xna.Framework;
+using System;
 using System.Linq;
 
 namespace Celeste.Mod.CollabUtils2 {
     public class CollabModule : EverestModule {
 
         public static CollabModule Instance;
-        
+
+        public override Type SessionType => typeof(CollabSession);
+        public CollabSession Session => _Session as CollabSession;
+
         public CollabModule() {
             Instance = this;
         }
@@ -15,11 +19,21 @@ namespace Celeste.Mod.CollabUtils2 {
         public override void Load() {
             Everest.Events.Level.OnLoadEntity += OnLoadEntity;
             InGameOverworldHelper.Load();
+            ReturnToLobbyHelper.Load();
         }
 
         public override void Unload() {
             Everest.Events.Level.OnLoadEntity -= OnLoadEntity;
             InGameOverworldHelper.Unload();
+            ReturnToLobbyHelper.Unload();
+        }
+
+        public override void LoadSession(int index, bool forceNew) {
+            base.LoadSession(index, forceNew);
+
+            if (forceNew) {
+                ReturnToLobbyHelper.OnSessionCreated();
+            }
         }
 
         private static bool OnLoadEntity(Level level, LevelData levelData, Vector2 offset, EntityData entityData) {

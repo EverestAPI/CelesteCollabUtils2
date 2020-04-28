@@ -1,3 +1,5 @@
+collabutils2_returntolobby= Return to Lobby
+
 # SHIP COLLAB-SPECIFIC DIALOG WITH THE COLLAB MOD, NOT THE COLLAB UTILS.
 
 area_1_collabcredits= 
