@@ -6,10 +6,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
     class LevelExitToLobby : Scene {
         private string targetSID;
         private string targetRoom;
-        private Vector2? targetSpawnPoint;
+        private Vector2 targetSpawnPoint;
 
-        public LevelExitToLobby() : base() {
+        public LevelExitToLobby(LevelExit.Mode exitMode, Session currentSession) : base() {
             Add(new HudRenderer());
+
+            // calling the LevelExit constructor triggers the Level.Exit Everest event, so that makes mods less confused about what's going on.
+            new LevelExit(exitMode, currentSession);
         }
 
         public override void Begin() {
@@ -17,11 +20,12 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             targetSID = CollabModule.Instance.Session.LobbySID;
             targetRoom = CollabModule.Instance.Session.LobbyRoom;
-            targetSpawnPoint = CollabModule.Instance.Session.LobbySpawnPoint;
+            targetSpawnPoint = new Vector2(CollabModule.Instance.Session.LobbySpawnPointX, CollabModule.Instance.Session.LobbySpawnPointY);
 
             CollabModule.Instance.Session.LobbySID = null;
             CollabModule.Instance.Session.LobbyRoom = null;
-            CollabModule.Instance.Session.LobbySpawnPoint = null;
+            CollabModule.Instance.Session.LobbySpawnPointX = 0;
+            CollabModule.Instance.Session.LobbySpawnPointY = 0;
 
             SaveLoadIcon.Show(this);
             Entity coroutineHolder;
@@ -45,8 +49,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             session.StartedFromBeginning = false;
             session.Level = targetRoom;
             session.RespawnPoint = targetSpawnPoint;
-            LevelLoader loader = new LevelLoader(session);
-            Engine.Scene = loader;
+            LevelEnter.Go(session, false);
         }
     }
 }

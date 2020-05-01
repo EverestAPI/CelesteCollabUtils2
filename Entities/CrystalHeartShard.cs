@@ -13,6 +13,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private Sprite sprite;
         private Sprite white;
         private string spriteName;
+        private bool collected;
 
         private Wiggler scaleWiggler;
 
@@ -20,6 +21,12 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private Wiggler moveWiggler;
 
         private float bounceSfxDelay;
+
+        private VertexLight light;
+        private BloomPoint bloom;
+        private ParticleType shineParticle;
+
+        private HoldableCollider holdableCollider;
 
         public CrystalHeartShard(EntityData data, Vector2 position, EntityID gid)
             : base(data.Position + position) {
@@ -36,6 +43,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             Add(moveWiggler);
 
             Add(new PlayerCollider(OnPlayer));
+            Add(holdableCollider = new HoldableCollider(OnHoldable));
         }
 
         public override void Awake(Scene scene) {
@@ -44,7 +52,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             AreaKey area = (scene as Level).Session.Area;
 
             string spritePath = "CollabUtils2/miniheart/" + spriteName + "/";
-            if (SaveData.Instance.Areas_Safe[area.ID].Modes[(int) area.Mode].HeartGem) {
+            collected = SaveData.Instance.Areas_Safe[area.ID].Modes[(int) area.Mode].HeartGem;
+            if (collected) {
                 spritePath = "CollabUtils2/miniheart/ghost/ghost";
             }
 
@@ -52,6 +61,42 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             sprite.AddLoop("idle", "", 0.08f);
             sprite.Play("idle");
             sprite.CenterOrigin();
+
+
+            Color heartColor;
+            switch (spriteName) {
+                case "beginner":
+                default:
+                    heartColor = Color.Aqua;
+                    shineParticle = HeartGem.P_BlueShine;
+                    break;
+                case "intermediate":
+                    heartColor = Color.Red;
+                    shineParticle = HeartGem.P_RedShine;
+                    break;
+                case "advanced":
+                    heartColor = Color.Gold;
+                    shineParticle = HeartGem.P_GoldShine;
+                    break;
+                case "expert":
+                    heartColor = Color.Orange;
+                    shineParticle = new ParticleType(HeartGem.P_BlueShine) {
+                        Color = Color.Orange
+                    };
+                    break;
+                case "grandmaster":
+                    heartColor = Color.DarkViolet;
+                    shineParticle = new ParticleType(HeartGem.P_BlueShine) {
+                        Color = Color.DarkViolet
+                    };
+                    break;
+            }
+            if (collected) {
+                heartColor = Color.White * 0.8f;
+            }
+            heartColor = Color.Lerp(heartColor, Color.White, 0.5f);
+            Add(light = new VertexLight(heartColor, 1f, 32, 64));
+            Add(bloom = new BloomPoint(0.75f, 16f));
         }
 
         private void OnPlayer(Player player) {
@@ -73,8 +118,16 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             }
         }
 
+        public void OnHoldable(Holdable holdable) {
+            Player player = Scene.Tracker.GetEntity<Player>();
+            if (player != null && holdable.Dangerous(holdableCollider)) {
+                Add(new Coroutine(SmashRoutine(player, SceneAs<Level>())));
+            }
+        }
+
         private IEnumerator SmashRoutine(Player player, Level level) {
             level.CanRetry = false;
+            collected = true;
 
             Collidable = false;
 
@@ -94,14 +147,14 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 item.OnCollect();
             }
 
-            // play the summit gem collect sound
-            SoundEmitter.Play("event:/game/07_summit/gem_get", this);
+            // play the collect jingle
+            SoundEmitter.Play("event:/SC2020_heartShard_get", this);
 
             // overlap a white sprite
             Add(white = new Sprite(GFX.Game, "CollabUtils2/miniheart/white/white"));
-            sprite.AddLoop("idle", "", 0.08f);
-            sprite.Play("idle");
-            sprite.CenterOrigin();
+            white.AddLoop("idle", "", 0.08f);
+            white.Play("idle");
+            white.CenterOrigin();
 
             // slow down time, visual effects
             Depth = -2000000;
@@ -116,6 +169,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             level.Shake();
             Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
             level.Flash(Color.White);
+            light.Alpha = (bloom.Alpha = 0f);
             level.FormationBackdrop.Display = true;
             level.FormationBackdrop.Alpha = 1f;
 
@@ -147,7 +201,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             }
 
             // get out of here, back to the lobby
-            level.DoScreenWipe(false, () => Engine.Scene = new LevelExitToLobby());
+            level.DoScreenWipe(false, () => Engine.Scene = new LevelExitToLobby(LevelExit.Mode.Completed, level.Session));
         }
 
         public override void Update() {
@@ -158,7 +212,11 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             if (white != null) {
                 white.Position = sprite.Position;
                 white.Scale = sprite.Scale;
-                // white.SetAnimationFrame(sprite.CurrentAnimationFrame);
+                white.SetAnimationFrame(sprite.CurrentAnimationFrame);
+            }
+
+            if (!collected && Scene.OnInterval(0.1f)) {
+                SceneAs<Level>().Particles.Emit(shineParticle, 1, Center + sprite.Position, Vector2.One * 4f);
             }
         }
     }

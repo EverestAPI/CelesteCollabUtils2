@@ -6,7 +6,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
     class ReturnToLobbyHelper {
         private static string temporaryLobbySIDHolder;
         private static string temporaryRoomHolder;
-        private static Vector2? temporarySpawnPointHolder;
+        private static Vector2 temporarySpawnPointHolder;
 
         public static void Load() {
             On.Celeste.OuiChapterPanel.Start += modChapterPanelStart;
@@ -41,10 +41,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
             // transfer the lobby info into the session that was just created.
             CollabModule.Instance.Session.LobbySID = temporaryLobbySIDHolder;
             CollabModule.Instance.Session.LobbyRoom = temporaryRoomHolder;
-            CollabModule.Instance.Session.LobbySpawnPoint = temporarySpawnPointHolder;
+            CollabModule.Instance.Session.LobbySpawnPointX = temporarySpawnPointHolder.X;
+            CollabModule.Instance.Session.LobbySpawnPointY = temporarySpawnPointHolder.Y;
             temporaryLobbySIDHolder = null;
             temporaryRoomHolder = null;
-            temporarySpawnPointHolder = null;
+            temporarySpawnPointHolder = Vector2.Zero;
         }
 
         private static void onCreatePauseMenuButtons(Level level, TextMenu menu, bool minimal) {
@@ -60,7 +61,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         Audio.BusStopAll("bus:/gameplay_sfx", immediate: true);
 
                         level.DoScreenWipe(wipeIn: false, () => {
-                            Engine.Scene = new LevelExitToLobby();
+                            Engine.Scene = new LevelExitToLobby(LevelExit.Mode.GiveUp, level.Session);
                         });
 
                         foreach (LevelEndingHook component in level.Tracker.GetComponents<LevelEndingHook>()) {
@@ -77,7 +78,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 // be sure to keep the lobby info in the session, even if we are resetting it.
                 temporaryLobbySIDHolder = CollabModule.Instance.Session.LobbySID;
                 temporaryRoomHolder = CollabModule.Instance.Session.LobbyRoom;
-                temporarySpawnPointHolder = CollabModule.Instance.Session.LobbySpawnPoint;
+                temporarySpawnPointHolder = new Vector2(CollabModule.Instance.Session.LobbySpawnPointX, CollabModule.Instance.Session.LobbySpawnPointY);
             }
             if (CollabModule.Instance.Session.LobbySID != null) {
                 // be sure that Return to Map and such from a collab entry returns to the lobby, not to the collab entry. 
