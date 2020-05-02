@@ -8,8 +8,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
-    [CustomEntity("CollabUtils2/CrystalHeartShard")]
-    class CrystalHeartShard : Entity {
+    [CustomEntity("CollabUtils2/MiniHeart")]
+    class MiniHeart : Entity {
         private static readonly int[] animationFrames = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 };
 
         private Sprite sprite;
@@ -30,7 +30,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         private HoldableCollider holdableCollider;
 
-        public CrystalHeartShard(EntityData data, Vector2 position, EntityID gid)
+        public MiniHeart(EntityData data, Vector2 position, EntityID gid)
             : base(data.Position + position) {
 
             spriteName = data.Attr("sprite");
@@ -111,10 +111,10 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private void OnPlayer(Player player) {
             Level level = Scene as Level;
             if (player.DashAttacking) {
-                // player broke the shard
+                // player broke the heart
                 Add(new Coroutine(SmashRoutine(player, level)));
             } else {
-                // player bounces on the shard
+                // player bounces on the heart
                 player.PointBounce(Center);
                 moveWiggler.Start();
                 scaleWiggler.Start();

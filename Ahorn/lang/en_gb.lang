@@ -4,5 +4,5 @@ placements.triggers.CollabUtils2/ChapterPanelTrigger.tooltips.map=The SID (strin
 # Journal Trigger
 placements.triggers.CollabUtils2/JournalTrigger.tooltips.levelset=The levelset for which the journal will be opened with the trigger.
 
-# Crystal Heart Shard
-placements.entities.CollabUtils2/CrystalHeartShard.tooltips.sprite=The sprite the heart shard should use.
+# Mini Heart
+placements.entities.CollabUtils2/MiniHeart.tooltips.sprite=The sprite the mini heart should use.
