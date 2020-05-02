@@ -10,6 +10,8 @@ using System.Collections.ObjectModel;
 namespace Celeste.Mod.CollabUtils2.Entities {
     [CustomEntity("CollabUtils2/CrystalHeartShard")]
     class CrystalHeartShard : Entity {
+        private static readonly int[] animationFrames = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 };
+
         private Sprite sprite;
         private Sprite white;
         private string spriteName;
@@ -58,9 +60,16 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             }
 
             Add(sprite = new Sprite(GFX.Game, spritePath));
-            sprite.AddLoop("idle", "", 0.08f);
+            sprite.AddLoop("idle", "", 0.1f, animationFrames);
             sprite.Play("idle");
             sprite.CenterOrigin();
+            sprite.OnLoop = anim => {
+                if (Visible) {
+                    Audio.Play("event:/game/general/crystalheart_pulse", Position);
+                    scaleWiggler.Start();
+                    (Scene as Level).Displacement.AddBurst(Position + sprite.Position, 0.35f, 4f, 24f, 0.25f);
+                }
+            };
 
 
             Color heartColor;
@@ -152,7 +161,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
             // overlap a white sprite
             Add(white = new Sprite(GFX.Game, "CollabUtils2/miniheart/white/white"));
-            white.AddLoop("idle", "", 0.08f);
+            white.AddLoop("idle", "", 0.1f, animationFrames);
             white.Play("idle");
             white.CenterOrigin();
 
