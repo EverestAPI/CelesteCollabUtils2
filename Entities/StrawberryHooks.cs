@@ -37,23 +37,43 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private static void modStrawberrySprite(ILContext il) {
             ILCursor cursor = new ILCursor(il);
 
-            // catch GFX.SpriteBank.Create("goldberry")
+            // catch the moment where the sprite is added to the entity
             if (cursor.TryGotoNext(
-                instr => instr.MatchLdsfld(typeof(GFX), "SpriteBank"),
-                instr => instr.MatchLdstr("goldberry"),
-                instr => instr.MatchCallvirt<SpriteBank>("Create"))) {
+                instr => instr.MatchLdarg(0),
+                instr => instr.MatchLdfld<Strawberry>("sprite"),
+                instr => instr.MatchCall<Entity>("Add"))) {
 
                 cursor.Index++;
-                Logger.Log("CollabUtils2/StrawberryHooks", $"Modding golden sprite at {cursor.Index} in IL for Strawberry.Added");
 
-                // we want to replace the vanilla sprite bank with the silver berry bank if the current berry is a silver one.
-                cursor.Emit(OpCodes.Ldarg_0);
-                cursor.EmitDelegate<Func<SpriteBank, Strawberry, SpriteBank>>((orig, self) => {
+                FieldReference strawberrySprite = cursor.Next.Operand as FieldReference;
+
+                // mod the sprite
+                Logger.Log("CollabUtils2/StrawberryHooks", $"Modding strawberry sprite at {cursor.Index} in IL for Strawberry.Added");
+
+                cursor.Emit(OpCodes.Ldarg_0); // for stfld
+                cursor.Index++;
+                cursor.Emit(OpCodes.Ldarg_0); // for the delegate call
+                cursor.EmitDelegate<Func<Sprite, Strawberry, Sprite>>((orig, self) => {
+                    // this method determines the strawberry sprite. "orig" is the original sprite, "self" is the strawberry.
                     if (self is SilverBerry) {
-                        return SilverBerry.SpriteBank;
+                        if (SaveData.Instance.CheckStrawberry(self.ID)) {
+                            // ghost rainbow = ghost golden
+                            return GFX.SpriteBank.Create("goldghostberry");
+                        }
+                        return SilverBerry.SpriteBank.Create("rainbowBerry");
+                    }
+                    if (self is RainbowBerry) {
+                        if (SaveData.Instance.CheckStrawberry(self.ID)) {
+                            // ghost rainbow = ghost golden
+                            return GFX.SpriteBank.Create("goldghostberry");
+                        }
+                        return RainbowBerry.SpriteBank.Create("rainbowBerry");
                     }
                     return orig;
                 });
+                cursor.Emit(OpCodes.Stfld, strawberrySprite);
+                cursor.Emit(OpCodes.Ldarg_0);
+                cursor.Emit(OpCodes.Ldfld, strawberrySprite);
             }
         }
 
@@ -70,6 +90,9 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 cursor.EmitDelegate<Func<string, Strawberry, string>>((orig, self) => {
                     if (self is SilverBerry) {
                         return "event:/SC2020_silverBerry_get";
+                    }
+                    if (self is RainbowBerry) {
+                        return "event:/SC2020_rainbowBerry_get";
                     }
                     return orig;
                 });

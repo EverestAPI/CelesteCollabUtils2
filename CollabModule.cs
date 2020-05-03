@@ -33,6 +33,7 @@ namespace Celeste.Mod.CollabUtils2 {
 
         public override void LoadContent(bool firstLoad) {
             SilverBerry.LoadContent();
+            RainbowBerry.LoadContent();
         }
 
         public override void LoadSession(int index, bool forceNew) {
@@ -41,6 +42,12 @@ namespace Celeste.Mod.CollabUtils2 {
             if (forceNew) {
                 ReturnToLobbyHelper.OnSessionCreated();
             }
+        }
+
+        public override void PrepareMapDataProcessors(MapDataFixup context) {
+            base.PrepareMapDataProcessors(context);
+
+            context.Add<CollabMapDataProcessor>();
         }
 
         private static bool OnLoadEntity(Level level, LevelData levelData, Vector2 offset, EntityData entityData) {
@@ -72,6 +79,5 @@ namespace Celeste.Mod.CollabUtils2 {
 
             return false;
         }
-
     }
 }

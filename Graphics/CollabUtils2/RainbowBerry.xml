@@ -1,8 +1,8 @@
 <Sprites>
-  <goldberry path="CollabUtils2/rainbowBerry/" start="idle">
+  <rainbowBerry path="CollabUtils2/rainbowBerry/" start="idle">
     <Center />
 
     <Loop id="idle" path="idle" delay=".08" frames="0-5,0-5,0-5,0-5,0-7" />
     <Anim id="collect" path="idle" delay=".07" frames="7-11"/>
-  </goldberry>
+  </rainbowBerry>
 </Sprites>
