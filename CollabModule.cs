@@ -1,4 +1,5 @@
-﻿using Celeste.Mod.CollabUtils2.Triggers;
+﻿using Celeste.Mod.CollabUtils2.Entities;
+using Celeste.Mod.CollabUtils2.Triggers;
 using Celeste.Mod.CollabUtils2.UI;
 using Microsoft.Xna.Framework;
 using System;
@@ -20,12 +21,18 @@ namespace Celeste.Mod.CollabUtils2 {
             Everest.Events.Level.OnLoadEntity += OnLoadEntity;
             InGameOverworldHelper.Load();
             ReturnToLobbyHelper.Load();
+            StrawberryHooks.Load();
         }
 
         public override void Unload() {
             Everest.Events.Level.OnLoadEntity -= OnLoadEntity;
             InGameOverworldHelper.Unload();
             ReturnToLobbyHelper.Unload();
+            StrawberryHooks.Unload();
+        }
+
+        public override void LoadContent(bool firstLoad) {
+            SilverBerry.LoadContent();
         }
 
         public override void LoadSession(int index, bool forceNew) {
