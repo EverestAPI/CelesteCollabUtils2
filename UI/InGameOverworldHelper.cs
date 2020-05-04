@@ -1,6 +1,4 @@
-﻿using Celeste.Mod.CollabUtils2.Entities;
-using Celeste.Mod.CollabUtils2.UI;
-using Celeste.Mod.Entities;
+﻿using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Mono.Cecil.Cil;
 using Monocle;
@@ -8,7 +6,6 @@ using MonoMod.Cil;
 using MonoMod.Utils;
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
