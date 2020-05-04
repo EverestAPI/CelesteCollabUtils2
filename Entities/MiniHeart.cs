@@ -102,6 +102,9 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             }
             if (collected) {
                 heartColor = Color.White * 0.8f;
+                shineParticle = new ParticleType(HeartGem.P_BlueShine) {
+                    Color = Calc.HexToColor("7589FF")
+                };
             }
             heartColor = Color.Lerp(heartColor, Color.White, 0.5f);
             Add(light = new VertexLight(heartColor, 1f, 32, 64));
@@ -224,7 +227,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 white.SetAnimationFrame(sprite.CurrentAnimationFrame);
             }
 
-            if (!collected && Scene.OnInterval(0.1f)) {
+            if (Visible && Scene.OnInterval(0.1f)) {
                 SceneAs<Level>().Particles.Emit(shineParticle, 1, Center + sprite.Position, Vector2.One * 4f);
             }
         }
