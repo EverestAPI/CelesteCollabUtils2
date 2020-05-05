@@ -1,4 +1,5 @@
-﻿using Celeste.Mod.CollabUtils2.Triggers;
+﻿using Celeste.Mod.CollabUtils2.Entities;
+using Celeste.Mod.CollabUtils2.Triggers;
 using Celeste.Mod.CollabUtils2.UI;
 using Microsoft.Xna.Framework;
 using System;
@@ -20,12 +21,14 @@ namespace Celeste.Mod.CollabUtils2 {
             Everest.Events.Level.OnLoadEntity += OnLoadEntity;
             InGameOverworldHelper.Load();
             ReturnToLobbyHelper.Load();
+            MiniHeartDoor.Load();
         }
 
         public override void Unload() {
             Everest.Events.Level.OnLoadEntity -= OnLoadEntity;
             InGameOverworldHelper.Unload();
             ReturnToLobbyHelper.Unload();
+            MiniHeartDoor.Unload();
         }
 
         public override void LoadSession(int index, bool forceNew) {

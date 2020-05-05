@@ -6,3 +6,9 @@ placements.triggers.CollabUtils2/JournalTrigger.tooltips.levelset=The levelset f
 
 # Mini Heart
 placements.entities.CollabUtils2/MiniHeart.tooltips.sprite=The sprite the mini heart should use.
+
+# Mini Heart Door
+placements.entities.CollabUtils2/MiniHeartDoor.tooltips.requires=Determines the number of Crystal Hearts required to open the heart door. Counts heart within the level set specified in the "Level Set" attribute.
+placements.entities.CollabUtils2/MiniHeartDoor.tooltips.startHidden=Whether the door should start hidden and come crashing down when the player approaches.\nWill destroy dash blocks as it crashes down.
+placements.entities.CollabUtils2/MiniHeartDoor.tooltips.levelSet=The heart door will be unlocked by collecting mini hearts in this level set.
+placements.entities.CollabUtils2/MiniHeartDoor.tooltips.color=The color of the door. Also supports hex color codes.
