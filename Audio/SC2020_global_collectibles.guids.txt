@@ -816,7 +816,8 @@
 {2dca99b6-dcf5-40e6-8cd1-c72f97d364cd} event:/ui/world_map/whoosh/900ms_back
 {21a98c43-8e79-4b8a-8963-a269735f3989} event:/ui/world_map/whoosh/900ms_forward
 {ea595d6d-cb07-4897-81cb-4830bf5823cb} event:/!!!_README_FIRST
-{e7308481-c432-4428-9ed3-477407bfff3f} event:/SC2020_heartShard_get_deprecated
+{825394c9-1703-4fb2-ad30-10d4239be598} event:/SC2020_heartShard_get
+{c776d4dd-f080-445a-84ab-f144f1c02e6c} event:/SC2020_heartShard_pulse
 {b5a27b8c-7b00-45c7-a856-81a90f77050a} event:/SC2020_Lobby_advanced
 {2fee4417-951a-42ee-86fe-13a8e55912b6} event:/SC2020_rainbowBerry_get
 {7ec12fef-9136-43af-9ed7-6e0498f378ca} event:/SC2020_silverBerry_death
@@ -824,7 +825,6 @@
 {51ff2e6b-42ec-4df0-9716-dc6adcd1c2ce} event:/SC2020_silverTimedBerry_death
 {4885ae25-1a01-47eb-9880-b9c0e3cbf1d2} event:/SC2020_timedBerry_death
 {b9b1d909-1ecb-4b85-bd96-0b0c81ee3157} event:/SC2020_timedBerry_get
-{825394c9-1703-4fb2-ad30-10d4239be598} event:/SC2020_heartShard_get
 {c7aad72f-9796-42d3-980b-d093fd765716} bus:/
 {aac396d1-a63f-418a-810a-5d5a59fb2c43} bus:/gameplay_sfx
 {2677ced7-94e4-44e2-9f5a-74aaeda5ab63} bus:/gameplay_sfx/ambience

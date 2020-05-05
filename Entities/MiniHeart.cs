@@ -65,7 +65,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             sprite.CenterOrigin();
             sprite.OnLoop = anim => {
                 if (Visible) {
-                    Audio.Play("event:/game/general/crystalheart_pulse", Position);
+                    Audio.Play("event:/SC2020_heartShard_pulse", Position);
                     scaleWiggler.Start();
                     (Scene as Level).Displacement.AddBurst(Position + sprite.Position, 0.35f, 4f, 24f, 0.25f);
                 }
