@@ -24,6 +24,7 @@ namespace Celeste.Mod.CollabUtils2 {
             Everest.Events.Level.OnLoadEntity += OnLoadEntity;
             InGameOverworldHelper.Load();
             ReturnToLobbyHelper.Load();
+            StrawberryHooks.Load();
             MiniHeartDoor.Load();
         }
 
@@ -31,7 +32,13 @@ namespace Celeste.Mod.CollabUtils2 {
             Everest.Events.Level.OnLoadEntity -= OnLoadEntity;
             InGameOverworldHelper.Unload();
             ReturnToLobbyHelper.Unload();
+            StrawberryHooks.Unload();
             MiniHeartDoor.Unload();
+        }
+
+        public override void LoadContent(bool firstLoad) {
+            SilverBerry.LoadContent();
+            RainbowBerry.LoadContent();
         }
 
         public override void LoadSession(int index, bool forceNew) {
@@ -39,7 +46,14 @@ namespace Celeste.Mod.CollabUtils2 {
 
             if (forceNew) {
                 ReturnToLobbyHelper.OnSessionCreated();
+                LobbyHelper.OnSessionCreated();
             }
+        }
+
+        public override void PrepareMapDataProcessors(MapDataFixup context) {
+            base.PrepareMapDataProcessors(context);
+
+            context.Add<CollabMapDataProcessor>();
         }
 
         private static bool OnLoadEntity(Level level, LevelData levelData, Vector2 offset, EntityData entityData) {
@@ -71,6 +85,5 @@ namespace Celeste.Mod.CollabUtils2 {
 
             return false;
         }
-
     }
 }
