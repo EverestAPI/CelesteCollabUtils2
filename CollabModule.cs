@@ -41,6 +41,7 @@ namespace Celeste.Mod.CollabUtils2 {
 
             if (forceNew) {
                 ReturnToLobbyHelper.OnSessionCreated();
+                LobbyHelper.OnSessionCreated();
             }
         }
 
