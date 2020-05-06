@@ -9,9 +9,11 @@ using MonoMod.Utils;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Security.Authentication.ExtendedProtection;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
     [CustomEntity("CollabUtils2/MiniHeartDoor")]
+    [Tracked]
     class MiniHeartDoor : HeartGemDoor {
         private static Hook hookOnHeartCount;
         private static ILHook hookOnDoorRoutine;
@@ -40,7 +42,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private delegate int orig_get_HeartGems(HeartGemDoor self);
 
         private static int getCollectedHeartGems(orig_get_HeartGems orig, HeartGemDoor self) {
-            if (!SaveData.Instance.CheatMode && self is MiniHeartDoor) {
+            if (self is MiniHeartDoor) {
                 return SaveData.Instance.GetLevelSetStatsFor((self as MiniHeartDoor).levelSet).TotalHeartGems;
             }
             return orig(self);
@@ -70,7 +72,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     if (self is MiniHeartDoor door) {
                         // actually check the Y poition of the player instead.
                         Player player = self.Scene.Tracker.GetEntity<Player>();
-                        if (player != null && player.Center.Y > door.Y - door.height && player.Center.Y < door.Y + door.height) {
+                        if (door.ForceTrigger || (player != null && player.Center.Y > door.Y - door.height && player.Center.Y < door.Y + door.height)) {
                             // player has same height as door => ok (return MaxValue so that the door is further right than the player)
                             return float.MaxValue;
                         } else {
@@ -113,8 +115,9 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             }
         }
 
-        private Solid topSolid;
-        private Solid bottomSolid;
+        public Solid TopSolid;
+        public Solid BottomSolid;
+
         private string levelSet;
         private string color;
         public bool ForceTrigger = false;
@@ -132,22 +135,41 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         }
 
         public override void Added(Scene scene) {
+            if (CollabModule.Instance.SaveData.OpenedMiniHeartDoors.Contains((scene as Level).Session.Area.GetSID())) {
+                // the gate was already opened on that save: open the door right away.
+                (scene as Level).Session.SetFlag("opened_heartgem_door_" + Requires);
+            }
+
             base.Added(scene);
 
             DynData<HeartGemDoor> self = new DynData<HeartGemDoor>(this);
-            topSolid = self.Get<Solid>("TopSolid");
-            bottomSolid = self.Get<Solid>("BotSolid");
+            TopSolid = self.Get<Solid>("TopSolid");
+            BottomSolid = self.Get<Solid>("BotSolid");
 
-            topSolid.Collider.Height = height;
-            bottomSolid.Collider.Height = height;
-            topSolid.Top = Y - height;
-            bottomSolid.Bottom = Y + height;
+            // resize the gate: it shouldn't take the whole screen height.
+            TopSolid.Collider.Height = height;
+            BottomSolid.Collider.Height = height;
+            TopSolid.Top = Y - height;
+            BottomSolid.Bottom = Y + height;
 
             if (Opened) {
+                // place the blocks correctly in an open position.
                 float openDistance = self.Get<float>("openDistance");
-                topSolid.Collider.Height -= openDistance;
-                bottomSolid.Collider.Height -= openDistance;
-                bottomSolid.Top += openDistance;
+                TopSolid.Collider.Height -= openDistance;
+                BottomSolid.Collider.Height -= openDistance;
+                BottomSolid.Top += openDistance;
+            }
+        }
+
+        public override void Awake(Scene scene) {
+            base.Awake(scene);
+
+            Player player = scene.Tracker.GetEntity<Player>();
+            if (!Opened && Requires <= HeartGems && player != null) {
+                // we got all hearts! trigger the cutscene.
+                scene.Add(new MiniHeartDoorUnlockCutscene(this, player));
+                // and save this progress.
+                CollabModule.Instance.SaveData.OpenedMiniHeartDoors.Add((Scene as Level).Session.Area.GetSID());
             }
         }
 
@@ -155,15 +177,15 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             base.Update();
 
             // make sure the two blocks don't escape their boundaries when the door opens up.
-            if (topSolid.Top != Y - height) {
+            if (TopSolid.Top != Y - height) {
                 // if the top block is at 12 instead of 16, and has height 30, make it height 26 instead.
-                float displacement = (Y - height) - topSolid.Top; // 20 - 16 = 4
-                topSolid.Collider.Height = height - displacement; // 30 - 4 = 26
-                topSolid.Top = Y - height; // replace the block at 16
+                float displacement = (Y - height) - TopSolid.Top; // 20 - 16 = 4
+                TopSolid.Collider.Height = height - displacement; // 30 - 4 = 26
+                TopSolid.Top = Y - height; // replace the block at 16
             }
-            if (bottomSolid.Bottom != Y + height) {
-                float displacement = bottomSolid.Top - Y;
-                bottomSolid.Collider.Height = height - displacement;
+            if (BottomSolid.Bottom != Y + height) {
+                float displacement = BottomSolid.Top - Y;
+                BottomSolid.Collider.Height = height - displacement;
             }
         }
     }

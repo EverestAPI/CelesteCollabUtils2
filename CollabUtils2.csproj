@@ -10,6 +10,9 @@
     <PackageReference Include="MonoMod.RuntimeDetour" Version="20.5.2.5" PrivateAssets="all" ExcludeAssets="runtime">
       <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
 

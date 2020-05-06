@@ -10,6 +10,9 @@ namespace Celeste.Mod.CollabUtils2 {
 
         public static CollabModule Instance;
 
+        public override Type SaveDataType => typeof(CollabSaveData);
+        public CollabSaveData SaveData => _SaveData as CollabSaveData;
+
         public override Type SessionType => typeof(CollabSession);
         public CollabSession Session => _Session as CollabSession;
 
