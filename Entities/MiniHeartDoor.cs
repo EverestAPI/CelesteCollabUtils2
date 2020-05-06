@@ -9,11 +9,9 @@ using MonoMod.Utils;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Security.Authentication.ExtendedProtection;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
     [CustomEntity("CollabUtils2/MiniHeartDoor")]
-    [Tracked]
     class MiniHeartDoor : HeartGemDoor {
         private static Hook hookOnHeartCount;
         private static ILHook hookOnDoorRoutine;

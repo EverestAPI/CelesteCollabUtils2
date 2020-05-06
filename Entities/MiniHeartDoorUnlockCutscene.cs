@@ -115,6 +115,14 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                         break;
                     }
                 }
+
+                // be sure to revive camera targets.
+                foreach (Trigger trigger in Scene.Tracker.GetEntities<CameraTargetTrigger>()) {
+                    trigger.Collidable = true;
+                }
+                foreach (Trigger trigger in Scene.Tracker.GetEntities<CameraAdvanceTargetTrigger>()) {
+                    trigger.Collidable = true;
+                }
             }
         }
     }
