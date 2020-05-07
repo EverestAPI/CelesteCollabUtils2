@@ -78,7 +78,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         private static void modStrawberrySound(ILContext il) {
             ILCursor cursor = new ILCursor(il);
-            FieldReference refToThis = findReferenceToThisInCoroutine(cursor);
+            FieldReference refToThis = HookHelper.FindReferenceToThisInCoroutine(cursor);
 
             if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("event:/game/general/strawberry_get"))) {
                 Logger.Log("CollabUtils2/StrawberryHooks", $"Modding golden sound at {cursor.Index} in IL for Strawberry.CollectRoutine");
@@ -111,7 +111,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         private static void modDeathSound(ILContext il) {
             ILCursor cursor = new ILCursor(il);
-            FieldReference refToThis = findReferenceToThisInCoroutine(cursor);
+            FieldReference refToThis = HookHelper.FindReferenceToThisInCoroutine(cursor);
 
             if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("event:/new_content/char/madeline/death_golden"))) {
                 Logger.Log("CollabUtils2/StrawberryHooks", $"Modding golden death sound at {cursor.Index} in IL for PlayerDeadBody.DeathRoutine");
@@ -126,14 +126,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     return orig;
                 });
             }
-        }
-
-        private static FieldReference findReferenceToThisInCoroutine(ILCursor cursor) {
-            // coroutines are cursed and references to "this" are actually references to this.<>4__this
-            cursor.GotoNext(instr => instr.OpCode == OpCodes.Ldfld && (instr.Operand as FieldReference).Name == "<>4__this");
-            FieldReference refToThis = cursor.Next.Operand as FieldReference;
-            cursor.Index = 0;
-            return refToThis;
         }
     }
 }

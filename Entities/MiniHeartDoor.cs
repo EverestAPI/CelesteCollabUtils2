@@ -50,20 +50,32 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private static void modDoorRoutine(ILContext il) {
             ILCursor cursor = new ILCursor(il);
 
-            FieldReference refToThis = null;
+            FieldReference refToThis = HookHelper.FindReferenceToThisInCoroutine(cursor);
 
             // find the "player is on the left side of the door" check
-            if (cursor.TryGotoNext(MoveType.After,
+            // FNA version
+            bool hookPointFound = cursor.TryGotoNext(MoveType.After,
                 instr => instr.MatchLdarg(0),
                 instr => instr.OpCode == OpCodes.Ldfld && (instr.Operand as FieldReference).Name.Contains("player"),
                 instr => instr.MatchCallvirt<Entity>("get_X"),
                 instr => instr.MatchLdarg(0),
                 instr => instr.OpCode == OpCodes.Ldfld && (instr.Operand as FieldReference).Name == "<>4__this",
-                instr => instr.MatchCallvirt<Entity>("get_X"))) {
+                instr => instr.MatchCallvirt<Entity>("get_X"));
 
+            if (!hookPointFound) {
+                cursor.Index = 0;
+
+                // XNA version
+                hookPointFound = cursor.TryGotoNext(MoveType.After,
+                    instr => instr.OpCode == OpCodes.Ldloc_S,
+                    instr => instr.MatchCallvirt<Entity>("get_X"),
+                    instr => instr.OpCode == OpCodes.Ldloc_1,
+                    instr => instr.MatchCallvirt<Entity>("get_X"));
+            }
+
+            if (hookPointFound) {
                 Logger.Log("CollabUtils2/MiniHeartDoor", $"Making mini heart door approachable from both sides at {cursor.Index} in IL for HeartGemDoor.Routine");
                 cursor.Index--;
-                refToThis = (cursor.Prev.Operand as FieldReference);
                 cursor.Emit(OpCodes.Dup);
                 cursor.Index++;
                 cursor.EmitDelegate<Func<HeartGemDoor, float, float>>((self, orig) => {
