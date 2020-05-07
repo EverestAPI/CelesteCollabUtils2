@@ -21,7 +21,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private static void modChapterPanelStart(On.Celeste.OuiChapterPanel.orig_Start orig, OuiChapterPanel self, string checkpoint) {
-            AreaData forceArea = self.Overworld == null ? null : new DynamicData(self.Overworld).Get<AreaData>("collabInGameForcedArea");
+            AreaData forceArea = self.Overworld == null ? null : new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea");
             if (forceArea != null) {
                 // current chapter panel is in-game: save the current map and room.
                 temporaryLobbySIDHolder = (Engine.Scene as Level)?.Session?.MapData?.Area.GetSID();
