@@ -6,12 +6,12 @@ using MonoMod.Cil;
 using MonoMod.Utils;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
 namespace Celeste.Mod.CollabUtils2.UI {
     public static class InGameOverworldHelper {
-
         public static bool IsOpen => overworldWrapper?.Scene == Engine.Scene;
 
         private static SceneWrappingEntity<Overworld> overworldWrapper;
@@ -25,6 +25,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
             .GetNestedType("Option", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
         private static readonly ConstructorInfo c_OuiChapterPanelOption = t_OuiChapterPanelOption
             .GetConstructor(Type.EmptyTypes);
+        private static MethodInfo m_PlayExpandSfx = typeof(OuiChapterPanel)
+            .GetMethod("PlayExpandSfx", BindingFlags.NonPublic | BindingFlags.Instance);
 
         public static void Load() {
             Everest.Events.Level.OnPause += OnPause;
@@ -75,7 +77,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private static void OnChapterPanelReset(On.Celeste.OuiChapterPanel.orig_Reset orig, OuiChapterPanel self) {
-            AreaData forceArea = self.Overworld == null ? null : new DynamicData(self.Overworld).Get<AreaData>("collabInGameForcedArea");
+            AreaData forceArea = self.Overworld == null ? null : new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea");
             if (forceArea == null) {
                 orig(self);
                 return;
@@ -88,17 +90,17 @@ namespace Celeste.Mod.CollabUtils2.UI {
             save.LastArea = forceArea.ToKey();
             save.CurrentSession = null;
 
-            dynamic ouiChapterSelect = new DynamicData(self.Overworld.GetUI<OuiChapterSelect>());
-            OuiChapterSelectIcon icon = ouiChapterSelect.icons[save.LastArea.ID];
+            DynData<OuiChapterSelect> ouiChapterSelect = new DynData<OuiChapterSelect>(self.Overworld.GetUI<OuiChapterSelect>());
+            OuiChapterSelectIcon icon = ouiChapterSelect.Get<List<OuiChapterSelectIcon>>("icons")[save.LastArea.ID];
             icon.SnapToSelected();
             icon.Add(new Coroutine(UpdateIconRoutine(self, icon)));
 
             orig(self);
 
-            dynamic data = new DynamicData(self);
-            data.hasCollabCredits = true;
+            DynData<OuiChapterPanel> data = new DynData<OuiChapterPanel>(self);
+            data["hasCollabCredits"] = true;
 
-            data.chapter = Dialog.Clean(new DynamicData(self.Overworld).Get<AreaData>("collabInGameForcedArea").Name + "_author");
+            data["chapter"] = Dialog.Clean(new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea").Name + "_author");
 
             /*
             (data.modes as IList).Add(
@@ -135,8 +137,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 return;
             }
 
-            dynamic data = new DynamicData(self);
-            bool selectingMode = data.selectingMode;
+            DynData<OuiChapterPanel> data = new DynData<OuiChapterPanel>(self);
+            bool selectingMode = data.Get<bool>("selectingMode");
             if ((int) self.Area.Mode >= 1 && selectingMode) {
                 return;
             }
@@ -146,29 +148,29 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 return;
             }
 
-            data.collabCredits = Dialog.Clean(new DynamicData(self.Overworld).Get<AreaData>("collabInGameForcedArea").Name + "_collabcredits");
+            data["collabCredits"] = Dialog.Clean(new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea").Name + "_collabcredits");
             self.Focused = false;
             self.Overworld.ShowInputUI = !selectingMode;
             self.Add(new Coroutine(ChapterPanelSwapRoutine(self, data)));
         }
 
-        private static IEnumerator ChapterPanelSwapRoutine(OuiChapterPanel self, dynamic data) {
-            float fromHeight = data.height;
+        private static IEnumerator ChapterPanelSwapRoutine(OuiChapterPanel self, DynData<OuiChapterPanel> data) {
+            float fromHeight = data.Get<float>("height");
             int toHeight = 730;
 
-            data.resizing = true;
-            data.PlayExpandSfx(fromHeight, (float) toHeight);
+            data["resizing"] = true;
+            m_PlayExpandSfx.Invoke(self, new object[] { fromHeight, (float) toHeight });
 
             float offset = 800f;
             for (float p = 0f; p < 1f; p += Engine.DeltaTime * 4f) {
                 yield return null;
-                data.contentOffset = new Vector2(440f + offset * Ease.CubeIn(p), data.contentOffset.Y);
-                data.height = MathHelper.Lerp(fromHeight, toHeight, Ease.CubeOut(p * 0.5f));
+                data["contentOffset"] = new Vector2(440f + offset * Ease.CubeIn(p), data.Get<Vector2>("contentOffset").Y);
+                data["height"] = MathHelper.Lerp(fromHeight, toHeight, Ease.CubeOut(p * 0.5f));
             }
 
-            data.selectingMode = false;
+            data["selectingMode"] = false;
 
-            IList checkpoints = data.checkpoints;
+            IList checkpoints = data.Get<IList>("checkpoints");
             checkpoints.Clear();
 
             checkpoints.Add(DynamicData.New(t_OuiChapterPanelOption)(new {
@@ -180,7 +182,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 Large = false
             }));
 
-            data.option = 0;
+            data["option"] = 0;
 
             for (int i = 0; i < checkpoints.Count; i++) {
                 new DynamicData(checkpoints[i]).Invoke("SlideTowards", i, checkpoints.Count, true);
@@ -189,18 +191,18 @@ namespace Celeste.Mod.CollabUtils2.UI {
             new DynamicData(checkpoints[0]).Set("Pop", 1f);
             for (float p = 0f; p < 1f; p += Engine.DeltaTime * 4f) {
                 yield return null;
-                data.height = MathHelper.Lerp(fromHeight, toHeight, Ease.CubeOut(Math.Min(1f, 0.5f + p * 0.5f)));
-                data.contentOffset = new Vector2(440f + offset * (1f - Ease.CubeOut(p)), data.contentOffset.Y);
+                data["height"] = MathHelper.Lerp(fromHeight, toHeight, Ease.CubeOut(Math.Min(1f, 0.5f + p * 0.5f)));
+                data["contentOffset"] = new Vector2(440f + offset * (1f - Ease.CubeOut(p)), data.Get<Vector2>("contentOffset").Y);
             }
 
-            data.contentOffset.X = 440f;
-            data.height = (float) toHeight;
+            data["contentOffset"] = new Vector2(440f, data.Get<Vector2>("contentOffset").Y);
+            data["height"] = (float) toHeight;
             self.Focused = true;
-            data.resizing = false;
+            data["resizing"] = false;
         }
 
         private static void OnChapterPanelDrawCheckpoint(On.Celeste.OuiChapterPanel.orig_DrawCheckpoint orig, OuiChapterPanel self, Vector2 center, object option, int checkpointIndex) {
-            string collabCredits = new DynamicData(self).Get<string>("collabCredits");
+            string collabCredits = new DynData<OuiChapterPanel>(self).Get<string>("collabCredits");
             if (collabCredits == null) {
                 orig(self, center, option, checkpointIndex);
                 return;
@@ -234,7 +236,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private static float moveAroundPanelHeader(float orig, OuiChapterPanel self) {
-            AreaData forceArea = self.Overworld == null ? null : new DynamicData(self.Overworld).Get<AreaData>("collabInGameForcedArea");
+            AreaData forceArea = self.Overworld == null ? null : new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea");
             if (forceArea != null) {
                 return orig == -18f ? -49f : 43f;
             } else {
@@ -246,7 +248,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             IEnumerator origc = orig(self, from);
 
             SaveData save = SaveData.Instance;
-            AreaData forceArea = new DynamicData(self.Overworld).Get<AreaData>("collabInGameForcedArea");
+            AreaData forceArea = new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea");
             if (forceArea != null) {
                 lastArea = save.LastArea;
                 save.LastArea = forceArea.ToKey();
@@ -308,7 +310,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             };
 
             level.Add(overworldWrapper);
-            new DynamicData(overworldWrapper.WrappedScene).Set("collabInGameForcedArea", area);
+            new DynData<Overworld>(overworldWrapper.WrappedScene).Set("collabInGameForcedArea", area);
 
             overworldWrapper.Add(new Coroutine(UpdateRoutine()));
         }
