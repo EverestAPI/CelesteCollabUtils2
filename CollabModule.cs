@@ -10,6 +10,9 @@ namespace Celeste.Mod.CollabUtils2 {
 
         public static CollabModule Instance;
 
+        public override Type SaveDataType => typeof(CollabSaveData);
+        public CollabSaveData SaveData => _SaveData as CollabSaveData;
+
         public override Type SessionType => typeof(CollabSession);
         public CollabSession Session => _Session as CollabSession;
 
@@ -22,6 +25,7 @@ namespace Celeste.Mod.CollabUtils2 {
             InGameOverworldHelper.Load();
             ReturnToLobbyHelper.Load();
             StrawberryHooks.Load();
+            MiniHeartDoor.Load();
         }
 
         public override void Unload() {
@@ -29,6 +33,7 @@ namespace Celeste.Mod.CollabUtils2 {
             InGameOverworldHelper.Unload();
             ReturnToLobbyHelper.Unload();
             StrawberryHooks.Unload();
+            MiniHeartDoor.Unload();
         }
 
         public override void LoadContent(bool firstLoad) {
