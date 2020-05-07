@@ -12,10 +12,6 @@
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="Microsoft.CSharp" />
-  </ItemGroup>
-
   <Choose>
     <When Condition="Exists('..\..\Celeste.exe')">
       <ItemGroup>
