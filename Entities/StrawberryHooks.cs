@@ -63,8 +63,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     }
                     if (self is RainbowBerry) {
                         if (SaveData.Instance.CheckStrawberry(self.ID)) {
-                            // ghost rainbow = ghost golden
-                            return GFX.SpriteBank.Create("goldghostberry");
+                            return RainbowBerry.SpriteBank.Create("ghostRainbowBerry");
                         }
                         return RainbowBerry.SpriteBank.Create("rainbowBerry");
                     }
