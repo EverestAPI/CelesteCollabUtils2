@@ -44,9 +44,9 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             yield return null;
 
             // the camera targets' OnLeave were called, now set our own target.
-            player.CameraAnchor = door.Center;
+            player.CameraAnchor = door.Center - new Vector2(160f - door.Size / 2, 90f);
             player.CameraAnchorLerp = Vector2.One;
-            
+
             // wait for the camera to reach its objective.
             Vector2 prevCameraPosition = level.Camera.Position;
             yield return null;
