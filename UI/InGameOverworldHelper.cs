@@ -1,4 +1,5 @@
-﻿using Celeste.Mod.Entities;
+﻿using Celeste.Mod.CollabUtils2.Triggers;
+using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Mono.Cecil.Cil;
 using Monocle;
@@ -274,15 +275,16 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
         }
 
-        public static void OpenChapterPanel(Player player, string sid) {
-            Open(player, AreaData.Get(sid) ?? AreaData.Get(0), out OuiHelper_EnterChapterPanel.Start);
+        public static void OpenChapterPanel(Player player, string sid, ChapterPanelTrigger.ReturnToLobbyMode returnToLobbyMode) {
+            Open(player, AreaData.Get(sid) ?? AreaData.Get(0), out OuiHelper_EnterChapterPanel.Start,
+                overworld => new DynData<Overworld>(overworld).Set("returnToLobbyMode", returnToLobbyMode));
         }
 
         public static void OpenJournal(Player player, string levelset) {
             Open(player, AreaData.Areas.FirstOrDefault(area => area.LevelSet == levelset) ?? AreaData.Get(0), out OuiHelper_EnterJournal.Start);
         }
 
-        public static void Open(Player player, AreaData area, out bool opened) {
+        public static void Open(Player player, AreaData area, out bool opened, Action<Overworld> callback = null) {
             opened = false;
 
             if (overworldWrapper?.Scene == Engine.Scene || player.StateMachine.State == Player.StDummy)
@@ -311,6 +313,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             level.Add(overworldWrapper);
             new DynData<Overworld>(overworldWrapper.WrappedScene).Set("collabInGameForcedArea", area);
+            callback?.Invoke(overworldWrapper.WrappedScene);
 
             overworldWrapper.Add(new Coroutine(UpdateRoutine()));
         }
