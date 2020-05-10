@@ -56,7 +56,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private static void OnPause(Level level, int startIndex, bool minimal, bool quickReset) {
-            Close(level, true, true);
+            if (overworldWrapper != null) {
+                Close(level, true, true);
+            }
         }
 
         private static bool OnSetMusic(On.Celeste.Audio.orig_SetMusic orig, string path, bool startPlaying, bool allowFadeOut) {
