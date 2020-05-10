@@ -16,3 +16,8 @@ placements.entities.CollabUtils2/MiniHeartDoor.tooltips.requires=Determines the 
 placements.entities.CollabUtils2/MiniHeartDoor.tooltips.startHidden=Whether the door should start hidden and come crashing down when the player approaches.\nWill destroy dash blocks as it crashes down.
 placements.entities.CollabUtils2/MiniHeartDoor.tooltips.levelSet=The heart door will be unlocked by collecting mini hearts in this level set.
 placements.entities.CollabUtils2/MiniHeartDoor.tooltips.color=The color of the door. Also supports hex color codes.
+
+# Map Swap Trigger
+placements.triggers.CollabUtils2/MapSwapTrigger.tooltips.map=The SID (string ID) of the map this trigger will teleport to.
+placements.triggers.CollabUtils2/MapSwapTrigger.tooltips.side=The side (A/B/C) this trigger will teleport to.
+placements.triggers.CollabUtils2/MapSwapTrigger.tooltips.room=The name of the room this trigger will teleport to.
