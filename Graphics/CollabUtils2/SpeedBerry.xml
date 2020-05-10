@@ -1,0 +1,15 @@
+<Sprites>
+  <speedBerry path="CollabUtils2/speedBerry/" start="idle">
+    <Center />
+
+    <Loop id="idle" path="normal" delay=".08" frames="0-5,0-5,0-5,0-5,0-6" />
+    <Anim id="collect" path="normal" delay=".07" frames="7-10"/>
+  </speedBerry>
+
+  <ghostSpeedBerry path="CollabUtils2/speedBerry/" start="idle">
+    <Center />
+
+    <Loop id="idle" path="ghost" delay=".08" frames="0-5,0-5,0-5,0-5,0-6" />
+    <Anim id="collect" path="ghost" delay=".07" frames="7-10"/>
+  </ghostSpeedBerry>
+</Sprites>
