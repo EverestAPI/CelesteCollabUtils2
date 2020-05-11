@@ -44,6 +44,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.OuiChapterPanel.UpdateStats += OnChapterPanelUpdateStats;
             IL.Celeste.OuiChapterPanel.Render += ModOuiChapterPanelEnter;
             IL.Celeste.DeathsCounter.Render += ModDeathsCounterRender;
+            IL.Celeste.StrawberriesCounter.Render += ModStrawberriesCounterRender;
+            On.Celeste.MapData.Load += ModMapDataLoad;
         }
 
         public static void Unload() {
@@ -59,6 +61,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.OuiChapterPanel.UpdateStats -= OnChapterPanelUpdateStats;
             IL.Celeste.OuiChapterPanel.Render -= ModOuiChapterPanelEnter;
             IL.Celeste.DeathsCounter.Render -= ModDeathsCounterRender;
+            IL.Celeste.StrawberriesCounter.Render -= ModStrawberriesCounterRender;
+            On.Celeste.MapData.Load -= ModMapDataLoad;
         }
 
         public static void LoadContent() {
@@ -243,17 +247,25 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(-2f) || instr.MatchLdcR4(-18f))) {
                 Logger.Log("CollabUtils2/InGameOverworldHelper", $"Modding chapter panel title position at {cursor.Index} in IL for OuiChapterPanel.Render");
-
-                cursor.Emit(OpCodes.Ldarg_0);
-                cursor.EmitDelegate<Func<float, OuiChapterPanel, float>>(moveAroundPanelHeader);
+                cursor.EmitDelegate<Func<float, float>>(orig => {
+                    if (Engine.Scene == overworldWrapper?.Scene) {
+                        return orig == -18f ? -49f : 43f;
+                    } else {
+                        return orig;
+                    }
+                });
             }
-        }
 
-        private static float moveAroundPanelHeader(float orig, OuiChapterPanel self) {
-            if (Engine.Scene == overworldWrapper?.Scene) {
-                return orig == -18f ? -49f : 43f;
-            } else {
-                return orig;
+            cursor.Index = 0;
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("areaselect/cardtop_golden") || instr.MatchLdstr("areaselect/card_golden"))) {
+                Logger.Log("CollabUtils2/InGameOverworldHelper", $"Modding chapter panel card at {cursor.Index} in IL for OuiChapterPanel.Render");
+
+                cursor.EmitDelegate<Func<string, string>>(orig => {
+                    if (Engine.Scene == overworldWrapper?.Scene) {
+                        return orig == "areaselect/cardtop_golden" ? "CollabUtils2/chapterCard/cardtop_silver" : "CollabUtils2/chapterCard/card_silver";
+                    }
+                    return orig;
+                });
             }
         }
 
@@ -287,9 +299,17 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 DeathsCounter deathsCounter = new DynData<OuiChapterPanel>(self).Get<DeathsCounter>("deaths");
                 deathsCounter.Visible = areaModeStats.Deaths > 0;
 
+                // mod the death icon
                 string pathToSkull = "CollabUtils2/skulls/" + self.Area.GetLevelSet();
                 if (GFX.Gui.Has(pathToSkull)) {
                     new DynData<DeathsCounter>(deathsCounter)["icon"] = GFX.Gui[pathToSkull];
+                }
+
+                // turn strawberry counter into golden if there is no berry in the map
+                if (AreaData.Get(self.Area).Mode[0].TotalStrawberries == 0) {
+                    StrawberriesCounter strawberriesCounter = new DynData<OuiChapterPanel>(self).Get<StrawberriesCounter>("strawberries");
+                    strawberriesCounter.Golden = true;
+                    strawberriesCounter.ShowOutOf = false;
                 }
             }
         }
@@ -307,6 +327,33 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     }
                     return orig;
                 });
+            }
+        }
+
+        private static void ModStrawberriesCounterRender(ILContext il) {
+            ILCursor cursor = new ILCursor(il);
+
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("collectables/goldberry"))) {
+                Logger.Log("CollabUtils2/InGameOverworldHelper", $"Changing strawberry icon w/ silver one at {cursor.Index} in IL for StrawberriesCounter.Render");
+                cursor.EmitDelegate<Func<string, string>>(orig => {
+                    if (Engine.Scene == overworldWrapper?.Scene) {
+                        return "CollabUtils2/silverberry";
+                    }
+                    return orig;
+                });
+            }
+        }
+
+        private static void ModMapDataLoad(On.Celeste.MapData.orig_Load orig, MapData self) {
+            orig(self);
+
+            // add the silver berries as golden berries in map data. This is what will make the chapter card golden.
+            foreach (LevelData level in self.Levels) {
+                foreach (EntityData entity in level.Entities) {
+                    if (entity.Name == "CollabUtils2/SilverBerry") {
+                        self.Goldenberries.Add(entity);
+                    }
+                }
             }
         }
 
