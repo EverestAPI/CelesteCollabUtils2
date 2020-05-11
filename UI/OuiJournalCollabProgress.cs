@@ -38,9 +38,28 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         .Add(new TextCell(Dialog.Clean(areaData.Name), new Vector2(1f, 0.5f), 0.6f, currentPage.TextColor))
                         .Add(null)
                         .Add(new IconCell(item.Modes[0].HeartGem ? heartTexture : "dot"))
-                        .Add(new TextCell(strawberryText, currentPage.TextJustify, 0.5f, currentPage.TextColor))
-                        .Add(new TextCell(Dialog.Deaths(item.Modes[0].Deaths), currentPage.TextJustify, 0.5f, currentPage.TextColor))
-                        .Add(new TextCell(Dialog.Deaths(item.Modes[0].BestDeaths), currentPage.TextJustify, 0.5f, currentPage.TextColor));
+                        .Add(new TextCell(strawberryText, currentPage.TextJustify, 0.5f, currentPage.TextColor));
+
+                    if (item.TotalTimePlayed > 0) {
+                        row.Add(new TextCell(Dialog.Deaths(item.Modes[0].Deaths), currentPage.TextJustify, 0.5f, currentPage.TextColor));
+                    } else {
+                        row.Add(new IconCell("dot"));
+                    }
+
+                    if (item.BestTotalTime > 0) {
+                        AreaStats stats = SaveData.Instance.GetAreaStatsFor(areaData.ToKey());
+                        if (CollabMapDataProcessor.SilverBerries.TryGetValue(areaData.GetLevelSet(), out Dictionary<string, EntityID> levelSetBerries)
+                            && levelSetBerries.TryGetValue(areaData.GetSID(), out EntityID berryID)
+                            && stats.Modes[0].Strawberries.Contains(berryID)) {
+
+                            // silver berry was obtained!
+                            row.Add(new IconCell("CollabUtils2/silver_strawberry"));
+                        } else {
+                            row.Add(new TextCell(Dialog.Deaths(item.Modes[0].BestDeaths), currentPage.TextJustify, 0.5f, currentPage.TextColor));
+                        }
+                    } else {
+                        row.Add(new IconCell("dot"));
+                    }
 
                     if (item.TotalTimePlayed > 0) {
                         row.Add(new TextCell(Dialog.Time(item.TotalTimePlayed), currentPage.TextJustify, 0.5f, currentPage.TextColor));
@@ -95,6 +114,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             : base(journal) {
 
             string skullTexture = MTN.Journal.Has("CollabUtils2Skulls/" + levelSet) ? "CollabUtils2Skulls/" + levelSet : "skullblue";
+            string minDeathsTexture = MTN.Journal.Has("CollabUtils2MinDeaths/" + levelSet) ? "CollabUtils2MinDeaths/" + levelSet : "CollabUtils2MinDeaths/SpringCollab2020/1-Beginner";
 
             PageTexture = "page";
             table = new Table()
@@ -103,7 +123,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 .AddColumn(new EmptyCell(64f))
                 .AddColumn(new IconCell("strawberry", 150f))
                 .AddColumn(new IconCell(skullTexture, 100f))
-                .AddColumn(new IconCell(skullTexture, 100f))
+                .AddColumn(new IconCell(minDeathsTexture, 100f))
                 .AddColumn(new IconCell("time", 220f))
                 .AddColumn(new IconCell("time", 220f));
         }
