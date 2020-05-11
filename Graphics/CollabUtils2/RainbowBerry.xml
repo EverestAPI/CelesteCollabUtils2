@@ -14,7 +14,7 @@
   </ghostRainbowBerry>
   
   <perfectAnimation path="CollabUtils2/perfectStrawberryText/" start="perfect">
-    <Justify x=".5" y=".6" />
+    <Justify x=".47" y=".6" />
     <Anim id="perfect" path="" delay=".1" frames="0-26"/>
   </perfectAnimation>
 </Sprites>
