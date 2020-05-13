@@ -1,5 +1,7 @@
-﻿using Microsoft.Xna.Framework;
+﻿using FMOD.Studio;
+using Microsoft.Xna.Framework;
 using Monocle;
+using MonoMod.Utils;
 using System.Collections;
 
 namespace Celeste.Mod.CollabUtils2.UI {
@@ -49,6 +51,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             session.StartedFromBeginning = false;
             session.Level = targetRoom;
             session.RespawnPoint = targetSpawnPoint;
+            new DynData<Session>(session)["pauseTimerUntilAction"] = true;
             LevelEnter.Go(session, false);
         }
     }
