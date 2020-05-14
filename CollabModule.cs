@@ -25,6 +25,7 @@ namespace Celeste.Mod.CollabUtils2 {
             ReturnToLobbyHelper.Load();
             StrawberryHooks.Load();
             MiniHeartDoor.Load();
+            LobbyHelper.Load();
         }
 
         public override void Unload() {
@@ -32,6 +33,7 @@ namespace Celeste.Mod.CollabUtils2 {
             ReturnToLobbyHelper.Unload();
             StrawberryHooks.Unload();
             MiniHeartDoor.Unload();
+            LobbyHelper.Unload();
         }
 
         public override void LoadContent(bool firstLoad) {
