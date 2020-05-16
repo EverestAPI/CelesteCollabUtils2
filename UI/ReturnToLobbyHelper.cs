@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Celeste.Mod.CollabUtils2.Triggers;
+using Microsoft.Xna.Framework;
 using Monocle;
 using MonoMod.Utils;
 
@@ -21,16 +22,27 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private static void modChapterPanelStart(On.Celeste.OuiChapterPanel.orig_Start orig, OuiChapterPanel self, string checkpoint) {
-            AreaData forceArea = self.Overworld == null ? null : new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea");
+            DynData<Overworld> data = new DynData<Overworld>(self.Overworld);
+            AreaData forceArea = self.Overworld == null ? null : data.Get<AreaData>("collabInGameForcedArea");
             if (forceArea != null) {
-                // current chapter panel is in-game: save the current map and room.
-                temporaryLobbySIDHolder = (Engine.Scene as Level)?.Session?.MapData?.Area.GetSID();
-                temporaryRoomHolder = (Engine.Scene as Level)?.Session?.LevelData?.Name;
+                // current chapter panel is in-game: set up Return to Lobby.
+                ChapterPanelTrigger.ReturnToLobbyMode returnToLobbyMode = data.Get<ChapterPanelTrigger.ReturnToLobbyMode>("returnToLobbyMode");
 
-                // and save the spawn point closest to the player.
-                Player player = Engine.Scene.Tracker.GetEntity<Player>();
-                if (player != null) {
-                    temporarySpawnPointHolder = (Engine.Scene as Level).GetSpawnPoint(player.Position);
+                if (returnToLobbyMode == ChapterPanelTrigger.ReturnToLobbyMode.DoNotChangeReturn) {
+                    // carry over current values.
+                    temporaryLobbySIDHolder = CollabModule.Instance.Session.LobbySID;
+                    temporaryRoomHolder = CollabModule.Instance.Session.LobbyRoom;
+                    temporarySpawnPointHolder = new Vector2(CollabModule.Instance.Session.LobbySpawnPointX, CollabModule.Instance.Session.LobbySpawnPointY);
+                } else if (returnToLobbyMode == ChapterPanelTrigger.ReturnToLobbyMode.SetReturnToHere) {
+                    // set the values to the current map, the current room, and the nearest spawn point.
+                    temporaryLobbySIDHolder = (Engine.Scene as Level)?.Session?.MapData?.Area.GetSID();
+                    temporaryRoomHolder = (Engine.Scene as Level)?.Session?.LevelData?.Name;
+
+                    // and save the spawn point closest to the player.
+                    Player player = Engine.Scene.Tracker.GetEntity<Player>();
+                    if (player != null) {
+                        temporarySpawnPointHolder = (Engine.Scene as Level).GetSpawnPoint(player.Position);
+                    }
                 }
             }
 

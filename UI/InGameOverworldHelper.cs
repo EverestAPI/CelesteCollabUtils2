@@ -1,4 +1,5 @@
-﻿using Celeste.Mod.Entities;
+﻿using Celeste.Mod.CollabUtils2.Triggers;
+using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Mono.Cecil.Cil;
 using Monocle;
@@ -15,6 +16,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
         public static bool IsOpen => overworldWrapper?.Scene == Engine.Scene;
 
         private static SceneWrappingEntity<Overworld> overworldWrapper;
+
+        private static SpriteBank heartSpriteBank;
 
         private static bool skipSetMusic;
         private static bool skipSetAmbience;
@@ -38,7 +41,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.OuiChapterPanel.Swap += OnChapterPanelSwap;
             On.Celeste.OuiChapterPanel.DrawCheckpoint += OnChapterPanelDrawCheckpoint;
             On.Celeste.OuiJournal.Enter += OnJournalEnter;
+            On.Celeste.OuiChapterPanel.UpdateStats += OnChapterPanelUpdateStats;
             IL.Celeste.OuiChapterPanel.Render += ModOuiChapterPanelEnter;
+            IL.Celeste.DeathsCounter.Render += ModDeathsCounterRender;
+            IL.Celeste.StrawberriesCounter.Render += ModStrawberriesCounterRender;
+            On.Celeste.MapData.Load += ModMapDataLoad;
         }
 
         public static void Unload() {
@@ -51,11 +58,21 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.OuiChapterPanel.Swap -= OnChapterPanelSwap;
             On.Celeste.OuiChapterPanel.DrawCheckpoint -= OnChapterPanelDrawCheckpoint;
             On.Celeste.OuiJournal.Enter -= OnJournalEnter;
+            On.Celeste.OuiChapterPanel.UpdateStats -= OnChapterPanelUpdateStats;
             IL.Celeste.OuiChapterPanel.Render -= ModOuiChapterPanelEnter;
+            IL.Celeste.DeathsCounter.Render -= ModDeathsCounterRender;
+            IL.Celeste.StrawberriesCounter.Render -= ModStrawberriesCounterRender;
+            On.Celeste.MapData.Load -= ModMapDataLoad;
+        }
+
+        public static void LoadContent() {
+            heartSpriteBank = new SpriteBank(GFX.Gui, "Graphics/CollabUtils2/CrystalHeartSwaps.xml");
         }
 
         private static void OnPause(Level level, int startIndex, bool minimal, bool quickReset) {
-            Close(level, true, true);
+            if (overworldWrapper != null) {
+                Close(level, true, true);
+            }
         }
 
         private static bool OnSetMusic(On.Celeste.Audio.orig_SetMusic orig, string path, bool startPlaying, bool allowFadeOut) {
@@ -125,7 +142,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private static int OnChapterPanelGetModeHeight(On.Celeste.OuiChapterPanel.orig_GetModeHeight orig, OuiChapterPanel self) {
-            if (Engine.Scene == overworldWrapper?.Scene && (int) self.Area.Mode >= 1)
+            AreaModeStats areaModeStats = self.RealStats.Modes[(int) self.Area.Mode];
+            if (Engine.Scene == overworldWrapper?.Scene && areaModeStats.Deaths > 0)
                 return 540;
 
             return orig(self);
@@ -229,18 +247,25 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(-2f) || instr.MatchLdcR4(-18f))) {
                 Logger.Log("CollabUtils2/InGameOverworldHelper", $"Modding chapter panel title position at {cursor.Index} in IL for OuiChapterPanel.Render");
-
-                cursor.Emit(OpCodes.Ldarg_0);
-                cursor.EmitDelegate<Func<float, OuiChapterPanel, float>>(moveAroundPanelHeader);
+                cursor.EmitDelegate<Func<float, float>>(orig => {
+                    if (Engine.Scene == overworldWrapper?.Scene) {
+                        return orig == -18f ? -49f : 43f;
+                    } else {
+                        return orig;
+                    }
+                });
             }
-        }
 
-        private static float moveAroundPanelHeader(float orig, OuiChapterPanel self) {
-            AreaData forceArea = self.Overworld == null ? null : new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea");
-            if (forceArea != null) {
-                return orig == -18f ? -49f : 43f;
-            } else {
-                return orig;
+            cursor.Index = 0;
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("areaselect/cardtop_golden") || instr.MatchLdstr("areaselect/card_golden"))) {
+                Logger.Log("CollabUtils2/InGameOverworldHelper", $"Modding chapter panel card at {cursor.Index} in IL for OuiChapterPanel.Render");
+
+                cursor.EmitDelegate<Func<string, string>>(orig => {
+                    if (Engine.Scene == overworldWrapper?.Scene) {
+                        return orig == "areaselect/cardtop_golden" ? "CollabUtils2/chapterCard/cardtop_silver" : "CollabUtils2/chapterCard/card_silver";
+                    }
+                    return orig;
+                });
             }
         }
 
@@ -263,6 +288,75 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
         }
 
+
+        private static void OnChapterPanelUpdateStats(On.Celeste.OuiChapterPanel.orig_UpdateStats orig, OuiChapterPanel self, bool wiggle,
+            bool? overrideStrawberryWiggle, bool? overrideDeathWiggle, bool? overrideHeartWiggle) {
+
+            orig(self, wiggle, overrideStrawberryWiggle, overrideDeathWiggle, overrideHeartWiggle);
+
+            if (Engine.Scene == overworldWrapper?.Scene) {
+                AreaModeStats areaModeStats = self.DisplayedStats.Modes[(int) self.Area.Mode];
+                DeathsCounter deathsCounter = new DynData<OuiChapterPanel>(self).Get<DeathsCounter>("deaths");
+                deathsCounter.Visible = areaModeStats.Deaths > 0;
+
+                // mod the death icon
+                string pathToSkull = "CollabUtils2/skulls/" + self.Area.GetLevelSet();
+                if (GFX.Gui.Has(pathToSkull)) {
+                    new DynData<DeathsCounter>(deathsCounter)["icon"] = GFX.Gui[pathToSkull];
+                }
+
+                // turn strawberry counter into golden if there is no berry in the map
+                if (AreaData.Get(self.Area).Mode[0].TotalStrawberries == 0) {
+                    StrawberriesCounter strawberriesCounter = new DynData<OuiChapterPanel>(self).Get<StrawberriesCounter>("strawberries");
+                    strawberriesCounter.Golden = true;
+                    strawberriesCounter.ShowOutOf = false;
+                }
+            }
+        }
+
+        private static void ModDeathsCounterRender(ILContext il) {
+            ILCursor cursor = new ILCursor(il);
+
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(62f))) {
+                Logger.Log("CollabUtils2/InGameOverworldHelper", $"Unhardcoding death icon width at {cursor.Index} in IL for DeathsCounter.Render");
+                cursor.Emit(OpCodes.Ldarg_0);
+                cursor.Emit(OpCodes.Ldfld, typeof(DeathsCounter).GetField("icon", BindingFlags.NonPublic | BindingFlags.Instance));
+                cursor.EmitDelegate<Func<float, MTexture, float>>((orig, icon) => {
+                    if (Engine.Scene == overworldWrapper?.Scene) {
+                        return icon.Width - 4; // vanilla icons are 66px wide.
+                    }
+                    return orig;
+                });
+            }
+        }
+
+        private static void ModStrawberriesCounterRender(ILContext il) {
+            ILCursor cursor = new ILCursor(il);
+
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("collectables/goldberry"))) {
+                Logger.Log("CollabUtils2/InGameOverworldHelper", $"Changing strawberry icon w/ silver one at {cursor.Index} in IL for StrawberriesCounter.Render");
+                cursor.EmitDelegate<Func<string, string>>(orig => {
+                    if (Engine.Scene == overworldWrapper?.Scene) {
+                        return "CollabUtils2/silverberry";
+                    }
+                    return orig;
+                });
+            }
+        }
+
+        private static void ModMapDataLoad(On.Celeste.MapData.orig_Load orig, MapData self) {
+            orig(self);
+
+            // add the silver berries as golden berries in map data. This is what will make the chapter card golden.
+            foreach (LevelData level in self.Levels) {
+                foreach (EntityData entity in level.Entities) {
+                    if (entity.Name == "CollabUtils2/SilverBerry") {
+                        self.Goldenberries.Add(entity);
+                    }
+                }
+            }
+        }
+
         private static IEnumerator UpdateIconRoutine(OuiChapterPanel panel, OuiChapterSelectIcon icon) {
             Overworld overworld = overworldWrapper?.WrappedScene;
             if (overworld == null)
@@ -274,15 +368,27 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
         }
 
-        public static void OpenChapterPanel(Player player, string sid) {
-            Open(player, AreaData.Get(sid) ?? AreaData.Get(0), out OuiHelper_EnterChapterPanel.Start);
+        public static void OpenChapterPanel(Player player, string sid, ChapterPanelTrigger.ReturnToLobbyMode returnToLobbyMode) {
+            Open(player, AreaData.Get(sid) ?? AreaData.Get(0), out OuiHelper_EnterChapterPanel.Start,
+                overworld => {
+                    new DynData<Overworld>(overworld).Set("returnToLobbyMode", returnToLobbyMode);
+                    OuiChapterPanel panel = overworld.GetUI<OuiChapterPanel>();
+
+                    // customize heart gem icon
+                    string animId = "crystalHeart_" + AreaData.Get(sid)?.GetLevelSet()?.DialogKeyify();
+                    if (heartSpriteBank.Has(animId)) {
+                        Sprite heartSprite = heartSpriteBank.Create(animId);
+                        new DynData<OuiChapterPanel>(panel).Get<HeartGemDisplay>("heart").Sprites[0] = heartSprite;
+                        heartSprite.Play("spin");
+                    }
+                });
         }
 
         public static void OpenJournal(Player player, string levelset) {
             Open(player, AreaData.Areas.FirstOrDefault(area => area.LevelSet == levelset) ?? AreaData.Get(0), out OuiHelper_EnterJournal.Start);
         }
 
-        public static void Open(Player player, AreaData area, out bool opened) {
+        public static void Open(Player player, AreaData area, out bool opened, Action<Overworld> callback = null) {
             opened = false;
 
             if (overworldWrapper?.Scene == Engine.Scene || player.StateMachine.State == Player.StDummy)
@@ -311,6 +417,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             level.Add(overworldWrapper);
             new DynData<Overworld>(overworldWrapper.WrappedScene).Set("collabInGameForcedArea", area);
+            callback?.Invoke(overworldWrapper.WrappedScene);
 
             overworldWrapper.Add(new Coroutine(UpdateRoutine()));
         }

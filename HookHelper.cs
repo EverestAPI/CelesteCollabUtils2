@@ -4,6 +4,7 @@ using MonoMod.RuntimeDetour;
 using System;
 using System.Reflection;
 using MonoMod.Utils;
+using Mono.Cecil.Cil;
 
 namespace Celeste.Mod.CollabUtils2 {
     static class HookHelper {
@@ -42,6 +43,14 @@ namespace Celeste.Mod.CollabUtils2 {
             }
 
             return null;
+        }
+
+        public static FieldReference FindReferenceToThisInCoroutine(ILCursor cursor) {
+            // coroutines are cursed and references to "this" are actually references to this.<>4__this
+            cursor.GotoNext(instr => instr.OpCode == OpCodes.Ldfld && (instr.Operand as FieldReference).Name == "<>4__this");
+            FieldReference refToThis = cursor.Next.Operand as FieldReference;
+            cursor.Index = 0;
+            return refToThis;
         }
     }
 }
