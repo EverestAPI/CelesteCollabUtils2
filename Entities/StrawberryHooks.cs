@@ -217,7 +217,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             SaveData self, AreaKey area, EntityID strawberry, bool golden) {
 
             if (CollabMapDataProcessor.SpeedBerries.ContainsKey(area.GetSID())) {
-                EntityID speedBerryID = CollabMapDataProcessor.SpeedBerries[area.GetSID()];
+                EntityID speedBerryID = CollabMapDataProcessor.SpeedBerries[area.GetSID()].ID;
                 if (speedBerryID.Level == strawberry.Level && speedBerryID.ID == strawberry.ID) {
                     // this is the speed berry! abort
                     return;

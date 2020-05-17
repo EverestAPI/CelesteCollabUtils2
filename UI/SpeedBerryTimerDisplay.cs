@@ -170,6 +170,18 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 Add(tween);
                 endChapterTimer = SceneAs<Level>().Session.Time;
                 wiggler.Start();
+
+                // save the PB if this was beaten.
+                long time = endChapterTimer - startChapterTimer;
+                bool newPB = true;
+                if (CollabModule.Instance.SaveData.SpeedBerryPBs.TryGetValue(SceneAs<Level>().Session.Area.GetSID(), out long pb)) {
+                    if (time > pb) {
+                        newPB = false;
+                    }
+                }
+                if (newPB) {
+                    CollabModule.Instance.SaveData.SpeedBerryPBs[SceneAs<Level>().Session.Area.GetSID()] = time;
+                }
             }
         }
 
