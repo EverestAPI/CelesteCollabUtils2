@@ -1,10 +1,17 @@
-﻿collabutils2_returntolobby= Return to Lobby
+﻿modname_collabutils2= Collab Utils 2
+modoptions_collab_title= Collab Utils 2
+
+collabutils2_returntolobby= Return to Lobby
 collabutils2_restartspeedberry= Restart Speed Berry
 
 collabutils2_speedberry_gold= Gold:
 collabutils2_speedberry_silver= Silver:
 collabutils2_speedberry_bronze= Bronze:
 collabutils2_speedberry_timeranout= Time ran out!
+
+modoptions_collab_speedberrytimerposition= Speed Berry Timer Position
+modoptions_collab_speedberrytimerposition_topleft= Top-Left
+modoptions_collab_speedberrytimerposition_topcenter= Top-Center
 
 # SHIP COLLAB-SPECIFIC DIALOG WITH THE COLLAB MOD, NOT THE COLLAB UTILS.
 
