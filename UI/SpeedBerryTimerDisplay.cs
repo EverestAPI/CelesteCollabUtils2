@@ -24,7 +24,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (hasSpeedBerryTimer && CollabModule.Instance.Settings.SpeedBerryTimerPosition == CollabSettings.SpeedBerryTimerPositions.TopLeft
                 && self.Visible) {
 
-                float expectedY = 246f;
+                float expectedY = 206f;
                 if (!self.SceneAs<Level>().TimerHidden) {
                     if (Settings.Instance.SpeedrunClock == SpeedrunType.Chapter) {
                         expectedY += 58f;
@@ -35,6 +35,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 self.Y = expectedY;
             }
         }
+
+        private const float targetTimeScale = 0.7f;
+        private const float lineSeparationFactor = 0.8f;
 
         public SpeedBerry TrackedBerry;
 
@@ -59,6 +62,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private Wiggler wiggler;
         private Tween tween;
+
+        private MTexture bg = GFX.Gui["CollabUtils2/extendedStrawberryCountBG"];
 
         private static Dictionary<string, Color> rankColors = new Dictionary<string, Color>() {
             { "Bronze", Calc.HexToColor("cd7f32") },
@@ -115,9 +120,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             // measure the ranks in the font for the current language.
             rankMeasurements = new Dictionary<string, Vector2>() {
-                { "Gold", ActiveFont.Measure(Dialog.Clean("collabutils2_speedberry_gold") + " ")},
-                { "Silver", ActiveFont.Measure(Dialog.Clean("collabutils2_speedberry_silver") + " ")},
-                { "Bronze", ActiveFont.Measure(Dialog.Clean("collabutils2_speedberry_bronze") + " ")}
+                { "Gold", ActiveFont.Measure(Dialog.Clean("collabutils2_speedberry_gold") + " ") * targetTimeScale},
+                { "Silver", ActiveFont.Measure(Dialog.Clean("collabutils2_speedberry_silver") + " ") * targetTimeScale},
+                { "Bronze", ActiveFont.Measure(Dialog.Clean("collabutils2_speedberry_bronze") + " ") * targetTimeScale}
             };
         }
 
@@ -134,17 +139,17 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
 
             if (CollabModule.Instance.Settings.SpeedBerryTimerPosition == CollabSettings.SpeedBerryTimerPositions.TopCenter) {
-                offscreenPosition = new Vector2(Engine.Width / 2f, -66f);
-                onscreenPosition = new Vector2(Engine.Width / 2f, 104f);
+                offscreenPosition = new Vector2(Engine.Width / 2f, -81f);
+                onscreenPosition = new Vector2(Engine.Width / 2f, 89f);
             } else if (Settings.Instance.SpeedrunClock == SpeedrunType.Off) {
                 offscreenPosition = new Vector2(-400f, 100f);
                 onscreenPosition = new Vector2(32f, 100f);
             } else if (Settings.Instance.SpeedrunClock == SpeedrunType.Chapter) {
+                offscreenPosition = new Vector2(-400f, 160f);
+                onscreenPosition = new Vector2(32f, 160f);
+            } else {
                 offscreenPosition = new Vector2(-400f, 180f);
                 onscreenPosition = new Vector2(32f, 180f);
-            } else {
-                offscreenPosition = new Vector2(-400f, 200f);
-                onscreenPosition = new Vector2(32f, 200f);
             }
             if (!tween.Active) {
                 Position = onscreenPosition;
@@ -198,45 +203,52 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 float scale = 1f + wiggler.Value * 0.15f;
 
                 Vector2 currentTimeSize = new Vector2(getTimeWidth(currentTimeString, scale), numberHeight);
-                Vector2 rankTimeSize = new Vector2(getTimeWidth(rankTimeString), numberHeight);
+                Vector2 rankTimeSize = new Vector2(getTimeWidth(rankTimeString), numberHeight) * targetTimeScale;
 
                 if (CollabModule.Instance.Settings.SpeedBerryTimerPosition == CollabSettings.SpeedBerryTimerPositions.TopCenter) {
-
                     // Current time
-                    drawTime(new Vector2(Position.X - (currentTimeSize.X / 2), Y), currentTimeString, rankColors[nextRankName], 1f + wiggler.Value * 0.15f, 1f);
-                    float fontOffset = Dialog.Language.Font.Face != "Renogare" ? -2f : 0f;
+                    drawTime(new Vector2(Position.X - (currentTimeSize.X / 2), Y + currentTimeSize.Y * lineSeparationFactor),
+                        currentTimeString, rankColors[nextRankName], 1f + wiggler.Value * 0.15f, 1f);
+                    float fontOffset = Dialog.Language.Font.Face != "Renogare" ? -2f * targetTimeScale : 0f;
 
                     if (nextRankName != "None") {
                         // draw next best rank time
                         Vector2 totalSize = rankTimeSize + rankMeasurements[nextRankName].X * Vector2.UnitX;
-                        drawTime(new Vector2(Position.X - (totalSize.X / 2) + rankMeasurements[nextRankName].X, Y + totalSize.Y),
-                            rankTimeString, rankColors[nextRankName], 1f, 1f);
+                        drawTime(new Vector2(Position.X - (totalSize.X / 2) + rankMeasurements[nextRankName].X, Y),
+                            rankTimeString, rankColors[nextRankName], targetTimeScale, 1f);
                         ActiveFont.DrawOutline(Dialog.Clean($"collabutils2_speedberry_{nextRankName}"),
-                            new Vector2(Position.X - (totalSize.X / 2), Y + totalSize.Y + fontOffset),
-                            new Vector2(0f, 1f), Vector2.One, rankColors[nextRankName], 2f, Color.Black);
+                            new Vector2(Position.X - (totalSize.X / 2), Y + fontOffset),
+                            new Vector2(0f, 1f), Vector2.One * targetTimeScale, rankColors[nextRankName], 2f, Color.Black);
                     } else {
                         // draw "time ran out!" text
                         ActiveFont.DrawOutline(Dialog.Clean($"collabutils2_speedberry_timeranout"),
-                            new Vector2(Position.X, Y + rankTimeSize.Y + fontOffset),
-                            new Vector2(0.5f, 1f), Vector2.One, rankColors[nextRankName], 2f, Color.Black);
+                            new Vector2(Position.X, Y + fontOffset),
+                            new Vector2(0.5f, 1f), Vector2.One * targetTimeScale, rankColors[nextRankName], 2f, Color.Black);
                     }
                 } else {
                     // Current time
-                    drawTime(new Vector2(Position.X, Y), currentTimeString, rankColors[nextRankName], 1f + wiggler.Value * 0.15f, 1f);
+                    bg.Draw(new Vector2(Position.X - 568 + currentTimeSize.X, Y + currentTimeSize.Y * lineSeparationFactor - 45));
+                    drawTime(new Vector2(Position.X, Y + currentTimeSize.Y * lineSeparationFactor),
+                        currentTimeString, rankColors[nextRankName], 1f + wiggler.Value * 0.15f, 1f);
+
                     float fontOffset = Dialog.Language.Font.Face != "Renogare" ? -2f : 0f;
 
                     if (nextRankName != "None") {
                         // draw next best rank time
-                        drawTime(new Vector2(Position.X + rankMeasurements[nextRankName].X, Y + currentTimeSize.Y),
-                            rankTimeString, rankColors[nextRankName], 1f, 1f);
+                        bg.Draw(new Vector2(Position.X - 392 + rankTimeSize.X + rankMeasurements[nextRankName].X, Y - 32), Vector2.Zero, Color.White, 0.7f);
+                        drawTime(new Vector2(Position.X + rankMeasurements[nextRankName].X + 3, Y),
+                            rankTimeString, rankColors[nextRankName], targetTimeScale, 1f);
                         ActiveFont.DrawOutline(Dialog.Clean($"collabutils2_speedberry_{nextRankName}"),
-                            new Vector2(Position.X, Y + currentTimeSize.Y + fontOffset),
-                            new Vector2(0f, 1f), Vector2.One, rankColors[nextRankName], 2f, Color.Black);
+                            new Vector2(Position.X + 3, Y + fontOffset),
+                            new Vector2(0f, 1f), Vector2.One * targetTimeScale, rankColors[nextRankName], 2f, Color.Black);
                     } else {
                         // draw "time ran out!" text
+                        bg.Draw(new Vector2(Position.X - 392 + ActiveFont.Measure(Dialog.Clean($"collabutils2_speedberry_timeranout")).X * targetTimeScale,
+                            Y - 32), Vector2.Zero, Color.White, 0.7f);
+
                         ActiveFont.DrawOutline(Dialog.Clean($"collabutils2_speedberry_timeranout"),
-                            new Vector2(Position.X, Y + currentTimeSize.Y + fontOffset),
-                            new Vector2(0f, 1f), Vector2.One, rankColors[nextRankName], 2f, Color.Black);
+                            new Vector2(Position.X + 3, Y + fontOffset),
+                            new Vector2(0f, 1f), Vector2.One * targetTimeScale, rankColors[nextRankName], 2f, Color.Black);
                     }
                 }
             }
