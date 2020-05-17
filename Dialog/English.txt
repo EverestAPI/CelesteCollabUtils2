@@ -1,5 +1,11 @@
-collabutils2_returntolobby= Return to Lobby
+﻿collabutils2_returntolobby= Return to Lobby
 collabutils2_restartspeedberry= Restart Speed Berry
+
+collabutils2_speedberry_gold= Gold:
+collabutils2_speedberry_silver= Silver:
+collabutils2_speedberry_bronze= Bronze:
+collabutils2_speedberry_timeranout= Time ran out!
+
 # SHIP COLLAB-SPECIFIC DIALOG WITH THE COLLAB MOD, NOT THE COLLAB UTILS.
 
 area_1_collabcredits= 
@@ -10,4 +16,4 @@ Music by Lena Raine
 Something Something
 Totally a collab map
 
-area_1_author= by max480
+area_1_author= by Matt Makes Games

@@ -9,6 +9,7 @@ namespace Celeste.Mod.CollabUtils2 {
         // the structure here is: SilverBerries[LevelSet][SID] = ID of the silver berry in that map.
         // so, to check if all silvers in a levelset have been unlocked, go through all entries in SilverBerries[levelset].
         public static Dictionary<string, Dictionary<string, EntityID>> SilverBerries = new Dictionary<string, Dictionary<string, EntityID>>();
+        public static Dictionary<string, EntityID> SpeedBerries = new Dictionary<string, EntityID>();
         private string levelName;
 
         public override Dictionary<string, Action<BinaryPacker.Element>> Init() {
@@ -30,6 +31,11 @@ namespace Celeste.Mod.CollabUtils2 {
                         }
                         allSilversInLevelSet[AreaKey.GetSID()] = new EntityID(levelName, silverBerry.AttrInt("id"));
                     }
+                },
+                {
+                    "entity:CollabUtils2/SpeedBerry", speedBerry => {
+                        SpeedBerries[AreaKey.GetSID()] = new EntityID(levelName, speedBerry.AttrInt("id"));
+                    }
                 }
             };
         }
@@ -38,6 +44,7 @@ namespace Celeste.Mod.CollabUtils2 {
             if (SilverBerries.ContainsKey(AreaKey.GetLevelSet())) {
                 SilverBerries[AreaKey.GetLevelSet()].Remove(AreaKey.GetSID());
             }
+            SpeedBerries.Remove(AreaKey.GetSID());
         }
 
         public override void End() {

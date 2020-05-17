@@ -28,6 +28,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             playerDeathRoutineHook = HookHelper.HookCoroutine("Celeste.PlayerDeadBody", "DeathRoutine", modDeathSound);
             Everest.Events.Level.OnCreatePauseMenuButtons += onCreatePauseMenuButtons;
             On.Celeste.Player.Added += Player_Added;
+            On.Celeste.SaveData.AddStrawberry_AreaKey_EntityID_bool += onSaveDataAddStrawberry;
         }
 
         public static void Unload() {
@@ -37,34 +38,32 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             playerDeathRoutineHook?.Dispose();
             Everest.Events.Level.OnCreatePauseMenuButtons -= onCreatePauseMenuButtons;
             On.Celeste.Player.Added -= Player_Added;
+            On.Celeste.SaveData.AddStrawberry_AreaKey_EntityID_bool -= onSaveDataAddStrawberry;
         }
 
         private static void Player_Added(On.Celeste.Player.orig_Added orig, Player self, Scene scene) {
             orig(self, scene);
             if (storedSpeedBerry != null) {
                 SpeedBerry berry;
-                if ((berry = scene.Tracker.GetEntity<SpeedBerry>()) != null) {
-                    // there's already a SpeedBerry in this room - the player died in the intro room, don't give them back the berry
-                    //berry.PauseUntilTransition = false;
-                } else {
+                if (scene.Tracker.CountEntities<SpeedBerry>() == 0) {
                     // create a new SpeedBerry in the current room
                     EntityData newData = storedSpeedBerry.EntityData;
                     Vector2 lastPos = newData.Position;
                     newData.Position = self.Position + new Vector2(8, -16);
                     scene.Add(berry = new SpeedBerry(newData, Vector2.Zero, storedSpeedBerry.ID));
                     newData.Position = lastPos;
-                    berry.CurrentTime = storedSpeedBerry.CurrentTime;
-                    berry.PauseUntilTransition = false;
-                    SpeedBerryTimerDisplay.Instance.TrackedBerry = berry;
+                    berry.TimerDisplay = storedSpeedBerry.TimerDisplay;
+                    berry.TimerDisplay.TrackedBerry = berry;
                     self.Leader.GainFollower(berry.Follower);
                     storedSpeedBerry.RemoveSelf();
+                } else {
+                    storedSpeedBerry.TimerDisplay?.RemoveSelf();
                 }
                 storedSpeedBerry = null;
             }
         }
 
-        private static void onCreatePauseMenuButtons(Level level, TextMenu menu, bool minimal) 
-        {
+        private static void onCreatePauseMenuButtons(Level level, TextMenu menu, bool minimal) {
             // create the Restart Speed Berry option at the bottom of the menu
             SpeedBerry berry;
             if ((berry = level.Tracker.GetEntity<SpeedBerry>()) != null && berry.Follower.HasLeader && !minimal) {
@@ -162,7 +161,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             SpeedBerry speedBerry = null;
             Follower speedBerryFollower = self.Leader.Followers.Find(follower => follower.Entity is SpeedBerry);
             if (speedBerryFollower != null) {
-                speedBerry = (SpeedBerry)speedBerryFollower.Entity;
+                speedBerry = (SpeedBerry) speedBerryFollower.Entity;
                 // Don't restart the player to the starting room if there's still time left on the speed berry
                 if (!speedBerry.TimeRanOut) {
                     DynData<Strawberry> data = new DynData<Strawberry>(speedBerry);
@@ -172,7 +171,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     data["start"] = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top)) + new Vector2(8, -16);
                 }
             }
-                
+
             PlayerDeadBody body = orig(self, direction, evenIfInvincible, registerDeathInStats);
 
             if (body != null) {
@@ -180,7 +179,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 data["hasSilver"] = hasSilver;
                 if (speedBerry != null) {
                     data["hasSpeedBerry"] = true;
-                    data["speedBerryTimeRanOut"] = speedBerry.TimeRanOut;
                     storedSpeedBerry = speedBerry;
                 }
             }
@@ -208,15 +206,25 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                         return "event:/SC2020_silverBerry_death";
                     }
                     if (hasSpeedBerry) {
-                        if (data.Get<bool>("speedBerryTimeRanOut")) {
-                            return "event:/SC2020_timedBerry_death";
-                        } else {
-                            return "event:/char/madeline/death";
-                        }
+                        return "event:/SC2020_timedBerry_death";
                     }
                     return orig;
                 });
             }
+        }
+
+        private static void onSaveDataAddStrawberry(On.Celeste.SaveData.orig_AddStrawberry_AreaKey_EntityID_bool orig,
+            SaveData self, AreaKey area, EntityID strawberry, bool golden) {
+
+            if (CollabMapDataProcessor.SpeedBerries.ContainsKey(area.GetSID())) {
+                EntityID speedBerryID = CollabMapDataProcessor.SpeedBerries[area.GetSID()];
+                if (speedBerryID.Level == strawberry.Level && speedBerryID.ID == strawberry.ID) {
+                    // this is the speed berry! abort
+                    return;
+                }
+            }
+
+            orig(self, area, strawberry, golden);
         }
     }
 }

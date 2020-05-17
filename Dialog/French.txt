@@ -1,1 +1,7 @@
 ﻿collabutils2_returntolobby= Retour au lobby
+collabutils2_restartspeedberry= Redémarrer la fraise speedrun
+
+collabutils2_speedberry_gold= Or :
+collabutils2_speedberry_silver= Argent :
+collabutils2_speedberry_bronze= Bronze :
+collabutils2_speedberry_timeranout= Temps écoulé !

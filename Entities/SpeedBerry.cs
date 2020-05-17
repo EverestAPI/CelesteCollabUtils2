@@ -1,4 +1,5 @@
-﻿using Celeste.Mod.CollabUtils2.UI;
+﻿using Celeste.Mod.CollabUtils2.Triggers;
+using Celeste.Mod.CollabUtils2.UI;
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -6,9 +7,6 @@ using MonoMod.Utils;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
 
@@ -16,62 +14,47 @@ namespace Celeste.Mod.CollabUtils2.Entities {
     /// A berry that requires you to go fast to collect it.
     /// </summary>
     [CustomEntity("CollabUtils2/SpeedBerry")]
-    [RegisterStrawberry(false, true)]
-    [Tracked(true)]
+    [Tracked]
     public class SpeedBerry : Strawberry {
 
         public static SpriteBank SpriteBank;
 
+        public EntityData EntityData;
         public float BronzeTime;
         public float SilverTime;
         public float GoldTime;
+        public bool TimeRanOut;
 
-        public float CurrentTime;
+        public SpeedBerryTimerDisplay TimerDisplay;
 
-        private Vector2 start;
-        private Vector2 nearestSpawn;
+        private bool transitioned = false;
 
-        /// <summary>
-        /// actually just pauses the timer completely
-        /// </summary>
-        public bool PauseUntilTransition;
-
-        public readonly EntityData EntityData;
-
-        public static void LoadContent() {
-            SpriteBank = new SpriteBank(GFX.Game, "Graphics/CollabUtils2/SpeedBerry.xml");
-        }
-
-        public SpeedBerry(EntityData data, Vector2 offset, EntityID id) : base(data, offset, id) {
-            new DynData<Strawberry>(this)["Golden"] = true;
-            BronzeTime = data.Float("bronzeTime", 15f);
-            SilverTime = data.Float("silverTime", 10f);
-            GoldTime = data.Float("goldTime", 5f);
-            PauseUntilTransition = data.Bool("pauseUntilTransition", true);
-            Follower.PersistentFollow = true;
-            EntityData = data;
-            startingRoom = data.Level.Name;
-            var listener = new TransitionListener() {
-                OnOutBegin = () => { PauseUntilTransition = false; SceneAs<Level>().Session.DoNotLoad.Add(ID); }
-            };
-            Add(listener);
-        }
-
-        private string startingRoom;
-
-        public static Dictionary<string, Color> RankColors = new Dictionary<string, Color>()
-        {
+        // TODO delete once definitive speedberry sprites are in place. they probably won't use tinting
+        private static Dictionary<string, Color> RankColors = new Dictionary<string, Color>() {
             { "Bronze", Calc.HexToColor("cd7f32") },
             { "Silver", Color.Silver },
             { "Gold", Color.Gold },
             { "None", Color.Transparent }
         };
 
-        public override void Added(Scene scene) {
-            base.Added(scene);
-            start = Position;
-            // The Speed Berry's gimmick needs to save information about the spawn point nearest its home location.
-            nearestSpawn = SceneAs<Level>().GetSpawnPoint(start);
+        public static void LoadContent() {
+            SpriteBank = new SpriteBank(GFX.Game, "Graphics/CollabUtils2/SpeedBerry.xml");
+        }
+
+        public SpeedBerry(EntityData data, Vector2 offset, EntityID id) : base(data, offset, id) {
+            EntityData = data;
+            new DynData<Strawberry>(this)["Golden"] = true;
+            BronzeTime = data.Float("bronzeTime", 15f);
+            SilverTime = data.Float("silverTime", 10f);
+            GoldTime = data.Float("goldTime", 5f);
+            Follower.PersistentFollow = true;
+            var listener = new TransitionListener() {
+                OnOutBegin = () => {
+                    SceneAs<Level>().Session.DoNotLoad.Add(ID);
+                    transitioned = true;
+                }
+            };
+            Add(listener);
         }
 
         public override void Awake(Scene scene) {
@@ -83,77 +66,56 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             }
             base.Awake(scene);
         }
-        
-        public string GetNextRank(out float nextRankTime) {
-            float currentTime = CurrentTime;
-            string nextRankName;
-            if (currentTime < GoldTime) {
-                nextRankTime = GoldTime;
-                nextRankName = "Gold";
-            } else if (currentTime < SilverTime) {
-                nextRankTime = SilverTime;
-                nextRankName = "Silver";
-            } else if (currentTime < BronzeTime) {
-                nextRankTime = BronzeTime;
-                nextRankName = "Bronze";
-            } else {
-                // time ran out
-                nextRankTime = 0;
-                nextRankName = "None";
-            }
-            return nextRankName;
-        }
 
         public override void Update() {
             Sprite sprite = Get<Sprite>();
-            SpeedBerryTimerDisplay timer = Scene.Tracker.GetEntity<SpeedBerryTimerDisplay>();
-            if (Follower.HasLeader) {
-                sprite.Color = RankColors[GetNextRank(out float n)];
-                SpeedBerryTimerDisplay.Enabled = true;
 
-                Player player = Follower.Leader.Entity as Player;
-                if (!PauseUntilTransition)
-                    CurrentTime += Engine.DeltaTime;
-                bool a = player.StrawberriesBlocked;
-                if (timer == null) {
-                    timer = new SpeedBerryTimerDisplay(this);
-                    SceneAs<Level>().Add(timer);
+            if (Follower.HasLeader) {
+                if (TimerDisplay == null) {
+                    TimerDisplay = new SpeedBerryTimerDisplay(this);
+                    SceneAs<Level>().Add(TimerDisplay);
                 }
-                timer.StopFading();
-            } else {
-                timer?.StartFading();
-                //base.Update();
+
+                if ((Follower.Leader.Entity as Player)?.CollideCheck<SpeedBerryCollectTrigger>() ?? false) {
+                    // collect the speed berry!
+                    TimerDisplay.EndTimer();
+                    OnCollect();
+                }
             }
-            if (BronzeTime < CurrentTime) {
-                // Time ran out
-                TimeRanOut = true;
+
+            if (TimerDisplay != null) {
+                sprite.Color = RankColors[TimerDisplay.GetNextRank(out _)];
+
+                if (BronzeTime < TimeSpan.FromTicks(TimerDisplay.GetSpentTime()).TotalSeconds) {
+                    // Time ran out
+                    TimeRanOut = true;
+                }
             }
+
             if (TimeRanOut) {
-                Dissolve();
+                dissolve();
             }
-            // If this Strawberry didn't block normal collection, we would check here to find out if we could collect it.
-            // However, since it CAN'T be collected normally, instead we'll check if the Player is overlapping a SpeedBerryCollectTrigger.
-            //if (Follower.Leader != null) {
-            //    Player player = Follower.Leader.Entity as Player;
-            //    if (player.CollideCheck<SpeedBerryCollectTrigger>()) {
-            //        OnCollect();
-            //    }
-            //}
+
+            if (transitioned) {
+                transitioned = false;
+                TimerDisplay?.StartTimer();
+            }
+
             base.Update();
         }
 
-        public void Dissolve() {
+        private void dissolve() {
             if (Follower.Leader != null) {
                 Player player = Follower.Leader.Entity as Player;
                 player.StrawberryCollectResetTimer = 2.5f;
-                Add(new Coroutine(DissolveRoutine(player), true));
+                Add(new Coroutine(dissolveRoutine(player), true));
             } else {
-                Add(new Coroutine(DissolveRoutine(null), true));
+                Add(new Coroutine(dissolveRoutine(null), true));
             }
 
         }
 
-        private IEnumerator DissolveRoutine(Player follower) {
+        private IEnumerator dissolveRoutine(Player follower) {
             Sprite sprite = Get<Sprite>();
             Level level = Scene as Level;
             Session session = level.Session;
@@ -176,7 +138,5 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             RemoveSelf();
             yield break;
         }
-
-        public bool TimeRanOut;
     }
 }
