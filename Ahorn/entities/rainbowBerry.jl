@@ -10,7 +10,7 @@ const placements = Ahorn.PlacementDict(
     )
 )
 
-const sprite = "CollabUtils2/rainbowBerry/00.png"
+const sprite = "CollabUtils2/rainbowBerry/rberry0030.png"
 
 function Ahorn.selection(entity::RainbowBerry)
     x, y = Ahorn.position(entity)
