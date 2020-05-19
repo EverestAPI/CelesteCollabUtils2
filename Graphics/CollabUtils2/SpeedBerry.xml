@@ -1,15 +1,17 @@
 <Sprites>
   <speedBerry path="CollabUtils2/speedBerry/" start="idle">
     <Center />
+	
+    <Anim id="idle" path="Idle_g" delay=".1" frames="9" goto="idle_gold"/>
 
-    <Loop id="idle" path="normal" delay=".08" frames="0-5,0-5,0-5,0-5,0-6" />
-    <Anim id="collect" path="normal" delay=".07" frames="7-10"/>
+    <Loop id="idle_bronze" path="Idle_b" delay=".1" frames="0-9" />
+    <Loop id="idle_silver" path="Idle_s" delay=".1" frames="0-9" />
+    <Loop id="idle_gold" path="Idle_g" delay=".1" frames="0-9" />
+	
+    <Anim id="transition_to_silver" path="transition_g" delay=".1" frames="0-2" goto="idle_silver"/>
+    <Anim id="transition_to_bronze" path="transition_s" delay=".1" frames="0-2" goto="idle_bronze"/>
+    <Anim id="explosion" path="transition_b" delay=".1" frames="0-11" goto="idle_bronze"/>
+	
+    <Anim id="collect" path="Idle_b" delay=".07" frames="5-9"/>
   </speedBerry>
-
-  <ghostSpeedBerry path="CollabUtils2/speedBerry/" start="idle">
-    <Center />
-
-    <Loop id="idle" path="ghost" delay=".08" frames="0-5,0-5,0-5,0-5,0-6" />
-    <Anim id="collect" path="ghost" delay=".07" frames="7-10"/>
-  </ghostSpeedBerry>
 </Sprites>

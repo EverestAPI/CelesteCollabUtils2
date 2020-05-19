@@ -25,17 +25,15 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         public float GoldTime;
         public bool TimeRanOut;
 
+        private static ParticleType P_OrigGoldGlow;
+        private static ParticleType P_SilverGlow;
+        private static ParticleType P_BronzeGlow;
+
         public SpeedBerryTimerDisplay TimerDisplay;
 
-        private bool transitioned = false;
+        private Sprite sprite;
 
-        // TODO delete once definitive speedberry sprites are in place. they probably won't use tinting
-        private static Dictionary<string, Color> RankColors = new Dictionary<string, Color>() {
-            { "Bronze", Calc.HexToColor("cd7f32") },
-            { "Silver", Color.Silver },
-            { "Gold", Color.Gold },
-            { "None", Color.Transparent }
-        };
+        private bool transitioned = false;
 
         public static void LoadContent() {
             SpriteBank = new SpriteBank(GFX.Game, "Graphics/CollabUtils2/SpeedBerry.xml");
@@ -55,6 +53,18 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 }
             };
             Add(listener);
+
+            if (P_SilverGlow == null) {
+                P_SilverGlow = new ParticleType(P_Glow) {
+                    Color = Calc.HexToColor("B3AF9F"),
+                    Color2 = Calc.HexToColor("E6DCB5")
+                };
+                P_BronzeGlow = new ParticleType(P_Glow) {
+                    Color = Calc.HexToColor("9A5B3C"),
+                    Color2 = Calc.HexToColor("ECAF66")
+                };
+                P_OrigGoldGlow = P_GoldGlow;
+            }
         }
 
         public override void Awake(Scene scene) {
@@ -65,6 +75,14 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 return;
             }
             base.Awake(scene);
+
+            sprite = new DynData<Strawberry>(this).Get<Sprite>("sprite");
+            if (TimerDisplay != null) {
+                string nextRank = TimerDisplay.GetNextRank(out _).ToLowerInvariant();
+                if (nextRank != "none") {
+                    sprite.Play("idle_" + nextRank);
+                }
+            }
         }
 
         public override void Update() {
@@ -84,11 +102,28 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             }
 
             if (TimerDisplay != null) {
-                sprite.Color = RankColors[TimerDisplay.GetNextRank(out _)];
-
                 if (BronzeTime < TimeSpan.FromTicks(TimerDisplay.GetSpentTime()).TotalSeconds) {
                     // Time ran out
                     TimeRanOut = true;
+                } else {
+                    string nextRank = TimerDisplay.GetNextRank(out float nextTime).ToLowerInvariant();
+                    // the berry is close to exploding, time is over in 1.2 seconds. Start the exploding animation
+                    if (nextRank == "bronze" && sprite.CurrentAnimationID != "explosion"
+                        && TimeSpan.FromTicks(TimerDisplay.GetSpentTime()).TotalMilliseconds + 1200 > nextTime * 1000) {
+
+                        sprite.Play("explosion");
+                    }
+
+                    // the current animation does not match the expected animation.
+                    if (sprite.CurrentAnimationID != "explosion" && !sprite.CurrentAnimationID.Contains(nextRank)) {
+                        sprite.Play("transition_to_" + nextRank);
+                    }
+
+                    if (nextRank == "bronze") {
+                        P_GoldGlow = P_BronzeGlow;
+                    } else if (nextRank == "silver") {
+                        P_GoldGlow = P_SilverGlow;
+                    }
                 }
             }
 
@@ -102,6 +137,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             }
 
             base.Update();
+
+            P_GoldGlow = P_OrigGoldGlow;
         }
 
         private void dissolve() {
@@ -121,7 +158,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             Session session = level.Session;
             session.DoNotLoad.Remove(ID);
             Collidable = false;
-            sprite.Scale = Vector2.One * 0.5f;
+            // sprite.Scale = Vector2.One * 0.5f;
             if (follower != null) {
                 foreach (Player player in Scene.Tracker.GetEntities<Player>()) {
                     player.Die(Vector2.Zero, true, true);
@@ -129,11 +166,12 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             }
             yield return 0.05f;
             Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
-            for (int i = 0; i < 6; i++) {
+            /* for (int i = 0; i < 6; i++) {
                 float dir = Calc.Random.NextFloat(6.28318548f);
                 level.ParticlesFG.Emit(StrawberrySeed.P_Burst, 1, Position + Calc.AngleToVector(dir, 4f), Vector2.Zero, dir);
-            }
-            sprite.Scale = Vector2.Zero;
+            } */
+            SceneAs<Level>().Displacement.AddBurst(Position, 0.5f, 8f, 100f);
+            // sprite.Scale = Vector2.Zero;
             Visible = false;
             RemoveSelf();
             yield break;
