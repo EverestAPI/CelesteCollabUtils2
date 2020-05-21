@@ -99,6 +99,14 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     TimerDisplay.EndTimer();
                     OnCollect();
                 }
+
+                // show a message about customizing the speed berry timer position when grabbing it for the first time in the save.
+                Player player = Scene.Tracker.GetEntity<Player>();
+                if (player != null && !CollabModule.Instance.SaveData.SpeedberryOptionMessageShown) {
+
+                    CollabModule.Instance.SaveData.SpeedberryOptionMessageShown = true;
+                    Scene.Add(new DialogCutscene("collabutils2_speedberry_optionmessage", player, false));
+                }
             }
 
             if (TimerDisplay != null) {

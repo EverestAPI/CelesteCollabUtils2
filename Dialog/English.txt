@@ -9,6 +9,9 @@ collabutils2_speedberry_silver= Silver:
 collabutils2_speedberry_bronze= Bronze:
 collabutils2_speedberry_timeranout= Time ran out!
 
+collabutils2_speedberry_optionmessage=
+	You can change the speedberry timer position in {# 9B3FB5}Mod Options{#}.
+
 modoptions_collab_speedberrytimerposition= Speed Berry Timer Position
 modoptions_collab_speedberrytimerposition_topleft= Top-Left
 modoptions_collab_speedberrytimerposition_topcenter= Top-Center

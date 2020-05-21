@@ -9,6 +9,9 @@ collabutils2_speedberry_silver= Argent :
 collabutils2_speedberry_bronze= Bronze :
 collabutils2_speedberry_timeranout= Temps écoulé !
 
+collabutils2_speedberry_optionmessage=
+	Tu peux changer la position du chrono des fraises speedrun dans les {# 9B3FB5}options des mods{#}.
+
 modoptions_collab_speedberrytimerposition= Position du chrono des fraises speedrun
 modoptions_collab_speedberrytimerposition_topleft= En haut à gauche
 modoptions_collab_speedberrytimerposition_topcenter= Centré en haut

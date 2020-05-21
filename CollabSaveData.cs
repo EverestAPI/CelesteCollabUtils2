@@ -7,5 +7,8 @@ namespace Celeste.Mod.CollabUtils2 {
 
         // PBs for the speed berries, by map SID
         public Dictionary<string, long> SpeedBerryPBs { get; set; } = new Dictionary<string, long>();
+
+        // flag used to show the "you can change the speed berry timer position in Mod Options" message only once per save
+        public bool SpeedberryOptionMessageShown { get; set; } = false;
     }
 }
