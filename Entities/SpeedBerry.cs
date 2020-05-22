@@ -34,6 +34,11 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private Sprite sprite;
 
         private bool transitioned = false;
+        private bool collected = false;
+
+        private Vector2 transitionStart;
+        private Vector2 transitionTarget;
+        private bool forcePositionToTransitionTarget;
 
         public static void LoadContent() {
             SpriteBank = new SpriteBank(GFX.Game, "Graphics/CollabUtils2/SpeedBerry.xml");
@@ -50,6 +55,18 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 OnOutBegin = () => {
                     SceneAs<Level>().Session.DoNotLoad.Add(ID);
                     transitioned = true;
+                    transitionStart = Position;
+                    transitionTarget = new Vector2(
+                        Calc.Clamp(transitionStart.X, SceneAs<Level>().Bounds.Left + 8f, SceneAs<Level>().Bounds.Right - 8f),
+                        Calc.Clamp(transitionStart.Y, SceneAs<Level>().Bounds.Top + 8f, SceneAs<Level>().Bounds.Bottom - 8f));
+                },
+                OnOut = percent => {
+                    if (SceneAs<Level>().Tracker.GetEntity<Player>()?.CollideCheck<SpeedBerryCollectTrigger>() ?? false) {
+                        // as soon as the transition is over, the berry will be collected, so be sure to drag it on the new screen
+                        // so that the player actually sees it collect.
+                        Position = Vector2.Lerp(transitionStart, transitionTarget, Ease.SineOut(percent));
+                        forcePositionToTransitionTarget = true;
+                    }
                 }
             };
             Add(listener);
@@ -94,25 +111,23 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     SceneAs<Level>().Add(TimerDisplay);
                 }
 
-                if ((Follower.Leader.Entity as Player)?.CollideCheck<SpeedBerryCollectTrigger>() ?? false) {
-                    // collect the speed berry!
-                    TimerDisplay.EndTimer();
-                    OnCollect();
-                }
-
                 // show a message about customizing the speed berry timer position when grabbing it for the first time in the save.
                 Player player = Scene.Tracker.GetEntity<Player>();
                 if (player != null && !CollabModule.Instance.SaveData.SpeedberryOptionMessageShown) {
-
                     CollabModule.Instance.SaveData.SpeedberryOptionMessageShown = true;
                     Scene.Add(new DialogCutscene("collabutils2_speedberry_optionmessage", player, false));
                 }
             }
 
-            if (TimerDisplay != null) {
+            if (TimerDisplay != null && !collected) {
                 if (BronzeTime < TimeSpan.FromTicks(TimerDisplay.GetSpentTime()).TotalSeconds) {
                     // Time ran out
                     TimeRanOut = true;
+                } else if ((Follower.Leader?.Entity as Player)?.CollideCheck<SpeedBerryCollectTrigger>() ?? false) {
+                    // collect the speed berry!
+                    TimerDisplay.EndTimer();
+                    OnCollect();
+                    collected = true;
                 } else {
                     string nextRank = TimerDisplay.GetNextRank(out float nextTime).ToLowerInvariant();
                     // the berry is close to exploding, time is over in 1.2 seconds. Start the exploding animation
@@ -147,6 +162,10 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             base.Update();
 
             P_GoldGlow = P_OrigGoldGlow;
+
+            if (forcePositionToTransitionTarget) {
+                Position = transitionTarget;
+            }
         }
 
         private void dissolve() {
