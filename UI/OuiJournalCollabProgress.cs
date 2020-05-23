@@ -1,11 +1,32 @@
 ﻿using Microsoft.Xna.Framework;
 using Monocle;
+using System;
 using System.Collections.Generic;
 
 namespace Celeste.Mod.CollabUtils2.UI {
     class OuiJournalCollabProgress : OuiJournalPage {
 
         private Table table;
+
+        private static Color getRankColor(CollabMapDataProcessor.SpeedBerryInfo speedBerryInfo, long pb) {
+            float pbSeconds = (float) TimeSpan.FromTicks(pb).TotalSeconds;
+            if (pbSeconds < speedBerryInfo.Gold) {
+                return Color.Goldenrod;
+            } else if (pbSeconds < speedBerryInfo.Silver) {
+                return Color.Gray;
+            }
+            return Calc.HexToColor("cd7f32");
+        }
+
+        private static string getRankIcon(CollabMapDataProcessor.SpeedBerryInfo speedBerryInfo, long pb) {
+            float pbSeconds = (float) TimeSpan.FromTicks(pb).TotalSeconds;
+            if (pbSeconds < speedBerryInfo.Gold) {
+                return "CollabUtils2/speed_berry_gold";
+            } else if (pbSeconds < speedBerryInfo.Silver) {
+                return "CollabUtils2/speed_berry_silver";
+            }
+            return "CollabUtils2/speed_berry_bronze";
+        }
 
         public static List<OuiJournalCollabProgress> GeneratePages(OuiJournal journal, string levelSet) {
             List<OuiJournalCollabProgress> pages = new List<OuiJournalCollabProgress>();
@@ -46,7 +67,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         row.Add(new IconCell("dot"));
                     }
 
-                    if (item.BestTotalTime > 0) {
+                    if (item.Modes[0].SingleRunCompleted) {
                         AreaStats stats = SaveData.Instance.GetAreaStatsFor(areaData.ToKey());
                         if (CollabMapDataProcessor.SilverBerries.TryGetValue(areaData.GetLevelSet(), out Dictionary<string, EntityID> levelSetBerries)
                             && levelSetBerries.TryGetValue(areaData.GetSID(), out EntityID berryID)
@@ -67,17 +88,20 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         row.Add(new IconCell("dot"));
                     }
 
-                    if (item.BestTotalTime > 0) {
-                        row.Add(new TextCell(Dialog.Time(item.BestTotalTime), currentPage.TextJustify, 0.5f, currentPage.TextColor));
+                    if (CollabMapDataProcessor.SpeedBerries.TryGetValue(item.GetSID(), out CollabMapDataProcessor.SpeedBerryInfo speedBerryInfo)
+                        && CollabModule.Instance.SaveData.SpeedBerryPBs.TryGetValue(item.GetSID(), out long speedBerryPB)) {
+
+                        row.Add(new TextCell(Dialog.Time(speedBerryPB), currentPage.TextJustify, 0.5f, getRankColor(speedBerryInfo, speedBerryPB)));
+                        row.Add(new IconCell(getRankIcon(speedBerryInfo, speedBerryPB)));
+                        sumOfBestTimes += speedBerryPB;
                     } else {
-                        row.Add(new IconCell("dot"));
+                        row.Add(new IconCell("dot")).Add(null);
                     }
 
                     totalStrawberries += item.TotalStrawberries;
                     totalDeaths += item.Modes[0].Deaths;
                     sumOfBestDeaths += item.Modes[0].BestDeaths;
                     totalTime += item.TotalTimePlayed;
-                    sumOfBestTimes += item.BestTotalTime;
 
                     rowCount++;
                     if (rowCount > 11) {
@@ -98,7 +122,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     .Add(new TextCell(Dialog.Deaths(totalDeaths), currentPage.TextJustify, 0.6f, currentPage.TextColor))
                     .Add(new TextCell(Dialog.Deaths(sumOfBestDeaths), currentPage.TextJustify, 0.6f, currentPage.TextColor))
                     .Add(new TextCell(Dialog.Time(totalTime), currentPage.TextJustify, 0.6f, currentPage.TextColor))
-                    .Add(new TextCell(Dialog.Time(sumOfBestTimes), currentPage.TextJustify, 0.6f, currentPage.TextColor));
+                    .Add(new TextCell(Dialog.Time(sumOfBestTimes), currentPage.TextJustify, 0.6f, currentPage.TextColor)).Add(null);
 
                 for (int l = 1; l < SaveData.Instance.UnlockedModes; l++) {
                     totalsRow.Add(null);
@@ -118,14 +142,15 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             PageTexture = "page";
             table = new Table()
-                .AddColumn(new TextCell(Dialog.Clean("journal_progress"), new Vector2(0f, 0.5f), 1f, Color.Black * 0.7f, 450f))
+                .AddColumn(new TextCell(Dialog.Clean("journal_progress"), new Vector2(0f, 0.5f), 1f, Color.Black * 0.7f, 420f))
                 .AddColumn(new EmptyCell(20f))
                 .AddColumn(new EmptyCell(64f))
                 .AddColumn(new IconCell("strawberry", 150f))
                 .AddColumn(new IconCell(skullTexture, 100f))
                 .AddColumn(new IconCell(minDeathsTexture, 100f))
                 .AddColumn(new IconCell("time", 220f))
-                .AddColumn(new IconCell("time", 220f));
+                .AddColumn(new IconCell("CollabUtils2/speed_berry_pbs_heading", 220f))
+                .AddColumn(new EmptyCell(30f));
         }
 
         public override void Redraw(VirtualRenderTarget buffer) {

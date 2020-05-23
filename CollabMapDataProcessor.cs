@@ -6,9 +6,17 @@ using System.Threading.Tasks;
 
 namespace Celeste.Mod.CollabUtils2 {
     class CollabMapDataProcessor : EverestMapDataProcessor {
+        public struct SpeedBerryInfo {
+            public EntityID ID;
+            public int Gold;
+            public int Silver;
+            public int Bronze;
+        }
+
         // the structure here is: SilverBerries[LevelSet][SID] = ID of the silver berry in that map.
         // so, to check if all silvers in a levelset have been unlocked, go through all entries in SilverBerries[levelset].
         public static Dictionary<string, Dictionary<string, EntityID>> SilverBerries = new Dictionary<string, Dictionary<string, EntityID>>();
+        public static Dictionary<string, SpeedBerryInfo> SpeedBerries = new Dictionary<string, SpeedBerryInfo>();
         private string levelName;
 
         public override Dictionary<string, Action<BinaryPacker.Element>> Init() {
@@ -30,6 +38,16 @@ namespace Celeste.Mod.CollabUtils2 {
                         }
                         allSilversInLevelSet[AreaKey.GetSID()] = new EntityID(levelName, silverBerry.AttrInt("id"));
                     }
+                },
+                {
+                    "entity:CollabUtils2/SpeedBerry", speedBerry => {
+                        SpeedBerries[AreaKey.GetSID()] = new SpeedBerryInfo() {
+                            ID = new EntityID(levelName, speedBerry.AttrInt("id")),
+                            Gold = speedBerry.AttrInt("goldTime"),
+                            Silver = speedBerry.AttrInt("silverTime"),
+                            Bronze = speedBerry.AttrInt("bronzeTime")
+                        };
+                    }
                 }
             };
         }
@@ -38,6 +56,7 @@ namespace Celeste.Mod.CollabUtils2 {
             if (SilverBerries.ContainsKey(AreaKey.GetLevelSet())) {
                 SilverBerries[AreaKey.GetLevelSet()].Remove(AreaKey.GetSID());
             }
+            SpeedBerries.Remove(AreaKey.GetSID());
         }
 
         public override void End() {
