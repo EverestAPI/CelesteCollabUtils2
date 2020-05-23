@@ -163,7 +163,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 timerEnded = true;
                 fadeTime = 5f;
                 Get<Tween>()?.RemoveSelf();
-                tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.CubeInOut, 1.4f);
+                tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.CubeInOut, 1.5f);
                 tween.OnUpdate = delegate (Tween t) {
                     Position = Vector2.Lerp(onscreenPosition, offscreenPosition, t.Eased);
                 };

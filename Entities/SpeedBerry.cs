@@ -166,6 +166,11 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             if (forcePositionToTransitionTarget) {
                 Position = transitionTarget;
             }
+
+            // replace the collect animation with the matching color collect animation.
+            if (sprite.CurrentAnimationID == "collect") {
+                sprite.Play("collect_" + TimerDisplay.GetNextRank(out _).ToLowerInvariant());
+            }
         }
 
         private void dissolve() {
