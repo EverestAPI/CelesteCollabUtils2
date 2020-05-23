@@ -9,12 +9,14 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private string targetSID;
         private string targetRoom;
         private Vector2 targetSpawnPoint;
+        private LevelExit.Mode exitMode;
 
         public LevelExitToLobby(LevelExit.Mode exitMode, Session currentSession) : base() {
             Add(new HudRenderer());
 
             // calling the LevelExit constructor triggers the Level.Exit Everest event, so that makes mods less confused about what's going on.
             new LevelExit(exitMode, currentSession);
+            this.exitMode = exitMode;
         }
 
         public override void Begin() {
@@ -46,13 +48,19 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 yield return null;
             }
 
-            Session session = new Session(AreaData.Get(targetSID).ToKey());
-            session.FirstLevel = false;
-            session.StartedFromBeginning = false;
-            session.Level = targetRoom;
-            session.RespawnPoint = targetSpawnPoint;
-            new DynData<Session>(session)["pauseTimerUntilAction"] = true;
-            LevelEnter.Go(session, false);
+            if (targetSID == null) {
+                // failsafe: if there is no lobby to return to, return to map instead.
+                Engine.Scene = new OverworldLoader(
+                    exitMode == LevelExit.Mode.Completed ? Overworld.StartMode.AreaComplete : Overworld.StartMode.AreaQuit);
+            } else {
+                Session session = new Session(AreaData.Get(targetSID).ToKey());
+                session.FirstLevel = false;
+                session.StartedFromBeginning = false;
+                session.Level = targetRoom;
+                session.RespawnPoint = targetSpawnPoint;
+                new DynData<Session>(session)["pauseTimerUntilAction"] = true;
+                LevelEnter.Go(session, false);
+            }
         }
     }
 }
