@@ -1,12 +1,12 @@
 <Sprites>
-  <rainbowBerry path="CollabUtils2/rainbowBerry/" start="idle">
+  <rainbowBerry path="CollabUtils2/rainbowBerry/rberry" start="idle">
     <Center />
 
     <Loop id="idle" path="" delay=".08" frames="0-31" />
     <Anim id="collect" path="" delay=".07" frames="32-37"/>
   </rainbowBerry>
   
-  <ghostRainbowBerry path="CollabUtils2/ghostbowBerry/" start="idle">
+  <ghostRainbowBerry path="CollabUtils2/ghostbowBerry/rberry(g)" start="idle">
     <Center />
 
     <Loop id="idle" path="" delay=".08" frames="0-31" />
