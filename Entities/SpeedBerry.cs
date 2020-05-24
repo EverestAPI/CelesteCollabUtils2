@@ -190,7 +190,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             Session session = level.Session;
             session.DoNotLoad.Remove(ID);
             Collidable = false;
-            // sprite.Scale = Vector2.One * 0.5f;
             if (follower != null) {
                 foreach (Player player in Scene.Tracker.GetEntities<Player>()) {
                     player.Die(Vector2.Zero, true, true);
@@ -198,12 +197,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             }
             yield return 0.05f;
             Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
-            /* for (int i = 0; i < 6; i++) {
-                float dir = Calc.Random.NextFloat(6.28318548f);
-                level.ParticlesFG.Emit(StrawberrySeed.P_Burst, 1, Position + Calc.AngleToVector(dir, 4f), Vector2.Zero, dir);
-            } */
             SceneAs<Level>().Displacement.AddBurst(Position, 0.5f, 8f, 100f);
-            // sprite.Scale = Vector2.Zero;
             Visible = false;
             RemoveSelf();
             yield break;

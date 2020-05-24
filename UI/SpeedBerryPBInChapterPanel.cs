@@ -3,6 +3,7 @@ using Mono.Cecil.Cil;
 using Monocle;
 using MonoMod.Cil;
 using System;
+using System.Reflection;
 
 namespace Celeste.Mod.CollabUtils2.UI {
     class SpeedBerryPBInChapterPanel {
@@ -58,13 +59,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 Logger.Log("CollabUtils2/SpeedBerryPBInChapterPanel", $"Injecting speed berry PB position updating at {cursor.Index} in CIL code for OuiChapterPanel.Render");
 
                 cursor.Emit(OpCodes.Ldarg_0);
-                cursor.Emit(OpCodes.Ldfld, typeof(OuiChapterPanel).GetField("contentOffset", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance));
-                cursor.EmitDelegate<Action<Vector2>>(updateSpeedBerryPBRenderedPosition);
+                cursor.Emit(OpCodes.Ldfld, typeof(OuiChapterPanel).GetField("contentOffset", BindingFlags.NonPublic | BindingFlags.Instance));
+                cursor.EmitDelegate<Action<Vector2>>(contentOffset => {
+                    speedBerryPBDisplay.Position = contentOffset + new Vector2(0f, 170f) + speedBerryPBOffset;
+                });
             }
-        }
-
-        private static void updateSpeedBerryPBRenderedPosition(Vector2 contentOffset) {
-            speedBerryPBDisplay.Position = contentOffset + new Vector2(0f, 170f) + speedBerryPBOffset;
         }
 
         private static void modOuiChapterPanelUpdateStats(On.Celeste.OuiChapterPanel.orig_UpdateStats orig, OuiChapterPanel self, bool wiggle, bool? overrideStrawberryWiggle, bool? overrideDeathWiggle, bool? overrideHeartWiggle) {
@@ -90,7 +89,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             // we want to catch the result of (float)(this.deaths.Visible ? -40 : 0) and transform it to shift the things up if the speed berry PB is there.
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchConvR4())) {
                 Logger.Log("CollabUtils2/SpeedBerryPBInChapterPanel", $"Modifying strawberry/death counter positioning at {cursor.Index} in CIL code for OuiChapterPanel.SetStatsPosition");
-                cursor.EmitDelegate<Func<float, float>>(shiftCountersPosition);
+                cursor.EmitDelegate<Func<float, float>>(position => speedBerryPBDisplay.Visible ? position - 40 : position);
             }
 
             cursor.Index = 0;
@@ -105,30 +104,37 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 cursor.Emit(OpCodes.Ldarg_1);
                 // StrawberriesCounter strawberries
                 cursor.Emit(OpCodes.Ldarg_0);
-                cursor.Emit(OpCodes.Ldfld, typeof(OuiChapterPanel).GetField("strawberries", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance));
+                cursor.Emit(OpCodes.Ldfld, typeof(OuiChapterPanel).GetField("strawberries", BindingFlags.NonPublic | BindingFlags.Instance));
                 // DeathsCounter deaths
                 cursor.Emit(OpCodes.Ldarg_0);
-                cursor.Emit(OpCodes.Ldfld, typeof(OuiChapterPanel).GetField("deaths", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance));
+                cursor.Emit(OpCodes.Ldfld, typeof(OuiChapterPanel).GetField("deaths", BindingFlags.NonPublic | BindingFlags.Instance));
                 // bool hasHeart
                 cursor.Emit(hasHeart ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
                 // function call
-                cursor.EmitDelegate<Action<bool, StrawberriesCounter, DeathsCounter, bool>>(updateSpeedBerryPBOffset);
+                cursor.EmitDelegate<Action<bool, StrawberriesCounter, DeathsCounter, bool>>((approach, strawberries, deaths, thisHasHeart) => {
+                    int shift = 0;
+                    if (strawberries.Visible)
+                        shift += 40;
+                    if (deaths.Visible)
+                        shift += 40;
+                    speedBerryPBOffset = SpeedBerryPBInChapterPanel.approach(speedBerryPBOffset, new Vector2(thisHasHeart ? 150f : 0f, shift), !approach);
+                });
 
                 hasHeart = false;
             }
-        }
 
-        private static float shiftCountersPosition(float position) {
-            return speedBerryPBDisplay.Visible ? position - 40 : position;
-        }
+            cursor.Index = 0;
 
-        private static void updateSpeedBerryPBOffset(bool approach, StrawberriesCounter strawberries, DeathsCounter deaths, bool hasHeart) {
-            int shift = 0;
-            if (strawberries.Visible)
-                shift += 40;
-            if (deaths.Visible)
-                shift += 40;
-            speedBerryPBOffset = SpeedBerryPBInChapterPanel.approach(speedBerryPBOffset, new Vector2(hasHeart ? 120f : 0f, shift), !approach);
+            // have a bigger spacing between heart and text when the speed berry PB is displayed, because it is bigger than berry / death count.
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(120f) || instr.MatchLdcR4(-120f))) {
+                Logger.Log("CollabUtils2/SpeedBerryPBInChapterPanel", $"Modifying column spacing at {cursor.Index} in CIL code for OuiChapterPanel.SetStatsPosition");
+                cursor.EmitDelegate<Func<float, float>>(orig => {
+                    if (speedBerryPBDisplay.Visible) {
+                        return orig + 30f * Math.Sign(orig);
+                    }
+                    return orig;
+                });
+            }
         }
 
         // vanilla method copypaste
