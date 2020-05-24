@@ -7,6 +7,7 @@ using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
 using MonoMod.Utils;
 using System;
+using System.Collections;
 using System.Linq;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
@@ -29,6 +30,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             Everest.Events.Level.OnCreatePauseMenuButtons += onCreatePauseMenuButtons;
             On.Celeste.Player.Added += Player_Added;
             On.Celeste.SaveData.AddStrawberry_AreaKey_EntityID_bool += onSaveDataAddStrawberry;
+            On.Celeste.Strawberry.CollectRoutine += onStrawberryCollectRoutine;
         }
 
         public static void Unload() {
@@ -39,6 +41,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             Everest.Events.Level.OnCreatePauseMenuButtons -= onCreatePauseMenuButtons;
             On.Celeste.Player.Added -= Player_Added;
             On.Celeste.SaveData.AddStrawberry_AreaKey_EntityID_bool -= onSaveDataAddStrawberry;
+            On.Celeste.Strawberry.CollectRoutine -= onStrawberryCollectRoutine;
         }
 
         private static void Player_Added(On.Celeste.Player.orig_Added orig, Player self, Scene scene) {
@@ -225,6 +228,25 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             }
 
             orig(self, area, strawberry, golden);
+        }
+
+        private static IEnumerator onStrawberryCollectRoutine(On.Celeste.Strawberry.orig_CollectRoutine orig, Strawberry self, int collectIndex) {
+            Scene scene = self.Scene;
+
+            IEnumerator origEnum = orig(self, collectIndex);
+            while (origEnum.MoveNext()) {
+                yield return origEnum.Current;
+            }
+
+            if (self is RainbowBerry) {
+                // remove the strawberry points
+                StrawberryPoints points = scene.Entities.ToAdd.OfType<StrawberryPoints>().First();
+                Vector2 position = points.Position;
+                scene.Entities.ToAdd.Remove(points);
+
+                // spawn a perfect effect instead
+                scene.Add(new RainbowBerryPerfectEffect(position));
+            }
         }
     }
 }
