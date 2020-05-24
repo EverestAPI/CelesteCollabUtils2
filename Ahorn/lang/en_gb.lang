@@ -21,3 +21,8 @@ placements.entities.CollabUtils2/MiniHeartDoor.tooltips.color=The color of the d
 placements.triggers.CollabUtils2/MapSwapTrigger.tooltips.map=The SID (string ID) of the map this trigger will teleport to.
 placements.triggers.CollabUtils2/MapSwapTrigger.tooltips.side=The side (A/B/C) this trigger will teleport to.
 placements.triggers.CollabUtils2/MapSwapTrigger.tooltips.room=The name of the room this trigger will teleport to.
+
+# Speed Berry
+placements.entities.CollabUtils2/SpeedBerry.tooltips.goldTime=The time (in seconds) required to get the Gold speed berry rank.
+placements.entities.CollabUtils2/SpeedBerry.tooltips.silverTime=The time (in seconds) required to get the Silver speed berry rank.
+placements.entities.CollabUtils2/SpeedBerry.tooltips.bronzeTime=The time (in seconds) required to get the Bronze speed berry rank.
