@@ -40,11 +40,23 @@ namespace Celeste.Mod.CollabUtils2.UI {
             long totalTime = 0;
             long sumOfBestTimes = 0;
 
+            bool allMapsDone = true;
+
             string heartTexture = MTN.Journal.Has("CollabUtils2Hearts/" + levelSet) ? "CollabUtils2Hearts/" + levelSet : "heartgem0";
 
             foreach (AreaStats item in SaveData.Instance.Areas_Safe) {
                 AreaData areaData = AreaData.Get(item.ID_Safe);
                 if (!areaData.Interlude_Safe) {
+                    if (areaData.GetSID().StartsWith("SpringCollab2020/") && areaData.GetSID().EndsWith("/ZZ-HeartSide")) {
+                        if (allMapsDone) {
+                            // add a separator, like the one between regular maps and Farewell
+                            currentPage.table.AddRow();
+                        } else {
+                            // all maps weren't complete yet: hide the heart side for now.
+                            continue;
+                        }
+                    }
+
                     string strawberryText = null;
                     if (areaData.Mode[0].TotalStrawberries > 0 || item.TotalStrawberries > 0) {
                         strawberryText = item.TotalStrawberries.ToString();
@@ -102,6 +114,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     totalDeaths += item.Modes[0].Deaths;
                     sumOfBestDeaths += item.Modes[0].BestDeaths;
                     totalTime += item.TotalTimePlayed;
+
+                    if (!item.Modes[0].HeartGem) {
+                        allMapsDone = false;
+                    }
 
                     rowCount++;
                     if (rowCount > 11) {
