@@ -47,7 +47,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             foreach (AreaStats item in SaveData.Instance.Areas_Safe) {
                 AreaData areaData = AreaData.Get(item.ID_Safe);
                 if (!areaData.Interlude_Safe) {
-                    if (areaData.GetSID().StartsWith("SpringCollab2020/") && areaData.GetSID().EndsWith("/ZZ-HeartSide")) {
+                    if (LobbyHelper.IsHeartSide(areaData.GetSID())) {
                         if (allMapsDone) {
                             // add a separator, like the one between regular maps and Farewell
                             currentPage.table.AddRow();
