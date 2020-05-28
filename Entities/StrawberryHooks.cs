@@ -180,10 +180,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             if (body != null) {
                 DynData<PlayerDeadBody> data = new DynData<PlayerDeadBody>(body);
                 data["hasSilver"] = hasSilver;
-                if (speedBerry != null) {
-                    data["hasSpeedBerry"] = true;
-                    storedSpeedBerry = speedBerry;
-                }
+                data["hasSpeedBerry"] = (speedBerry != null);
+                storedSpeedBerry = speedBerry;
             }
             return body;
         }
