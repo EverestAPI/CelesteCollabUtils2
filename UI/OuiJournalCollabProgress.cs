@@ -11,7 +11,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private static Color getRankColor(CollabMapDataProcessor.SpeedBerryInfo speedBerryInfo, long pb) {
             float pbSeconds = (float) TimeSpan.FromTicks(pb).TotalSeconds;
             if (pbSeconds < speedBerryInfo.Gold) {
-                return Color.Goldenrod;
+                return Calc.HexToColor("B07A00");
             } else if (pbSeconds < speedBerryInfo.Silver) {
                 return Color.Gray;
             }

@@ -1,30 +1,44 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Sprites>
-  <crystalHeart_SpringCollab2020_2_Intermediate path="collectables/heartgem/1/" start="idle">
+  <crystalHeart_SpringCollab2020_0_Test path="CollabUtils2/crystalHeart/bgr/" start="idle">
     <Center />
-    <Loop id="idle" path="spin" frames="0" />
-    <Loop id="spin" path="spin" frames="0*10,1-10" delay="0.08"/>
-    <Loop id="fastspin" path="spin" frames="1-10" delay="0.08"/>
+    <Loop id="idle" path="" frames="0" />
+    <Loop id="spin" path="" frames="0*10,1-10" delay="0.08"/>
+    <Loop id="fastspin" path="" frames="1-10" delay="0.08"/>
+  </crystalHeart_SpringCollab2020_0_Test>
+
+  <crystalHeart_SpringCollab2020_1_Beginner path="CollabUtils2/crystalHeart/bgr/" start="idle">
+    <Center />
+    <Loop id="idle" path="" frames="0" />
+    <Loop id="spin" path="" frames="0*10,1-10" delay="0.08"/>
+    <Loop id="fastspin" path="" frames="1-10" delay="0.08"/>
+  </crystalHeart_SpringCollab2020_1_Beginner>
+  
+  <crystalHeart_SpringCollab2020_2_Intermediate path="CollabUtils2/crystalHeart/imd/" start="idle">
+    <Center />
+    <Loop id="idle" path="" frames="0" />
+    <Loop id="spin" path="" frames="0*10,1-10" delay="0.08"/>
+    <Loop id="fastspin" path="" frames="1-10" delay="0.08"/>
   </crystalHeart_SpringCollab2020_2_Intermediate>
 	
-  <crystalHeart_SpringCollab2020_3_Advanced path="collectables/heartgem/2/" start="idle">
+  <crystalHeart_SpringCollab2020_3_Advanced path="CollabUtils2/crystalHeart/adv/" start="idle">
     <Center />
-    <Loop id="idle" path="spin" frames="0" />
-    <Loop id="spin" path="spin" frames="0*10,1-10" delay="0.08"/>
-    <Loop id="fastspin" path="spin" frames="1-10" delay="0.08"/>
+    <Loop id="idle" path="" frames="0" />
+    <Loop id="spin" path="" frames="0*10,1-10" delay="0.08"/>
+    <Loop id="fastspin" path="" frames="1-10" delay="0.08"/>
   </crystalHeart_SpringCollab2020_3_Advanced>
 	
-  <crystalHeart_SpringCollab2020_4_Expert path="CollabUtils2/crystalHeart/expert/" start="idle">
+  <crystalHeart_SpringCollab2020_4_Expert path="CollabUtils2/crystalHeart/exp/" start="idle">
     <Center />
-    <Loop id="idle" path="spin" frames="0" />
-    <Loop id="spin" path="spin" frames="0*10,1-10" delay="0.08"/>
-    <Loop id="fastspin" path="spin" frames="1-10" delay="0.08"/>
+    <Loop id="idle" path="" frames="0" />
+    <Loop id="spin" path="" frames="0*10,1-10" delay="0.08"/>
+    <Loop id="fastspin" path="" frames="1-10" delay="0.08"/>
   </crystalHeart_SpringCollab2020_4_Expert>
 	
-  <crystalHeart_SpringCollab2020_5_Grandmaster path="CollabUtils2/crystalHeart/grandmaster/" start="idle">
+  <crystalHeart_SpringCollab2020_5_Grandmaster path="CollabUtils2/crystalHeart/gdm/" start="idle">
     <Center />
-    <Loop id="idle" path="spin" frames="0" />
-    <Loop id="spin" path="spin" frames="0*10,1-10" delay="0.08"/>
-    <Loop id="fastspin" path="spin" frames="1-10" delay="0.08"/>
+    <Loop id="idle" path="" frames="0" />
+    <Loop id="spin" path="" frames="0*10,1-10" delay="0.08"/>
+    <Loop id="fastspin" path="" frames="1-10" delay="0.08"/>
   </crystalHeart_SpringCollab2020_5_Grandmaster> 
 </Sprites>
