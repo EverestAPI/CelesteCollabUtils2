@@ -15,7 +15,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             } else if (pbSeconds < speedBerryInfo.Silver) {
                 return Color.Gray;
             }
-            return Calc.HexToColor("cd7f32");
+            return Calc.HexToColor("B96F11");
         }
 
         private static string getRankIcon(CollabMapDataProcessor.SpeedBerryInfo speedBerryInfo, long pb) {
