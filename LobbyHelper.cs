@@ -51,6 +51,7 @@ namespace Celeste.Mod.CollabUtils2 {
             On.Celeste.Player.Update += onPlayerUpdate;
             On.Celeste.SaveData.RegisterHeartGem += onRegisterHeartGem;
             On.Celeste.SaveData.RegisterPoemEntry += onRegisterPoemEntry;
+            On.Celeste.SaveData.RegisterCompletion += onRegisterCompletion;
         }
 
         public static void Unload() {
@@ -58,6 +59,7 @@ namespace Celeste.Mod.CollabUtils2 {
             On.Celeste.Player.Update -= onPlayerUpdate;
             On.Celeste.SaveData.RegisterHeartGem -= onRegisterHeartGem;
             On.Celeste.SaveData.RegisterPoemEntry -= onRegisterPoemEntry;
+            On.Celeste.SaveData.RegisterCompletion -= onRegisterCompletion;
         }
 
         public static void OnSessionCreated() {
@@ -125,6 +127,20 @@ namespace Celeste.Mod.CollabUtils2 {
             }
 
             return result;
+        }
+
+        private static void onRegisterCompletion(On.Celeste.SaveData.orig_RegisterCompletion orig, SaveData self, Session session) {
+            orig(self, session);
+
+            AreaKey currentArea = session.Area;
+            if (IsHeartSide(currentArea.GetSID())) {
+                string lobby = GetLobbyForLevelSet(currentArea.GetLevelSet());
+                if (lobby != null) {
+                    // completing the heart side should also complete the lobby.
+                    AreaModeStats areaModeStats = SaveData.Instance.Areas_Safe[AreaData.Get(lobby).ID].Modes[0];
+                    areaModeStats.Completed = true;
+                }
+            }
         }
     }
 }
