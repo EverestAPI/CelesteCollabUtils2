@@ -264,6 +264,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     if (Engine.Scene == overworldWrapper?.Scene) {
                         return orig == "areaselect/cardtop_golden" ? "CollabUtils2/chapterCard/cardtop_silver" : "CollabUtils2/chapterCard/card_silver";
                     }
+                    if (isPanelShowingLobby()) {
+                        return orig == "areaselect/cardtop_golden" ? "CollabUtils2/chapterCard/cardtop_rainbow" : "CollabUtils2/chapterCard/card_rainbow";
+                    }
                     return orig;
                 });
             }
@@ -304,7 +307,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 if (GFX.Gui.Has(pathToSkull)) {
                     new DynData<DeathsCounter>(deathsCounter)["icon"] = GFX.Gui[pathToSkull];
                 }
+            }
 
+
+            if (isPanelShowingLobby() || Engine.Scene == overworldWrapper?.Scene) {
                 // turn strawberry counter into golden if there is no berry in the map
                 if (AreaData.Get(self.Area).Mode[0].TotalStrawberries == 0) {
                     StrawberriesCounter strawberriesCounter = new DynData<OuiChapterPanel>(self).Get<StrawberriesCounter>("strawberries");
@@ -339,6 +345,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     if (Engine.Scene == overworldWrapper?.Scene) {
                         return "CollabUtils2/silverberry";
                     }
+                    if (isPanelShowingLobby()) {
+                        return "CollabUtils2/rainbowberry";
+                    }
                     return orig;
                 });
             }
@@ -347,10 +356,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private static void ModMapDataLoad(On.Celeste.MapData.orig_Load orig, MapData self) {
             orig(self);
 
-            // add the silver berries as golden berries in map data. This is what will make the chapter card golden.
+            // add the silver/rainbow berries as golden berries in map data. This is what will make the chapter card golden.
             foreach (LevelData level in self.Levels) {
                 foreach (EntityData entity in level.Entities) {
-                    if (entity.Name == "CollabUtils2/SilverBerry") {
+                    if (entity.Name == "CollabUtils2/SilverBerry" || entity.Name == "CollabUtils2/RainbowBerry") {
                         self.Goldenberries.Add(entity);
                     }
                 }
@@ -475,5 +484,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
         }
 
+        private static bool isPanelShowingLobby() {
+            return LobbyHelper.GetLobbyLevelSet((Engine.Scene as Overworld)?.GetUI<OuiChapterPanel>()?.Area.GetSID() ?? "") != null;
+        }
     }
 }
