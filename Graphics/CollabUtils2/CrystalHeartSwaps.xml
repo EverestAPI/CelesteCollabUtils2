@@ -1,12 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Sprites>
-  <crystalHeart_SpringCollab2020_0_Test path="CollabUtils2/crystalHeart/bgr/" start="idle">
-    <Center />
-    <Loop id="idle" path="" frames="0" />
-    <Loop id="spin" path="" frames="0*10,1-10" delay="0.08"/>
-    <Loop id="fastspin" path="" frames="1-10" delay="0.08"/>
-  </crystalHeart_SpringCollab2020_0_Test>
-
   <crystalHeart_SpringCollab2020_1_Beginner path="CollabUtils2/crystalHeart/bgr/" start="idle">
     <Center />
     <Loop id="idle" path="" frames="0" />
