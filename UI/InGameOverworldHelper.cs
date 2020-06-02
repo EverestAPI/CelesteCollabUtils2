@@ -42,7 +42,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.OuiChapterPanel.DrawCheckpoint += OnChapterPanelDrawCheckpoint;
             On.Celeste.OuiJournal.Enter += OnJournalEnter;
             On.Celeste.OuiChapterPanel.UpdateStats += OnChapterPanelUpdateStats;
-            IL.Celeste.OuiChapterPanel.Render += ModOuiChapterPanelEnter;
+            IL.Celeste.OuiChapterPanel.Render += ModOuiChapterPanelRender;
             IL.Celeste.DeathsCounter.Render += ModDeathsCounterRender;
             IL.Celeste.StrawberriesCounter.Render += ModStrawberriesCounterRender;
             On.Celeste.MapData.Load += ModMapDataLoad;
@@ -59,7 +59,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.OuiChapterPanel.DrawCheckpoint -= OnChapterPanelDrawCheckpoint;
             On.Celeste.OuiJournal.Enter -= OnJournalEnter;
             On.Celeste.OuiChapterPanel.UpdateStats -= OnChapterPanelUpdateStats;
-            IL.Celeste.OuiChapterPanel.Render -= ModOuiChapterPanelEnter;
+            IL.Celeste.OuiChapterPanel.Render -= ModOuiChapterPanelRender;
             IL.Celeste.DeathsCounter.Render -= ModDeathsCounterRender;
             IL.Celeste.StrawberriesCounter.Render -= ModStrawberriesCounterRender;
             On.Celeste.MapData.Load -= ModMapDataLoad;
@@ -242,9 +242,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
             );
         }
 
-        private static void ModOuiChapterPanelEnter(ILContext il) {
+        private static void ModOuiChapterPanelRender(ILContext il) {
             ILCursor cursor = new ILCursor(il);
 
+            // 1. Swap the "chapter xx" and the map name positions.
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(-2f) || instr.MatchLdcR4(-18f))) {
                 Logger.Log("CollabUtils2/InGameOverworldHelper", $"Modding chapter panel title position at {cursor.Index} in IL for OuiChapterPanel.Render");
                 cursor.EmitDelegate<Func<float, float>>(orig => {
@@ -257,6 +258,24 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
 
             cursor.Index = 0;
+
+            // 2. Resize the title if it does not fit.
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(-60))) {
+                Logger.Log("CollabUtils2/InGameOverworldHelper", $"Modding chapter panel title bookmark position at {cursor.Index} in IL for OuiChapterPanel.Render");
+                cursor.Emit(OpCodes.Ldarg_0);
+                cursor.EmitDelegate<Func<float, OuiChapterPanel, float>>((orig, self) => {
+                    if (Engine.Scene == overworldWrapper?.Scene) {
+                        float mapNameSize = ActiveFont.Measure(Dialog.Clean(AreaData.Get(self.Area).Name)).X;
+                        return orig - Math.Max(0f, mapNameSize - 550f);
+                    } else {
+                        return orig;
+                    }
+                });
+            }
+
+            cursor.Index = 0;
+
+            // 3. Turn the chapter card silver or rainbow instead of gold when relevant.
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("areaselect/cardtop_golden") || instr.MatchLdstr("areaselect/card_golden"))) {
                 Logger.Log("CollabUtils2/InGameOverworldHelper", $"Modding chapter panel card at {cursor.Index} in IL for OuiChapterPanel.Render");
 
