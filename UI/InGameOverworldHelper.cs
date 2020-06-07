@@ -26,8 +26,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private static readonly Type t_OuiChapterPanelOption = typeof(OuiChapterPanel)
             .GetNestedType("Option", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
-        private static readonly ConstructorInfo c_OuiChapterPanelOption = t_OuiChapterPanelOption
-            .GetConstructor(Type.EmptyTypes);
         private static MethodInfo m_PlayExpandSfx = typeof(OuiChapterPanel)
             .GetMethod("PlayExpandSfx", BindingFlags.NonPublic | BindingFlags.Instance);
 
@@ -94,9 +92,12 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private static void OnChapterPanelReset(On.Celeste.OuiChapterPanel.orig_Reset orig, OuiChapterPanel self) {
+            resetCrystalHeart(self);
+
             AreaData forceArea = self.Overworld == null ? null : new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea");
             if (forceArea == null) {
                 orig(self);
+                customizeCrystalHeart(self);
                 return;
             }
 
@@ -113,6 +114,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             icon.Add(new Coroutine(UpdateIconRoutine(self, icon)));
 
             orig(self);
+            customizeCrystalHeart(self);
 
             DynData<OuiChapterPanel> data = new DynData<OuiChapterPanel>(self);
             data["hasCollabCredits"] = true;
@@ -132,6 +134,40 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             // LastArea is also checked in Render.
             save.CurrentSession = session;
+        }
+
+        private static void resetCrystalHeart(OuiChapterPanel panel) {
+            DynData<OuiChapterPanel> panelData = new DynData<OuiChapterPanel>(panel);
+            if (panelData.Data.ContainsKey("heartDirty") && panelData.Get<bool>("heartDirty")) {
+                panel.Remove(panelData["heart"] as HeartGemDisplay);
+                panelData["heart"] = new HeartGemDisplay(0, false);
+                panel.Add(panelData["heart"] as HeartGemDisplay);
+                panelData["heartDirty"] = false;
+            }
+        }
+
+        private static void customizeCrystalHeart(OuiChapterPanel panel) {
+            // customize heart gem icon
+            string animId = null;
+
+            string sid = panel.Area.GetSID();
+            string mapName = sid.DialogKeyify();
+            string mapLevelSet = AreaData.Get(sid)?.GetLevelSet().DialogKeyify();
+
+            if (heartSpriteBank.Has("crystalHeart_" + mapName)) {
+                // this map has a custom heart registered: use it.
+                animId = "crystalHeart_" + mapName;
+            } else if (heartSpriteBank.Has("crystalHeart_" + mapLevelSet)) {
+                // this level set has a custom heart registered: use it.
+                animId = "crystalHeart_" + mapLevelSet;
+            }
+
+            if (animId != null) {
+                Sprite heartSprite = heartSpriteBank.Create(animId);
+                new DynData<OuiChapterPanel>(panel).Get<HeartGemDisplay>("heart").Sprites[0] = heartSprite;
+                heartSprite.Play("spin");
+                new DynData<OuiChapterPanel>(panel)["heartDirty"] = true;
+            }
         }
 
         private static bool OnSaveDataFoundAnyCheckpoints(On.Celeste.SaveData.orig_FoundAnyCheckpoints orig, SaveData self, AreaKey area) {
@@ -398,18 +434,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         public static void OpenChapterPanel(Player player, string sid, ChapterPanelTrigger.ReturnToLobbyMode returnToLobbyMode) {
             Open(player, AreaData.Get(sid) ?? AreaData.Get(0), out OuiHelper_EnterChapterPanel.Start,
-                overworld => {
-                    new DynData<Overworld>(overworld).Set("returnToLobbyMode", returnToLobbyMode);
-                    OuiChapterPanel panel = overworld.GetUI<OuiChapterPanel>();
-
-                    // customize heart gem icon
-                    string animId = "crystalHeart_" + AreaData.Get(sid)?.GetLevelSet()?.DialogKeyify();
-                    if (heartSpriteBank.Has(animId)) {
-                        Sprite heartSprite = heartSpriteBank.Create(animId);
-                        new DynData<OuiChapterPanel>(panel).Get<HeartGemDisplay>("heart").Sprites[0] = heartSprite;
-                        heartSprite.Play("spin");
-                    }
-                });
+                overworld => new DynData<Overworld>(overworld).Set("returnToLobbyMode", returnToLobbyMode));
         }
 
         public static void OpenJournal(Player player, string levelset) {
@@ -504,7 +529,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private static bool isPanelShowingLobby(OuiChapterPanel panel = null) {
-            if(panel == null) {
+            if (panel == null) {
                 panel = (Engine.Scene as Overworld)?.GetUI<OuiChapterPanel>();
             }
             return LobbyHelper.GetLobbyLevelSet(panel?.Area.GetSID() ?? "") != null;
