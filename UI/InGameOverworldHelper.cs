@@ -329,7 +329,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
 
 
-            if (isPanelShowingLobby() || Engine.Scene == overworldWrapper?.Scene) {
+            if (isPanelShowingLobby(self) || Engine.Scene == overworldWrapper?.Scene) {
                 // turn strawberry counter into golden if there is no berry in the map
                 if (AreaData.Get(self.Area).Mode[0].TotalStrawberries == 0) {
                     StrawberriesCounter strawberriesCounter = new DynData<OuiChapterPanel>(self).Get<StrawberriesCounter>("strawberries");
@@ -503,8 +503,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
         }
 
-        private static bool isPanelShowingLobby() {
-            return LobbyHelper.GetLobbyLevelSet((Engine.Scene as Overworld)?.GetUI<OuiChapterPanel>()?.Area.GetSID() ?? "") != null;
+        private static bool isPanelShowingLobby(OuiChapterPanel panel = null) {
+            if(panel == null) {
+                panel = (Engine.Scene as Overworld)?.GetUI<OuiChapterPanel>();
+            }
+            return LobbyHelper.GetLobbyLevelSet(panel?.Area.GetSID() ?? "") != null;
         }
     }
 }
