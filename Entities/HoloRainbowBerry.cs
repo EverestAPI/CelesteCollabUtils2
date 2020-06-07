@@ -15,6 +15,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private int particleColor = 0;
         private float particleDelay;
 
+        public ParticleSystem Particles { get; private set; }
+
         private CustomMemorialText counterText;
 
         public HoloRainbowBerry(Vector2 position, int currentBerries, int totalBerries) {
@@ -66,6 +68,9 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             if (counterText != null) {
                 scene.Add(counterText);
             }
+
+            scene.Add(Particles = new ParticleSystem(-50000, 800));
+            Particles.Tag = Tag;
         }
 
         public override void Update() {
@@ -79,7 +84,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             // emit particles.
             if (Scene.OnInterval(particleDelay)) {
                 ParticleType type = particleColors[particleColor % particleColors.Count];
-                SceneAs<Level>().ParticlesFG.Emit(type, Position + Calc.Random.Range(-Vector2.One * 6f, Vector2.One * 6f));
+                Particles.Emit(type, Position + Calc.Random.Range(-Vector2.One * 6f, Vector2.One * 6f));
                 particleColor++;
             }
 
@@ -87,6 +92,20 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             if (counterText != null) {
                 Player player = Scene.Tracker.GetEntity<Player>();
                 counterText.Show = player != null && (player.Position - Position).LengthSquared() < 2500f;
+            }
+        }
+
+        public override void Removed(Scene scene) {
+            base.Removed(scene);
+            if (Particles != null) {
+                scene.Remove(Particles);
+            }
+        }
+
+        public override void SceneEnd(Scene scene) {
+            base.SceneEnd(scene);
+            if (Particles != null) {
+                scene.Remove(Particles);
             }
         }
     }
