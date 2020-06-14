@@ -175,25 +175,12 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         }
 
         private void dissolve() {
-            if (Follower.Leader != null) {
-                Player player = Follower.Leader.Entity as Player;
-                player.StrawberryCollectResetTimer = 2.5f;
-                dissolveRoutine(player);
-            } else {
-                dissolveRoutine(null);
-            }
-
-        }
-
-        private void dissolveRoutine(Player follower) {
             Level level = Scene as Level;
             Session session = level.Session;
             session.DoNotLoad.Remove(ID);
             Collidable = false;
-            if (follower != null) {
-                foreach (Player player in Scene.Tracker.GetEntities<Player>()) {
-                    player.Die(Vector2.Zero, true, true);
-                }
+            foreach (Player player in Scene.Tracker.GetEntities<Player>()) {
+                player.Die(Vector2.Zero, true, true);
             }
             Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
             Visible = false;
