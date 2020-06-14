@@ -2,6 +2,7 @@
 using Celeste.Mod.CollabUtils2.UI;
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
+using Mono.Cecil.Pdb;
 using Monocle;
 using MonoMod.Utils;
 using System;
@@ -177,15 +178,14 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             if (Follower.Leader != null) {
                 Player player = Follower.Leader.Entity as Player;
                 player.StrawberryCollectResetTimer = 2.5f;
-                Add(new Coroutine(dissolveRoutine(player), true));
+                dissolveRoutine(player);
             } else {
-                Add(new Coroutine(dissolveRoutine(null), true));
+                dissolveRoutine(null);
             }
 
         }
 
-        private IEnumerator dissolveRoutine(Player follower) {
-            Sprite sprite = Get<Sprite>();
+        private void dissolveRoutine(Player follower) {
             Level level = Scene as Level;
             Session session = level.Session;
             session.DoNotLoad.Remove(ID);
@@ -195,12 +195,18 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     player.Die(Vector2.Zero, true, true);
                 }
             }
-            yield return 0.05f;
             Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
-            SceneAs<Level>().Displacement.AddBurst(Position, 0.5f, 8f, 100f);
             Visible = false;
             RemoveSelf();
-            yield break;
+
+            Scene.Add(new SpeedBerryExplosionAnimation(Position));
+        }
+
+        private class SpeedBerryExplosionAnimation : Entity {
+            public SpeedBerryExplosionAnimation(Vector2 position) : base(position) {
+                Add(SpriteBank.Create("speedBerryExplosion"));
+                Depth = -1000000;
+            }
         }
     }
 }
