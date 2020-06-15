@@ -21,4 +21,10 @@
     <Anim id="collect_silver" path="collect_s" delay=".07" frames="0-3"/>
     <Anim id="collect_bronze" path="collect_b" delay=".07" frames="0-3"/>
   </speedBerry>
+  
+  <!-- Explosion animation -->
+  <speedBerryExplosion path="CollabUtils2/speedBerry/" start="explosion">
+    <Justify x=".52" y=".59" />    
+    <Anim id="explosion" path="explode_" delay=".07" frames="0-5"/>
+  </speedBerryExplosion>
 </Sprites>
