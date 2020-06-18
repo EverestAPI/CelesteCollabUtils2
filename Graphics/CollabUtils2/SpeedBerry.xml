@@ -25,6 +25,6 @@
   <!-- Explosion animation -->
   <speedBerryExplosion path="CollabUtils2/speedBerry/" start="explosion">
     <Justify x=".52" y=".59" />    
-    <Anim id="explosion" path="explode_" delay=".07" frames="0-5"/>
+    <Anim id="explosion" path="explode_" delay=".1" frames="0-7"/>
   </speedBerryExplosion>
 </Sprites>
