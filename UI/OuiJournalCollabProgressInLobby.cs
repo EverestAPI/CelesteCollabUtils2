@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 
 namespace Celeste.Mod.CollabUtils2.UI {
-    class OuiJournalCollabProgress : OuiJournalPage {
+    class OuiJournalCollabProgressInLobby : OuiJournalPage {
 
         private Table table;
 
@@ -28,10 +28,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
             return "CollabUtils2/speed_berry_bronze";
         }
 
-        public static List<OuiJournalCollabProgress> GeneratePages(OuiJournal journal, string levelSet) {
-            List<OuiJournalCollabProgress> pages = new List<OuiJournalCollabProgress>();
+        public static List<OuiJournalCollabProgressInLobby> GeneratePages(OuiJournal journal, string levelSet) {
+            List<OuiJournalCollabProgressInLobby> pages = new List<OuiJournalCollabProgressInLobby>();
             int rowCount = 0;
-            OuiJournalCollabProgress currentPage = new OuiJournalCollabProgress(journal, levelSet);
+            OuiJournalCollabProgressInLobby currentPage = new OuiJournalCollabProgressInLobby(journal, levelSet);
             pages.Add(currentPage);
 
             int totalStrawberries = 0;
@@ -41,6 +41,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
             long sumOfBestTimes = 0;
 
             bool allMapsDone = true;
+
+            bool allLevelsDone = true;
+            bool allSpeedBerriesDone = true;
 
             string heartTexture = MTN.Journal.Has("CollabUtils2Hearts/" + levelSet) ? "CollabUtils2Hearts/" + levelSet : "heartgem0";
 
@@ -92,6 +95,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         }
                     } else {
                         row.Add(new IconCell("dot"));
+                        allLevelsDone = false;
                     }
 
                     if (item.TotalTimePlayed > 0) {
@@ -108,6 +112,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         sumOfBestTimes += speedBerryPB;
                     } else {
                         row.Add(new IconCell("dot")).Add(null);
+                        allSpeedBerriesDone = false;
                     }
 
                     totalStrawberries += item.TotalStrawberries;
@@ -123,7 +128,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     if (rowCount > 11) {
                         // split the next zones into another page.
                         rowCount = 0;
-                        currentPage = new OuiJournalCollabProgress(journal, levelSet);
+                        currentPage = new OuiJournalCollabProgressInLobby(journal, levelSet);
                         pages.Add(currentPage);
                     }
                 }
@@ -136,9 +141,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     .Add(null)
                     .Add(new TextCell(totalStrawberries.ToString(), currentPage.TextJustify, 0.6f, currentPage.TextColor))
                     .Add(new TextCell(Dialog.Deaths(totalDeaths), currentPage.TextJustify, 0.6f, currentPage.TextColor))
-                    .Add(new TextCell(Dialog.Deaths(sumOfBestDeaths), currentPage.TextJustify, 0.6f, currentPage.TextColor))
+                    .Add(new TextCell(allLevelsDone ? Dialog.Deaths(sumOfBestDeaths) : "-", currentPage.TextJustify, 0.6f, currentPage.TextColor))
                     .Add(new TextCell(Dialog.Time(totalTime), currentPage.TextJustify, 0.6f, currentPage.TextColor))
-                    .Add(new TextCell(Dialog.Time(sumOfBestTimes), currentPage.TextJustify, 0.6f, currentPage.TextColor)).Add(null);
+                    .Add(new TextCell(allSpeedBerriesDone ? Dialog.Time(sumOfBestTimes) : "-", currentPage.TextJustify, 0.6f, currentPage.TextColor)).Add(null);
 
                 for (int l = 1; l < SaveData.Instance.UnlockedModes; l++) {
                     totalsRow.Add(null);
@@ -150,7 +155,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             return pages;
         }
 
-        public OuiJournalCollabProgress(OuiJournal journal, string levelSet)
+        public OuiJournalCollabProgressInLobby(OuiJournal journal, string levelSet)
             : base(journal) {
 
             string skullTexture = MTN.Journal.Has("CollabUtils2Skulls/" + levelSet) ? "CollabUtils2Skulls/" + levelSet : "skullblue";

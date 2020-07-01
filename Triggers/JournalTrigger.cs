@@ -32,7 +32,7 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
                 }
 
                 // then, fill in the journal with our custom pages.
-                journal.Pages.AddRange(OuiJournalCollabProgress.GeneratePages(journal, forceArea.GetLevelSet()));
+                journal.Pages.AddRange(OuiJournalCollabProgressInLobby.GeneratePages(journal, forceArea.GetLevelSet()));
             }
         }
 
