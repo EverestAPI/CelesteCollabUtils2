@@ -1,4 +1,5 @@
-﻿using Mono.Cecil;
+﻿using Celeste.Mod.CollabUtils2.UI;
+using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Monocle;
 using MonoMod.Cil;
@@ -56,7 +57,7 @@ namespace Celeste.Mod.CollabUtils2 {
             On.Celeste.SaveData.RegisterPoemEntry += onRegisterPoemEntry;
             On.Celeste.SaveData.RegisterCompletion += onRegisterCompletion;
             On.Celeste.SaveData.AfterInitialize += onSaveDataAfterInitialize;
-            IL.Celeste.OuiJournalProgress.ctor += modOuiJournalProgressPage;
+            Everest.Events.Journal.OnEnter += onJournalEnter;
         }
 
         public static void Unload() {
@@ -66,7 +67,7 @@ namespace Celeste.Mod.CollabUtils2 {
             On.Celeste.SaveData.RegisterPoemEntry -= onRegisterPoemEntry;
             On.Celeste.SaveData.RegisterCompletion -= onRegisterCompletion;
             On.Celeste.SaveData.AfterInitialize -= onSaveDataAfterInitialize;
-            IL.Celeste.OuiJournalProgress.ctor -= modOuiJournalProgressPage;
+            Everest.Events.Journal.OnEnter -= onJournalEnter;
         }
 
         public static void OnSessionCreated() {
@@ -160,42 +161,18 @@ namespace Celeste.Mod.CollabUtils2 {
             }
         }
 
-
-        private static void modOuiJournalProgressPage(ILContext il) {
-            ILCursor cursor = new ILCursor(il);
-
-            OpCode loadAreaStatsCode = OpCodes.Ldarg_0;
-
-            // phase 1: look for the op-code used to load the area stats local variable. this is ldloc.1 on XNA and ldloc.3 on FNA
-            // for that we use this part of code: area.Modes[i].HeartGem
-            if (cursor.TryGotoNext(MoveType.Before,
-                instr => instr.MatchLdfld<AreaStats>("Modes"),
-                instr => instr.OpCode == OpCodes.Ldloc_S,
-                instr => instr.MatchLdelemRef(),
-                instr => instr.MatchLdfld<AreaModeStats>("HeartGem"))) {
-
-                loadAreaStatsCode = cursor.Prev.OpCode;
-            }
-
-            // phase 2: mod elements added to the heart texture list if the area is a lobby for a level set that has a custom heart.
-            if (loadAreaStatsCode != OpCodes.Ldarg_0 && cursor.TryGotoNext(MoveType.Before,
-                instr => instr.MatchCall<string>("Concat"),
-                instr => instr.OpCode == OpCodes.Callvirt && (instr.Operand as MethodReference)?.Name == "Add")) {
-
-                cursor.Index++;
-
-                Logger.Log("CollabUtils2/LobbyHelper", $"Modding crystal heart color for lobbies in overworld at {cursor.Index} in IL for OuiJournalProgress.ctor: area stats is {loadAreaStatsCode}");
-
-                cursor.Emit(loadAreaStatsCode);
-                cursor.EmitDelegate<Func<string, AreaStats, string>>((orig, areaStats) => {
-                    if (GetLobbyLevelSet(areaStats.GetSID()) != null) {
-                        string levelSetHeart = "CollabUtils2Hearts/" + GetLobbyLevelSet(areaStats.GetSID());
-                        if (MTN.Journal.Has(levelSetHeart)) {
-                            return levelSetHeart;
-                        }
+        private static void onJournalEnter(OuiJournal journal, Oui from) {
+            if (SaveData.Instance.GetLevelSet() == "SpringCollab2020/0-Lobbies") {
+                // customize the journal in the overworld for the collab.
+                for (int i = 0; i < journal.Pages.Count; i++) {
+                    if (journal.Pages[i].GetType() != typeof(OuiJournalCover)) {
+                        journal.Pages.RemoveAt(i);
+                        i--;
                     }
-                    return orig;
-                });
+                }
+
+                // then, fill in the journal with our custom pages.
+                journal.Pages.Add(new OuiJournalCollabProgressInOverworld(journal));
             }
         }
     }
