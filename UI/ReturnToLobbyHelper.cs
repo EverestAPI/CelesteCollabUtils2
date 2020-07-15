@@ -65,21 +65,14 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 int returnToMapIndex = menu.GetItems().FindIndex(item =>
                     item.GetType() == typeof(TextMenu.Button) && ((TextMenu.Button) item).Label == Dialog.Clean("MENU_PAUSE_RETURN"));
 
-                menu.Insert(returnToMapIndex, new TextMenu.Button(Dialog.Clean("collabutils2_returntolobby"))
-                    .Pressed(() => {
-                        Engine.TimeRate = 1f;
-                        menu.Focused = false;
-                        Audio.SetMusic(null);
-                        Audio.BusStopAll("bus:/gameplay_sfx", immediate: true);
-
-                        level.DoScreenWipe(wipeIn: false, () => {
-                            Engine.Scene = new LevelExitToLobby(LevelExit.Mode.GiveUp, level.Session);
-                        });
-
-                        foreach (LevelEndingHook component in level.Tracker.GetComponents<LevelEndingHook>()) {
-                            component.OnEnd?.Invoke();
-                        }
-                    }));
+                TextMenu.Button returnToLobbyButton = new TextMenu.Button(Dialog.Clean("collabutils2_returntolobby"));
+                returnToLobbyButton.Pressed(() => {
+                    level.PauseMainMenuOpen = false;
+                    menu.RemoveSelf();
+                    openReturnToLobbyConfirmMenu(level, menu.Selection);
+                });
+                returnToLobbyButton.ConfirmSfx = "event:/ui/main/message_confirm";
+                menu.Insert(returnToMapIndex, returnToLobbyButton);
             }
         }
 
@@ -96,6 +89,43 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 // be sure that Return to Map and such from a collab entry returns to the lobby, not to the collab entry. 
                 SaveData.Instance.LastArea_Safe = AreaData.Get(CollabModule.Instance.Session.LobbySID).ToKey();
             }
+        }
+
+        private static void openReturnToLobbyConfirmMenu(Level level, int returnIndex) {
+            level.Paused = true;
+            TextMenu menu = new TextMenu();
+            menu.AutoScroll = false;
+            menu.Position = new Vector2((float) Engine.Width / 2f, (float) Engine.Height / 2f - 100f);
+            menu.Add(new TextMenu.Header(Dialog.Clean("collabutils2_returntolobby_confirm_title")));
+            menu.Add(new TextMenu.Button(Dialog.Clean("menu_return_continue")).Pressed(() => {
+                Engine.TimeRate = 1f;
+                menu.Focused = false;
+                Audio.SetMusic(null);
+                Audio.BusStopAll("bus:/gameplay_sfx", immediate: true);
+
+                level.DoScreenWipe(wipeIn: false, () => {
+                    Engine.Scene = new LevelExitToLobby(LevelExit.Mode.GiveUp, level.Session);
+                });
+
+                foreach (LevelEndingHook component in level.Tracker.GetComponents<LevelEndingHook>()) {
+                    component.OnEnd?.Invoke();
+                }
+            }));
+            menu.Add(new TextMenu.Button(Dialog.Clean("menu_return_cancel")).Pressed(() => {
+                menu.OnCancel();
+            }));
+            menu.OnPause = (menu.OnESC = () => {
+                menu.RemoveSelf();
+                level.Paused = false;
+                Engine.FreezeTimer = 0.15f;
+                Audio.Play("event:/ui/game/unpause");
+            });
+            menu.OnCancel = () => {
+                Audio.Play("event:/ui/main/button_back");
+                menu.RemoveSelf();
+                level.Pause(returnIndex, minimal: false);
+            };
+            level.Add(menu);
         }
     }
 }
