@@ -4,6 +4,8 @@ modoptions_collab_title= Collab Utils 2
 collabutils2_returntolobby= Return to Lobby
 collabutils2_restartspeedberry= Restart Speed Berry
 
+collabutils2_returntolobby_confirm_title= RETURN TO LOBBY?
+
 collabutils2_speedberry_gold= Gold:
 collabutils2_speedberry_silver= Silver:
 collabutils2_speedberry_bronze= Bronze:

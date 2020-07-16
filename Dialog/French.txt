@@ -4,6 +4,8 @@ modoptions_collab_title= Collab Utils 2
 collabutils2_returntolobby= Retour au lobby
 collabutils2_restartspeedberry= Redémarrer la fraise speedrun
 
+collabutils2_returntolobby_confirm_title= RETOURNER AU LOBBY ?
+
 collabutils2_speedberry_gold= Or :
 collabutils2_speedberry_silver= Argent :
 collabutils2_speedberry_bronze= Bronze :
