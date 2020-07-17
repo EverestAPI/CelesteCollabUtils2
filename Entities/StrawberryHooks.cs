@@ -160,18 +160,23 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private static SpeedBerry storedSpeedBerry;
 
         private static PlayerDeadBody onPlayerDie(On.Celeste.Player.orig_Die orig, Player self, Vector2 direction, bool evenIfInvincible, bool registerDeathInStats) {
-            bool hasSilver = self.Leader.Followers.Any(follower => follower.Entity is SilverBerry);
+            bool hasSilver = false;
             SpeedBerry speedBerry = null;
-            Follower speedBerryFollower = self.Leader.Followers.Find(follower => follower.Entity is SpeedBerry);
-            if (speedBerryFollower != null) {
-                speedBerry = (SpeedBerry) speedBerryFollower.Entity;
-                // Don't restart the player to the starting room if there's still time left on the speed berry
-                if (!speedBerry.TimeRanOut) {
-                    DynData<Strawberry> data = new DynData<Strawberry>(speedBerry);
-                    data["Golden"] = false;
-                    // set the starting position to the spawn point
-                    Level level = self.SceneAs<Level>();
-                    data["start"] = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top)) + new Vector2(8, -16);
+
+            // check if the player is actually going to die first.
+            if (!self.Dead && (evenIfInvincible || !SaveData.Instance.Assists.Invincible) && self.StateMachine.State != 18) {
+                hasSilver = self.Leader.Followers.Any(follower => follower.Entity is SilverBerry);
+                Follower speedBerryFollower = self.Leader.Followers.Find(follower => follower.Entity is SpeedBerry);
+                if (speedBerryFollower != null) {
+                    speedBerry = (SpeedBerry) speedBerryFollower.Entity;
+                    // Don't restart the player to the starting room if there's still time left on the speed berry
+                    if (!speedBerry.TimeRanOut) {
+                        DynData<Strawberry> data = new DynData<Strawberry>(speedBerry);
+                        data["Golden"] = false;
+                        // set the starting position to the spawn point
+                        Level level = self.SceneAs<Level>();
+                        data["start"] = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top)) + new Vector2(8, -16);
+                    }
                 }
             }
 
