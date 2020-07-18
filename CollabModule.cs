@@ -1,9 +1,7 @@
 ﻿using Celeste.Mod.CollabUtils2.Entities;
 using Celeste.Mod.CollabUtils2.Triggers;
 using Celeste.Mod.CollabUtils2.UI;
-using Microsoft.Xna.Framework;
 using System;
-using System.Linq;
 
 namespace Celeste.Mod.CollabUtils2 {
     public class CollabModule : EverestModule {

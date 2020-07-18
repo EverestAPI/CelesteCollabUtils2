@@ -13,12 +13,14 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.OuiChapterPanel.Start += modChapterPanelStart;
             Everest.Events.Level.OnCreatePauseMenuButtons += onCreatePauseMenuButtons;
             On.Celeste.LevelExit.ctor += onLevelExitConstructor;
+            On.Celeste.LevelLoader.ctor += onLevelLoaderConstructor;
         }
 
         public static void Unload() {
             On.Celeste.OuiChapterPanel.Start -= modChapterPanelStart;
             Everest.Events.Level.OnCreatePauseMenuButtons -= onCreatePauseMenuButtons;
             On.Celeste.LevelExit.ctor -= onLevelExitConstructor;
+            On.Celeste.LevelLoader.ctor -= onLevelLoaderConstructor;
         }
 
         private static void modChapterPanelStart(On.Celeste.OuiChapterPanel.orig_Start orig, OuiChapterPanel self, string checkpoint) {
@@ -126,6 +128,17 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 level.Pause(returnIndex, minimal: false);
             };
             level.Add(menu);
+        }
+
+        private static void onLevelLoaderConstructor(On.Celeste.LevelLoader.orig_ctor orig, LevelLoader self, Session session, Vector2? startPosition) {
+            if (Engine.Scene is Level level && level.Session != session && session.Area.ID == level.Session.Area.ID) {
+                Logger.Log("CollabUtils2/ReturnToLobbyHelper", "Teleporting within the level: conserving mod session");
+                temporaryLobbySIDHolder = CollabModule.Instance.Session.LobbySID;
+                temporaryRoomHolder = CollabModule.Instance.Session.LobbyRoom;
+                temporarySpawnPointHolder = new Vector2(CollabModule.Instance.Session.LobbySpawnPointX, CollabModule.Instance.Session.LobbySpawnPointY);
+            }
+
+            orig(self, session, startPosition);
         }
     }
 }
