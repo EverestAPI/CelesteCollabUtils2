@@ -74,7 +74,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     openReturnToLobbyConfirmMenu(level, menu.Selection);
                 });
                 returnToLobbyButton.ConfirmSfx = "event:/ui/main/message_confirm";
-                menu.Insert(returnToMapIndex, returnToLobbyButton);
+                menu.Insert(returnToMapIndex + 1, returnToLobbyButton);
             }
         }
 
