@@ -8,18 +8,12 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private MiniHeartDoor door;
         private Player player;
 
-        private Vector2 origCameraAnchor;
-        private Vector2 origCameraAnchorLerp;
-
         public MiniHeartDoorUnlockCutscene(MiniHeartDoor door, Player player) {
             this.door = door;
             this.player = player;
         }
 
         public override void OnBegin(Level level) {
-            origCameraAnchor = player.CameraAnchor;
-            origCameraAnchorLerp = player.CameraAnchorLerp;
-
             Add(new Coroutine(Cutscene(level)));
         }
 
@@ -30,30 +24,11 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             }
 
             player.StateMachine.State = 11;
-            player.ForceCameraUpdate = true;
 
             yield return 0.5f;
 
-            // kill camera targets before they mess with our plans.
-            foreach (Trigger trigger in Scene.Tracker.GetEntities<CameraTargetTrigger>()) {
-                trigger.Collidable = false;
-            }
-            foreach (Trigger trigger in Scene.Tracker.GetEntities<CameraAdvanceTargetTrigger>()) {
-                trigger.Collidable = false;
-            }
-            yield return null;
-
-            // the camera targets' OnLeave were called, now set our own target.
-            player.CameraAnchor = door.Center - new Vector2(160f - door.Size / 2, 90f);
-            player.CameraAnchorLerp = Vector2.One;
-
-            // wait for the camera to reach its objective.
-            Vector2 prevCameraPosition = level.Camera.Position;
-            yield return null;
-            while ((level.Camera.Position - prevCameraPosition).LengthSquared() > 0.01f) {
-                prevCameraPosition = level.Camera.Position;
-                yield return null;
-            }
+            // pan the camera to the door.
+            yield return CameraTo(door.Center - new Vector2(160f - door.Size / 2, 90f), 1.5f, Ease.CubeOut);
 
             // make door open.
             door.ForceTrigger = true;
@@ -66,24 +41,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             yield return 1f;
 
             // pan back to player.
-            player.CameraAnchor = origCameraAnchor;
-            player.CameraAnchorLerp = origCameraAnchorLerp;
-
-            // revive camera targets.
-            foreach (Trigger trigger in Scene.Tracker.GetEntities<CameraTargetTrigger>()) {
-                trigger.Collidable = true;
-            }
-            foreach (Trigger trigger in Scene.Tracker.GetEntities<CameraAdvanceTargetTrigger>()) {
-                trigger.Collidable = true;
-            }
-
-            // wait for the camera to reach its objective.
-            prevCameraPosition = level.Camera.Position;
-            yield return null;
-            while ((level.Camera.Position - prevCameraPosition).LengthSquared() > 0.01f) {
-                prevCameraPosition = level.Camera.Position;
-                yield return null;
-            }
+            yield return CameraTo(player.CameraTarget, 1.5f, Ease.CubeOut);
 
             // cutscene over.
             EndCutscene(level);
@@ -95,8 +53,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
             if (WasSkipped) {
                 // snap camera to player
-                player.CameraAnchor = origCameraAnchor;
-                player.CameraAnchorLerp = origCameraAnchorLerp;
                 level.Camera.Position = player.CameraTarget;
 
                 // instant open the door
@@ -114,14 +70,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                         component.RemoveSelf();
                         break;
                     }
-                }
-
-                // be sure to revive camera targets.
-                foreach (Trigger trigger in Scene.Tracker.GetEntities<CameraTargetTrigger>()) {
-                    trigger.Collidable = true;
-                }
-                foreach (Trigger trigger in Scene.Tracker.GetEntities<CameraAdvanceTargetTrigger>()) {
-                    trigger.Collidable = true;
                 }
             }
         }
