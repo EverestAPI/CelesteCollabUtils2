@@ -171,8 +171,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private static bool OnSaveDataFoundAnyCheckpoints(On.Celeste.SaveData.orig_FoundAnyCheckpoints orig, SaveData self, AreaKey area) {
+            // if this is a collab chapter panel, display the second page (containing the credits) if they are defined in English.txt.
             if (Engine.Scene == overworldWrapper?.Scene)
-                return true;
+                return Dialog.Has(new DynData<Overworld>(overworldWrapper.WrappedScene).Get<AreaData>("collabInGameForcedArea").Name + "_collabcredits");
 
             return orig(self, area);
         }
