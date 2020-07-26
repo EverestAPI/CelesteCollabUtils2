@@ -180,7 +180,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private static int OnChapterPanelGetModeHeight(On.Celeste.OuiChapterPanel.orig_GetModeHeight orig, OuiChapterPanel self) {
             AreaModeStats areaModeStats = self.RealStats.Modes[(int) self.Area.Mode];
-            if (Engine.Scene == overworldWrapper?.Scene && areaModeStats.Deaths > 0)
+            if (Engine.Scene == overworldWrapper?.Scene && areaModeStats.Deaths > 0 && !AreaData.Get(self.Area).Interlude_Safe)
                 return 540;
 
             return orig(self);
@@ -356,7 +356,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (Engine.Scene == overworldWrapper?.Scene) {
                 AreaModeStats areaModeStats = self.DisplayedStats.Modes[(int) self.Area.Mode];
                 DeathsCounter deathsCounter = new DynData<OuiChapterPanel>(self).Get<DeathsCounter>("deaths");
-                deathsCounter.Visible = areaModeStats.Deaths > 0;
+                deathsCounter.Visible = areaModeStats.Deaths > 0 && !AreaData.Get(self.Area).Interlude_Safe;
 
                 // mod the death icon
                 string pathToSkull = "CollabUtils2/skulls/" + self.Area.GetLevelSet();
