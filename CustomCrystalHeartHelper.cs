@@ -55,11 +55,11 @@ namespace Celeste.Mod.CollabUtils2 {
                 // and adjust the screen color to the heart.
                 DynData<Poem> selfData = new DynData<Poem>(self);
                 switch (self.Heart.Texture.AtlasPath) {
-                    case "collectables/heartGem/1/spin00":
+                    case "collectables/heartgem/1/spin00":
                         selfData["Color"] = Calc.HexToColor("ff668a");
                         break;
-                    case "collectables/heartGem/2/spin00":
-                        selfData["Color"] = Calc.HexToColor("fffc24");
+                    case "collectables/heartgem/2/spin00":
+                        selfData["Color"] = Calc.HexToColor("D2AD01");
                         break;
                     case "CollabUtils2/crystalHeart/expert/spin00":
                         selfData["Color"] = Color.Orange;
