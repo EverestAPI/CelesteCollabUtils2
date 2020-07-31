@@ -30,6 +30,7 @@ namespace Celeste.Mod.CollabUtils2 {
             SpeedBerryTimerDisplay.Load();
             SpeedBerryPBInChapterPanel.Load();
             JournalTrigger.Load();
+            CustomCrystalHeartHelper.Load();
         }
 
         public override void Unload() {
@@ -41,6 +42,7 @@ namespace Celeste.Mod.CollabUtils2 {
             SpeedBerryTimerDisplay.Unload();
             SpeedBerryPBInChapterPanel.Unload();
             JournalTrigger.Unload();
+            CustomCrystalHeartHelper.Unload();
         }
 
         public override void LoadContent(bool firstLoad) {

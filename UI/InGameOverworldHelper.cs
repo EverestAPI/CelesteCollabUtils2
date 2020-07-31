@@ -17,7 +17,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private static SceneWrappingEntity<Overworld> overworldWrapper;
 
-        private static SpriteBank heartSpriteBank;
+        public static SpriteBank HeartSpriteBank;
 
         private static bool skipSetMusic;
         private static bool skipSetAmbience;
@@ -64,7 +64,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         public static void LoadContent() {
-            heartSpriteBank = new SpriteBank(GFX.Gui, "Graphics/CollabUtils2/CrystalHeartSwaps.xml");
+            HeartSpriteBank = new SpriteBank(GFX.Gui, "Graphics/CollabUtils2/CrystalHeartSwaps.xml");
         }
 
         private static void OnPause(Level level, int startIndex, bool minimal, bool quickReset) {
@@ -154,16 +154,16 @@ namespace Celeste.Mod.CollabUtils2.UI {
             string mapName = sid.DialogKeyify();
             string mapLevelSet = AreaData.Get(sid)?.GetLevelSet().DialogKeyify();
 
-            if (heartSpriteBank.Has("crystalHeart_" + mapName)) {
+            if (HeartSpriteBank.Has("crystalHeart_" + mapName)) {
                 // this map has a custom heart registered: use it.
                 animId = "crystalHeart_" + mapName;
-            } else if (heartSpriteBank.Has("crystalHeart_" + mapLevelSet)) {
+            } else if (HeartSpriteBank.Has("crystalHeart_" + mapLevelSet)) {
                 // this level set has a custom heart registered: use it.
                 animId = "crystalHeart_" + mapLevelSet;
             }
 
             if (animId != null) {
-                Sprite heartSprite = heartSpriteBank.Create(animId);
+                Sprite heartSprite = HeartSpriteBank.Create(animId);
                 new DynData<OuiChapterPanel>(panel).Get<HeartGemDisplay>("heart").Sprites[0] = heartSprite;
                 heartSprite.Play("spin");
                 new DynData<OuiChapterPanel>(panel)["heartDirty"] = true;
