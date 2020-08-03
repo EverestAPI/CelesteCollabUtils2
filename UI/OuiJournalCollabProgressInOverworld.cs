@@ -62,7 +62,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             foreach (AreaStats item in SaveData.Instance.Areas_Safe) {
                 AreaData areaData = AreaData.Get(item.ID_Safe);
-                if (!areaData.Interlude_Safe) {
+                if (areaData.GetLevelSet() == SaveData.Instance.LevelSet) {
                     string lobbyMapLevelSetName = LobbyHelper.GetLobbyLevelSet(areaData.GetSID());
                     LevelSetStats lobbyMapLevelSet = null;
                     if (lobbyMapLevelSetName != null) {
