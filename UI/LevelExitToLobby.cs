@@ -40,6 +40,16 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private IEnumerator Routine() {
+            Session newSession = null;
+            if (targetSID != null) {
+                newSession = new Session(AreaData.Get(targetSID).ToKey());
+                newSession.FirstLevel = false;
+                newSession.StartedFromBeginning = false;
+                newSession.Level = targetRoom;
+                newSession.RespawnPoint = targetSpawnPoint;
+                SaveData.Instance.CurrentSession_Safe = newSession;
+            }
+
             UserIO.SaveHandler(file: true, settings: true);
             while (UserIO.Saving) {
                 yield return null;
@@ -53,13 +63,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 Engine.Scene = new OverworldLoader(
                     exitMode == LevelExit.Mode.Completed ? Overworld.StartMode.AreaComplete : Overworld.StartMode.AreaQuit);
             } else {
-                Session session = new Session(AreaData.Get(targetSID).ToKey());
-                session.FirstLevel = false;
-                session.StartedFromBeginning = false;
-                session.Level = targetRoom;
-                session.RespawnPoint = targetSpawnPoint;
-                new DynData<Session>(session)["pauseTimerUntilAction"] = true;
-                LevelEnter.Go(session, false);
+                new DynData<Session>(newSession)["pauseTimerUntilAction"] = true;
+                LevelEnter.Go(newSession, false);
             }
         }
     }
