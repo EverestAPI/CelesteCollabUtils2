@@ -3,6 +3,7 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Monocle;
 using MonoMod.Cil;
+using MonoMod.RuntimeDetour;
 using MonoMod.Utils;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,8 @@ namespace Celeste.Mod.CollabUtils2 {
     class LobbyHelper {
 
         private static bool unpauseTimerOnNextAction = false;
+
+        private static ILHook hookOnOuiFileSelectRender;
 
         /// <summary>
         /// Returns the level set the given lobby SID is associated to, or null if the SID given is not a lobby.
@@ -58,6 +61,9 @@ namespace Celeste.Mod.CollabUtils2 {
             On.Celeste.SaveData.RegisterCompletion += onRegisterCompletion;
             On.Celeste.SaveData.AfterInitialize += onSaveDataAfterInitialize;
             Everest.Events.Journal.OnEnter += onJournalEnter;
+            On.Celeste.OuiFileSelectSlot.Show += onOuiFileSelectSlotShow;
+
+            hookOnOuiFileSelectRender = new ILHook(typeof(OuiFileSelectSlot).GetMethod("orig_Render"), modSelectSlotLevelSetDisplayName);
         }
 
         public static void Unload() {
@@ -68,6 +74,9 @@ namespace Celeste.Mod.CollabUtils2 {
             On.Celeste.SaveData.RegisterCompletion -= onRegisterCompletion;
             On.Celeste.SaveData.AfterInitialize -= onSaveDataAfterInitialize;
             Everest.Events.Journal.OnEnter -= onJournalEnter;
+            On.Celeste.OuiFileSelectSlot.Show -= onOuiFileSelectSlotShow;
+
+            hookOnOuiFileSelectRender?.Dispose();
         }
 
         public static void OnSessionCreated() {
@@ -173,6 +182,76 @@ namespace Celeste.Mod.CollabUtils2 {
 
                 // then, fill in the journal with our custom pages.
                 journal.Pages.Add(new OuiJournalCollabProgressInOverworld(journal));
+            }
+        }
+
+        private static void onOuiFileSelectSlotShow(On.Celeste.OuiFileSelectSlot.orig_Show orig, OuiFileSelectSlot self) {
+            orig(self);
+
+            if (self.SaveData?.LevelSet == "SpringCollab2020/0-Lobbies") {
+                // recompute the stats for the collab.
+                int totalStrawberries = 0;
+                int totalGoldenStrawberries = 0;
+                int totalHeartGems = 0;
+                int totalCassettes = 0;
+                int maxStrawberryCount = 0;
+                int maxGoldenStrawberryCount = 0;
+                int maxStrawberryCountIncludingUntracked = 0;
+                int maxCassettes = 0;
+                int maxCrystalHearts = 0;
+                int maxCrystalHeartsExcludingCSides = 0;
+
+                // aggregate all stats for SpringCollab2020 level sets.
+                foreach (LevelSetStats stats in self.SaveData.LevelSets) {
+                    if (stats.Name.StartsWith("SpringCollab2020/")) {
+                        totalStrawberries += stats.TotalStrawberries;
+                        totalGoldenStrawberries += stats.TotalGoldenStrawberries;
+                        totalHeartGems += stats.TotalHeartGems;
+                        totalCassettes += stats.TotalCassettes;
+                        maxStrawberryCount += stats.MaxStrawberries;
+                        maxGoldenStrawberryCount += stats.MaxGoldenStrawberries;
+                        maxStrawberryCountIncludingUntracked += stats.MaxStrawberriesIncludingUntracked;
+                        maxCassettes += stats.MaxCassettes;
+                        maxCrystalHearts += stats.MaxHeartGems;
+                        maxCrystalHeartsExcludingCSides += stats.MaxHeartGemsExcludingCSides;
+                    }
+                }
+
+                DynData<OuiFileSelectSlot> slotData = new DynData<OuiFileSelectSlot>(self);
+                slotData["totalGoldenStrawberries"] = totalGoldenStrawberries;
+                slotData["totalHeartGems"] = totalHeartGems;
+                slotData["totalCassettes"] = totalCassettes;
+                slotData["maxStrawberryCount"] = maxStrawberryCount;
+                slotData["maxGoldenStrawberryCount"] = maxGoldenStrawberryCount;
+                slotData["maxStrawberryCountIncludingUntracked"] = maxStrawberryCountIncludingUntracked;
+                slotData["maxCassettes"] = maxCassettes;
+                slotData["maxCrystalHearts"] = maxCrystalHearts;
+                slotData["maxCrystalHeartsExcludingCSides"] = maxCrystalHeartsExcludingCSides;
+                slotData["summitStamp"] = false;
+                slotData["farewellStamp"] = false;
+
+                self.Strawberries.Amount = totalStrawberries;
+                self.Strawberries.OutOf = maxStrawberryCount;
+            }
+        }
+
+        private static void modSelectSlotLevelSetDisplayName(ILContext il) {
+            ILCursor cursor = new ILCursor(il);
+
+            while (cursor.TryGotoNext(MoveType.After,
+                instr => instr.MatchLdfld<AreaData>("Name"),
+                instr => instr.MatchLdnull())) {
+
+                Logger.Log("CollabUtils2/LobbyHelper", $"Replacing collab display name at {cursor.Index} in IL for OuiFileSelectSlot.orig_Render");
+
+                cursor.Index--;
+                cursor.Emit(OpCodes.Ldarg_0);
+                cursor.EmitDelegate<Func<string, OuiFileSelectSlot, string>>((orig, self) => {
+                    if (self.SaveData?.LevelSet == "SpringCollab2020/0-Lobbies") {
+                        return self.SaveData.LevelSet.DialogKeyify();
+                    }
+                    return orig;
+                });
             }
         }
     }
