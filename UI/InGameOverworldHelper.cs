@@ -44,6 +44,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             IL.Celeste.DeathsCounter.Render += ModDeathsCounterRender;
             IL.Celeste.StrawberriesCounter.Render += ModStrawberriesCounterRender;
             On.Celeste.MapData.Load += ModMapDataLoad;
+            On.Celeste.OuiChapterPanel.Start += OnOuiChapterPanelStart;
         }
 
         public static void Unload() {
@@ -61,6 +62,15 @@ namespace Celeste.Mod.CollabUtils2.UI {
             IL.Celeste.DeathsCounter.Render -= ModDeathsCounterRender;
             IL.Celeste.StrawberriesCounter.Render -= ModStrawberriesCounterRender;
             On.Celeste.MapData.Load -= ModMapDataLoad;
+            On.Celeste.OuiChapterPanel.Start -= OnOuiChapterPanelStart;
+        }
+
+        private static void OnOuiChapterPanelStart(On.Celeste.OuiChapterPanel.orig_Start orig, OuiChapterPanel self, string checkpoint) {
+            if (overworldWrapper != null) {
+                (overworldWrapper.Scene as Level).PauseLock = true;
+            }
+
+            orig(self, checkpoint);
         }
 
         public static void LoadContent() {
@@ -467,6 +477,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 overworld.RendererList.Remove(overworld.RendererList.Renderers.Find(r => r is MountainRenderer));
                 overworld.RendererList.Remove(overworld.RendererList.Renderers.Find(r => r is ScreenWipe));
                 overworld.RendererList.UpdateLists();
+            };
+            overworldWrapper.OnEnd += (overworld) => {
+                if (overworldWrapper?.WrappedScene == overworld) {
+                    overworldWrapper = null;
+                }
             };
 
             level.Add(overworldWrapper);
