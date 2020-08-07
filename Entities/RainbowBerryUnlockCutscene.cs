@@ -9,12 +9,15 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private RainbowBerry strawberry;
         private HoloRainbowBerry holoBerry;
         private int silverBerryCount;
-        private Vector2 cameraStart;
         private ParticleSystem system;
         private EventInstance snapshot;
         private EventInstance sfx;
 
         private Image[] silverBerries;
+
+        private float initialLightingAlphaAdd = 0f;
+        private float initialBloomBase = 0f;
+        private Coroutine fadeCoroutine;
 
         public RainbowBerryUnlockCutscene(RainbowBerry strawberry, HoloRainbowBerry holoBerry, int silverBerryCount) {
             this.strawberry = strawberry;
@@ -23,15 +26,12 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         }
 
         public override void OnBegin(Level level) {
-            cameraStart = level.Camera.Position;
             Add(new Coroutine(Cutscene(level)));
         }
 
         private IEnumerator Cutscene(Level level) {
             Player player = Scene.Tracker.GetEntity<Player>();
             if (player != null) {
-                cameraStart = player.CameraTarget;
-
                 // wait until player is in control (respawn animation done, etc).
                 while (!player.InControl) {
                     yield return null;
@@ -80,6 +80,11 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             system.Tag = Tags.FrozenUpdate;
             level.Add(system);
 
+            // fade the lighting to default.
+            initialLightingAlphaAdd = level.Session.LightingAlphaAdd;
+            initialBloomBase = level.Bloom.Base;
+            Add(fadeCoroutine = new Coroutine(fadeRoutine(level, true)));
+
             // start the spin
             float angleSep = (float) Math.PI * 2f / silverBerryCount;
             float angle = (float) Math.PI / 2f;
@@ -91,8 +96,9 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             // focus camera on rainbow berry and wait
             Vector2 cameraTarget = strawberry.Position - new Vector2(160f, 90f);
             cameraTarget = cameraTarget.Clamp(level.Bounds.Left, level.Bounds.Top, level.Bounds.Right - 320, level.Bounds.Bottom - 180);
-            Add(new Coroutine(CameraTo(cameraTarget, 3.5f, Ease.CubeInOut)));
-            yield return 4f;
+            yield return 0.1f;
+            Add(new Coroutine(CameraTo(cameraTarget, 2f, Ease.CubeInOut)));
+            yield return 3.9f;
 
             // combine all silvers into the rainbow
             Input.Rumble(RumbleStrength.Light, RumbleLength.Long);
@@ -111,21 +117,38 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             strawberry.CollectedSeeds();
             yield return 0.5f;
 
+            // fade the lighting back.
+            Add(fadeCoroutine = new Coroutine(fadeRoutine(level, false)));
+
             // pan back to the player
-            float dist = (level.Camera.Position - cameraStart).Length();
-            yield return CameraTo(cameraStart, dist / 180f);
-            if (dist > 80f) {
-                yield return 0.25f;
-            }
+            yield return CameraTo(player.CameraTarget, 1.5f, Ease.CubeOut);
 
             // cutscene is over!
             level.EndCutscene();
             OnEnd(level);
         }
 
+        private IEnumerator fadeRoutine(Level level, bool fadeIn) {
+            for (float f = 0; f < 1.5f; f += Engine.DeltaTime) {
+                float fadeProgress = fadeIn ? f / 1.5f : (1.5f - f) / 1.5f;
+                level.Session.LightingAlphaAdd = MathHelper.Lerp(initialLightingAlphaAdd, 0, fadeProgress);
+                level.Lighting.Alpha = level.BaseLightingAlpha + level.Session.LightingAlphaAdd;
+                level.Bloom.Base = MathHelper.Lerp(initialBloomBase, AreaData.Get(SceneAs<Level>()).BloomBase, fadeProgress);
+                yield return null;
+            }
+        }
+
         public override void OnEnd(Level level) {
             if (WasSkipped) {
                 Audio.Stop(sfx);
+
+                // restore the lighting.
+                if (fadeCoroutine != null) {
+                    Remove(fadeCoroutine);
+                    level.Session.LightingAlphaAdd = initialLightingAlphaAdd;
+                    level.Lighting.Alpha = level.BaseLightingAlpha + level.Session.LightingAlphaAdd;
+                    level.Bloom.Base = initialBloomBase;
+                }
             }
             Player player = Scene.Tracker.GetEntity<Player>();
             if (player != null) {
@@ -140,7 +163,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     }
                     holoBerry.RemoveSelf();
                     strawberry.CollectedSeeds();
-                    level.Camera.Position = cameraStart;
+                    level.Camera.Position = player.CameraTarget;
                 }
                 strawberry.Depth = -100;
                 strawberry.RemoveTag(Tags.FrozenUpdate);
@@ -164,7 +187,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             Vector2 start = silverBerry.Position;
 
             // first tween to make the lerp progress
-            Tween tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.CubeIn, time / 2f, start: true);
+            Tween tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.CubeInOut, time / 2f, start: true);
             tween.OnUpdate = t => {
                 spinLerp = t.Eased;
             };

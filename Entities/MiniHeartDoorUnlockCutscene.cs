@@ -2,11 +2,19 @@
 using Monocle;
 using MonoMod.Utils;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
     class MiniHeartDoorUnlockCutscene : CutsceneEntity {
         private MiniHeartDoor door;
         private Player player;
+
+        private float initialLightingAlphaAdd = 0f;
+        private float initialBloomBase = 0f;
+        private Coroutine fadeCoroutine;
+        private IEnumerable<LightFadeTrigger> lightFadeTriggers;
+        private IEnumerable<BloomFadeTrigger> bloomFadeTriggers;
 
         public MiniHeartDoorUnlockCutscene(MiniHeartDoor door, Player player) {
             this.door = door;
@@ -27,6 +35,21 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
             yield return 0.5f;
 
+            // turn off light fade triggers.
+            lightFadeTriggers = player.CollideAll<Trigger>().OfType<LightFadeTrigger>();
+            foreach (LightFadeTrigger trigger in lightFadeTriggers) {
+                trigger.Collidable = false;
+            }
+            bloomFadeTriggers = player.CollideAll<Trigger>().OfType<BloomFadeTrigger>();
+            foreach (BloomFadeTrigger trigger in bloomFadeTriggers) {
+                trigger.Collidable = false;
+            }
+
+            // fade the lighting to default.
+            initialLightingAlphaAdd = level.Session.LightingAlphaAdd;
+            initialBloomBase = level.Bloom.Base;
+            Add(fadeCoroutine = new Coroutine(fadeRoutine(level, true)));
+
             // pan the camera to the door.
             yield return CameraTo(door.Center - new Vector2(160f - door.Size / 2, 90f), 1.5f, Ease.CubeOut);
 
@@ -40,11 +63,32 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             }
             yield return 1f;
 
+            // fade the lighting back.
+            Add(fadeCoroutine = new Coroutine(fadeRoutine(level, false)));
+
             // pan back to player.
             yield return CameraTo(player.CameraTarget, 1.5f, Ease.CubeOut);
 
+            // turn back on light fade triggers.
+            foreach (LightFadeTrigger trigger in lightFadeTriggers) {
+                trigger.Collidable = true;
+            }
+            foreach (BloomFadeTrigger trigger in bloomFadeTriggers) {
+                trigger.Collidable = true;
+            }
+
             // cutscene over.
             EndCutscene(level);
+        }
+
+        private IEnumerator fadeRoutine(Level level, bool fadeIn) {
+            for (float f = 0; f < 1.5f; f += Engine.DeltaTime) {
+                float fadeProgress = fadeIn ? f / 1.5f : (1.5f - f) / 1.5f;
+                level.Session.LightingAlphaAdd = MathHelper.Lerp(initialLightingAlphaAdd, 0, fadeProgress);
+                level.Lighting.Alpha = level.BaseLightingAlpha + level.Session.LightingAlphaAdd;
+                level.Bloom.Base = MathHelper.Lerp(initialBloomBase, AreaData.Get(SceneAs<Level>()).BloomBase, fadeProgress);
+                yield return null;
+            }
         }
 
         public override void OnEnd(Level level) {
@@ -69,6 +113,24 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     if (component is Coroutine) {
                         component.RemoveSelf();
                         break;
+                    }
+                }
+
+                // restore the lighting.
+                if (fadeCoroutine != null) {
+                    Remove(fadeCoroutine);
+                    level.Session.LightingAlphaAdd = initialLightingAlphaAdd;
+                    level.Lighting.Alpha = level.BaseLightingAlpha + level.Session.LightingAlphaAdd;
+                    level.Bloom.Base = initialBloomBase;
+                }
+
+                // turn back on light fade triggers.
+                if (lightFadeTriggers != null) {
+                    foreach (LightFadeTrigger trigger in lightFadeTriggers) {
+                        trigger.Collidable = true;
+                    }
+                    foreach (BloomFadeTrigger trigger in bloomFadeTriggers) {
+                        trigger.Collidable = true;
                     }
                 }
             }
