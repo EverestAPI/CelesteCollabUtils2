@@ -8,6 +8,7 @@ using MonoMod.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace Celeste.Mod.CollabUtils2 {
     class LobbyHelper {
@@ -15,6 +16,7 @@ namespace Celeste.Mod.CollabUtils2 {
         private static bool unpauseTimerOnNextAction = false;
 
         private static ILHook hookOnOuiFileSelectRender;
+        private static ILHook hookOnOuiJournalPoemLines;
 
         /// <summary>
         /// Returns the level set the given lobby SID is associated to, or null if the SID given is not a lobby.
@@ -64,6 +66,7 @@ namespace Celeste.Mod.CollabUtils2 {
             On.Celeste.OuiFileSelectSlot.Show += onOuiFileSelectSlotShow;
 
             hookOnOuiFileSelectRender = new ILHook(typeof(OuiFileSelectSlot).GetMethod("orig_Render"), modSelectSlotLevelSetDisplayName);
+            hookOnOuiJournalPoemLines = new ILHook(typeof(OuiJournalPoem).GetNestedType("PoemLine", BindingFlags.NonPublic).GetMethod("Render"), modJournalPoemHeartColors);
         }
 
         public static void Unload() {
@@ -77,6 +80,7 @@ namespace Celeste.Mod.CollabUtils2 {
             On.Celeste.OuiFileSelectSlot.Show -= onOuiFileSelectSlotShow;
 
             hookOnOuiFileSelectRender?.Dispose();
+            hookOnOuiJournalPoemLines?.Dispose();
         }
 
         public static void OnSessionCreated() {
@@ -174,14 +178,14 @@ namespace Celeste.Mod.CollabUtils2 {
             if (SaveData.Instance.GetLevelSet() == "SpringCollab2020/0-Lobbies") {
                 // customize the journal in the overworld for the collab.
                 for (int i = 0; i < journal.Pages.Count; i++) {
-                    if (journal.Pages[i].GetType() != typeof(OuiJournalCover)) {
+                    if (journal.Pages[i].GetType() != typeof(OuiJournalCover) && journal.Pages[i].GetType() != typeof(OuiJournalPoem)) {
                         journal.Pages.RemoveAt(i);
                         i--;
                     }
                 }
 
                 // then, fill in the journal with our custom pages.
-                journal.Pages.Add(new OuiJournalCollabProgressInOverworld(journal));
+                journal.Pages.Insert(1, new OuiJournalCollabProgressInOverworld(journal));
             }
         }
 
@@ -249,6 +253,33 @@ namespace Celeste.Mod.CollabUtils2 {
                 cursor.EmitDelegate<Func<string, OuiFileSelectSlot, string>>((orig, self) => {
                     if (self.SaveData?.LevelSet == "SpringCollab2020/0-Lobbies") {
                         return self.SaveData.LevelSet.DialogKeyify();
+                    }
+                    return orig;
+                });
+            }
+        }
+
+        private static void modJournalPoemHeartColors(ILContext il) {
+            ILCursor cursor = new ILCursor(il);
+
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("heartgem0"))) {
+                Logger.Log("CollabUtils2/LobbyHelper", $"Modding journal poem heart colors at {cursor.Index} in IL for OuiJournalPoem.PoemLine.Render");
+
+                // load a second parameter for the delegate: PoemLine.Text.
+                cursor.Emit(OpCodes.Ldarg_0);
+                cursor.Emit(OpCodes.Ldfld, typeof(OuiJournalPoem).GetNestedType("PoemLine", BindingFlags.NonPublic).GetField("Text"));
+
+                cursor.EmitDelegate<Func<string, string, string>>((orig, poem) => {
+                    if (SaveData.Instance?.LevelSet == "SpringCollab2020/0-Lobbies") {
+                        foreach (AreaData area in AreaData.Areas) {
+                            string levelSetName = GetLobbyLevelSet(area.GetSID());
+                            if (levelSetName != null
+                                && Dialog.Clean("poem_" + levelSetName + "_ZZ_HeartSide_A") == poem
+                                && MTN.Journal.Has("CollabUtils2Hearts/" + levelSetName)) {
+
+                                return "CollabUtils2Hearts/" + levelSetName;
+                            }
+                        }
                     }
                     return orig;
                 });

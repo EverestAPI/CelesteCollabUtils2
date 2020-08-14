@@ -65,7 +65,7 @@ namespace Celeste.Mod.CollabUtils2 {
                         selfData["Color"] = Color.Orange;
                         break;
                     case "CollabUtils2/crystalHeart/grandmaster/spin00":
-                        selfData["Color"] = Color.DarkViolet;
+                        selfData["Color"] = Calc.HexToColor("d9a2ff");
                         break;
                 }
             }
