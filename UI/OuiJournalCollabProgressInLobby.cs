@@ -51,11 +51,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 AreaData areaData = AreaData.Get(item.ID_Safe);
                 if (!areaData.Interlude_Safe) {
                     if (LobbyHelper.IsHeartSide(areaData.GetSID())) {
-                        if (allMapsDone) {
+                        if (allMapsDone || item.TotalTimePlayed > 0) {
                             // add a separator, like the one between regular maps and Farewell
                             currentPage.table.AddRow();
                         } else {
-                            // all maps weren't complete yet: hide the heart side for now.
+                            // all maps weren't complete yet, and the heart side was never accessed: hide the heart side for now.
                             continue;
                         }
                     }
