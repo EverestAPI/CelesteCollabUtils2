@@ -24,7 +24,7 @@ namespace Celeste.Mod.CollabUtils2 {
         /// <param name="sid">The SID for a map</param>
         /// <returns>The level set name for this lobby, or null if the SID given is not a lobby</returns>
         public static string GetLobbyLevelSet(string sid) {
-            if (sid.StartsWith("SpringCollab2020/0-Lobbies/")) {
+            if (sid.StartsWith("SpringCollab2020/0-Lobbies/") && sid != "SpringCollab2020/0-Lobbies/0-Prologue") {
                 return "SpringCollab2020/" + sid.Substring("SpringCollab2020/0-Lobbies/".Length);
             }
             return null;
@@ -169,7 +169,7 @@ namespace Celeste.Mod.CollabUtils2 {
 
             // be sure that all lobbies are unlocked.
             LevelSetStats stats = self.GetLevelSetStatsFor("SpringCollab2020/0-Lobbies");
-            if (stats != null) {
+            if (stats != null && stats.UnlockedAreas > 0) { // we at least completed Prologue.
                 stats.UnlockedAreas = stats.Areas.Count - 1;
             }
         }
