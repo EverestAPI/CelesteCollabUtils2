@@ -31,6 +31,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             On.Celeste.Player.Added += Player_Added;
             On.Celeste.SaveData.AddStrawberry_AreaKey_EntityID_bool += onSaveDataAddStrawberry;
             On.Celeste.Strawberry.CollectRoutine += onStrawberryCollectRoutine;
+            On.Celeste.Level.End += onLevelEnd;
         }
 
         public static void Unload() {
@@ -42,6 +43,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             On.Celeste.Player.Added -= Player_Added;
             On.Celeste.SaveData.AddStrawberry_AreaKey_EntityID_bool -= onSaveDataAddStrawberry;
             On.Celeste.Strawberry.CollectRoutine -= onStrawberryCollectRoutine;
+            On.Celeste.Level.End -= onLevelEnd;
         }
 
         private static void Player_Added(On.Celeste.Player.orig_Added orig, Player self, Scene scene) {
@@ -250,6 +252,13 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 // spawn a perfect effect instead
                 scene.Add(new RainbowBerryPerfectEffect(position));
             }
+        }
+
+        private static void onLevelEnd(On.Celeste.Level.orig_End orig, Level self) {
+            orig(self);
+
+            // we're leaving the level: forget about the stored speed berry.
+            storedSpeedBerry = null;
         }
     }
 }
