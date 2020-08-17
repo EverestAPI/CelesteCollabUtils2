@@ -444,11 +444,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         public static void OpenChapterPanel(Player player, string sid, ChapterPanelTrigger.ReturnToLobbyMode returnToLobbyMode) {
+            player.Drop();
             Open(player, AreaData.Get(sid) ?? AreaData.Get(0), out OuiHelper_EnterChapterPanel.Start,
                 overworld => new DynData<Overworld>(overworld).Set("returnToLobbyMode", returnToLobbyMode));
         }
 
         public static void OpenJournal(Player player, string levelset) {
+            player.Drop();
             Open(player, AreaData.Areas.FirstOrDefault(area => area.LevelSet == levelset) ?? AreaData.Get(0), out OuiHelper_EnterJournal.Start);
         }
 
