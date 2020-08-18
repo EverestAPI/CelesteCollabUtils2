@@ -2,12 +2,9 @@
 using Celeste.Mod.CollabUtils2.UI;
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
-using Mono.Cecil.Pdb;
 using Monocle;
 using MonoMod.Utils;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
 
@@ -139,7 +136,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     }
 
                     // the current animation does not match the expected animation.
-                    if (sprite.CurrentAnimationID != "explosion" && !sprite.CurrentAnimationID.Contains(nextRank)) {
+                    if (nextRank != "gold" && sprite.CurrentAnimationID != "explosion" && !sprite.CurrentAnimationID.Contains(nextRank)) {
                         sprite.Play("transition_to_" + nextRank);
                     }
 
