@@ -40,6 +40,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private IEnumerator Routine() {
+            Session oldSession = SaveData.Instance.CurrentSession_Safe;
             Session newSession = null;
             if (targetSID != null) {
                 newSession = new Session(AreaData.Get(targetSID).ToKey());
@@ -57,6 +58,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
             while (SaveLoadIcon.OnScreen) {
                 yield return null;
             }
+
+            SaveData.Instance.CurrentSession_Safe = oldSession;
 
             if (targetSID == null) {
                 // failsafe: if there is no lobby to return to, return to map instead.
