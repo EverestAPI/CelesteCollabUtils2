@@ -17,11 +17,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private static void onTotalStrawberriesDisplayUpdate(On.Celeste.TotalStrawberriesDisplay.orig_Update orig, TotalStrawberriesDisplay self) {
-            bool hasSpeedBerryTimer = self.Scene.Tracker.CountEntities<SpeedBerryTimerDisplay>() > 0;
+            SpeedBerryTimerDisplay speedBerryTimer = self.Scene.Tracker.GetEntity<SpeedBerryTimerDisplay>();
 
             orig(self);
 
-            if (hasSpeedBerryTimer && CollabModule.Instance.Settings.SpeedBerryTimerPosition == CollabSettings.SpeedBerryTimerPositions.TopLeft
+            if (speedBerryTimer != null && CollabModule.Instance.Settings.SpeedBerryTimerPosition == CollabSettings.SpeedBerryTimerPositions.TopLeft
                 && self.Visible) {
 
                 float expectedY = 206f;
@@ -31,6 +31,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     } else if (Settings.Instance.SpeedrunClock == SpeedrunType.File) {
                         expectedY += 78f;
                     }
+                }
+                if (speedBerryTimer.startChapterTimer == -1) {
+                    // more times are displayed.
+                    expectedY += 70f;
                 }
                 self.Y = expectedY;
             }
@@ -75,7 +79,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
         public SpeedBerryTimerDisplay(SpeedBerry berry) {
             drawLerp = 0f;
             Tag = (Tags.HUD | Tags.Global | Tags.PauseUpdate | Tags.TransitionUpdate);
-            Depth = -100;
             calculateBaseSizes();
             Add(wiggler = Wiggler.Create(0.5f, 4f, null, false, false));
             TrackedBerry = berry;
@@ -154,6 +157,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (!tween.Active) {
                 Position = onscreenPosition;
             }
+
+            Depth = startChapterTimer == -1 ? 100 : -100;
 
             base.Update();
         }
