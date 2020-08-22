@@ -230,6 +230,19 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             if (Visible && Scene.OnInterval(0.1f)) {
                 SceneAs<Level>().Particles.Emit(shineParticle, 1, Center + sprite.Position, Vector2.One * 4f);
             }
+
+            if (collected && (Scene.Tracker.GetEntity<Player>()?.Dead ?? true)) {
+                InterruptCollection();
+            }
+        }
+
+        private void InterruptCollection() {
+            Level level = Scene as Level;
+            level.Frozen = false;
+            level.CanRetry = true;
+            level.FormationBackdrop.Display = false;
+            Engine.TimeRate = 1f;
+            RemoveSelf();
         }
     }
 }

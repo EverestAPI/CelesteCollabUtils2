@@ -1,14 +1,15 @@
 ﻿using Celeste.Mod.CollabUtils2.Entities;
 using Celeste.Mod.CollabUtils2.Triggers;
 using Celeste.Mod.CollabUtils2.UI;
-using Microsoft.Xna.Framework;
 using System;
-using System.Linq;
 
 namespace Celeste.Mod.CollabUtils2 {
     public class CollabModule : EverestModule {
 
         public static CollabModule Instance;
+
+        public override Type SettingsType => typeof(CollabSettings);
+        public CollabSettings Settings => _Settings as CollabSettings;
 
         public override Type SaveDataType => typeof(CollabSaveData);
         public CollabSaveData SaveData => _SaveData as CollabSaveData;
@@ -26,6 +27,11 @@ namespace Celeste.Mod.CollabUtils2 {
             StrawberryHooks.Load();
             MiniHeartDoor.Load();
             LobbyHelper.Load();
+            SpeedBerryTimerDisplay.Load();
+            SpeedBerryPBInChapterPanel.Load();
+            JournalTrigger.Load();
+            CustomCrystalHeartHelper.Load();
+            GoldenBerryPlayerRespawnPoint.Load();
         }
 
         public override void Unload() {
@@ -34,11 +40,17 @@ namespace Celeste.Mod.CollabUtils2 {
             StrawberryHooks.Unload();
             MiniHeartDoor.Unload();
             LobbyHelper.Unload();
+            SpeedBerryTimerDisplay.Unload();
+            SpeedBerryPBInChapterPanel.Unload();
+            JournalTrigger.Unload();
+            CustomCrystalHeartHelper.Unload();
+            GoldenBerryPlayerRespawnPoint.Unload();
         }
 
         public override void LoadContent(bool firstLoad) {
             SilverBerry.LoadContent();
             RainbowBerry.LoadContent();
+            SpeedBerry.LoadContent();
             InGameOverworldHelper.LoadContent();
         }
 

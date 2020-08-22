@@ -12,6 +12,30 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
     [CustomEntity("CollabUtils2/JournalTrigger")]
     public class JournalTrigger : Trigger {
 
+        public static void Load() {
+            Everest.Events.Journal.OnEnter += onJournalEnter;
+        }
+
+        public static void Unload() {
+            Everest.Events.Journal.OnEnter -= onJournalEnter;
+        }
+
+        private static void onJournalEnter(OuiJournal journal, Oui from) {
+            AreaData forceArea = journal.Overworld == null ? null : new DynData<Overworld>(journal.Overworld).Get<AreaData>("collabInGameForcedArea");
+            if (forceArea != null) {
+                // custom journal: throw away all pages, except the cover.
+                for (int i = 0; i < journal.Pages.Count; i++) {
+                    if (journal.Pages[i].GetType() != typeof(OuiJournalCover)) {
+                        journal.Pages.RemoveAt(i);
+                        i--;
+                    }
+                }
+
+                // then, fill in the journal with our custom pages.
+                journal.Pages.AddRange(OuiJournalCollabProgressInLobby.GeneratePages(journal, forceArea.GetLevelSet()));
+            }
+        }
+
         public string levelset;
 
         private readonly TalkComponent talkComponent;

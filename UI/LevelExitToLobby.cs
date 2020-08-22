@@ -9,12 +9,14 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private string targetSID;
         private string targetRoom;
         private Vector2 targetSpawnPoint;
+        private LevelExit.Mode exitMode;
 
         public LevelExitToLobby(LevelExit.Mode exitMode, Session currentSession) : base() {
             Add(new HudRenderer());
 
             // calling the LevelExit constructor triggers the Level.Exit Everest event, so that makes mods less confused about what's going on.
             new LevelExit(exitMode, currentSession);
+            this.exitMode = exitMode;
         }
 
         public override void Begin() {
@@ -38,6 +40,17 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private IEnumerator Routine() {
+            Session oldSession = SaveData.Instance.CurrentSession_Safe;
+            Session newSession = null;
+            if (targetSID != null) {
+                newSession = new Session(AreaData.Get(targetSID).ToKey());
+                newSession.FirstLevel = false;
+                newSession.StartedFromBeginning = false;
+                newSession.Level = targetRoom;
+                newSession.RespawnPoint = targetSpawnPoint;
+                SaveData.Instance.CurrentSession_Safe = newSession;
+            }
+
             UserIO.SaveHandler(file: true, settings: true);
             while (UserIO.Saving) {
                 yield return null;
@@ -46,13 +59,16 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 yield return null;
             }
 
-            Session session = new Session(AreaData.Get(targetSID).ToKey());
-            session.FirstLevel = false;
-            session.StartedFromBeginning = false;
-            session.Level = targetRoom;
-            session.RespawnPoint = targetSpawnPoint;
-            new DynData<Session>(session)["pauseTimerUntilAction"] = true;
-            LevelEnter.Go(session, false);
+            SaveData.Instance.CurrentSession_Safe = oldSession;
+
+            if (targetSID == null) {
+                // failsafe: if there is no lobby to return to, return to map instead.
+                Engine.Scene = new OverworldLoader(
+                    exitMode == LevelExit.Mode.Completed ? Overworld.StartMode.AreaComplete : Overworld.StartMode.AreaQuit);
+            } else {
+                new DynData<Session>(newSession)["pauseTimerUntilAction"] = true;
+                LevelEnter.Go(newSession, false);
+            }
         }
     }
 }

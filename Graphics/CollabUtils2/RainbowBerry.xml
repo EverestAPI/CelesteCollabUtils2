@@ -12,4 +12,19 @@
     <Loop id="idle" path="" delay=".08" frames="0-31" />
     <Anim id="collect" path="" delay=".07" frames="32-37"/>
   </ghostRainbowBerry>
+  
+  <perfectAnimation path="CollabUtils2/perfectStrawberryText/" start="perfect">
+    <Justify x=".47" y=".6" />
+    <Anim id="perfect" path="" delay=".1" frames="0-49"/>
+  </perfectAnimation>
+  
+  <holoRainbowBerry path="CollabUtils2/holoRainbowBerry/" start="idle">
+    <Center />
+    <Loop id="idle" path="holo" delay=".08" frames="0-31" />
+  </holoRainbowBerry>
+  
+  <desaturatedHoloRainbowBerry path="CollabUtils2/desaturatedHoloRainbowBerry/" start="idle">
+    <Center />
+    <Loop id="idle" path="holo" delay=".08" frames="0-31" />
+  </desaturatedHoloRainbowBerry>
 </Sprites>
