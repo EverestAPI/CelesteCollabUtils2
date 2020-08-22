@@ -1,7 +1,5 @@
-using Celeste.Mod.UI;
-using Mono.Cecil;
-using Mono.Cecil.Cil;
 using Celeste.Mod.CollabUtils2.UI;
+using Celeste.Mod.UI;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Monocle;
@@ -9,7 +7,6 @@ using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
 using MonoMod.Utils;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -21,6 +18,7 @@ namespace Celeste.Mod.CollabUtils2 {
 
         private static ILHook hookOnOuiFileSelectRender;
         private static ILHook hookOnOuiJournalPoemLines;
+        private static ILHook hookOnLevelSetSwitch;
 
         /// <summary>
         /// Returns the level set the given lobby SID is associated to, or null if the SID given is not a lobby.
@@ -41,8 +39,7 @@ namespace Celeste.Mod.CollabUtils2 {
             return levelSet.StartsWith("SpringCollab2020/") && levelSet != "SpringCollab2020/0-Lobbies";
         }
 
-        private static ILHook hookOnLevelSetSwitch;
-
+        /// <summary>
         /// Returns the SID of the lobby corresponding to this level set.
         /// </summary>
         /// <param name="levelSet">The level set name</param>
@@ -77,6 +74,7 @@ namespace Celeste.Mod.CollabUtils2 {
             IL.Celeste.Mod.UI.OuiMapSearch.ReloadItems += modMapSearch;
             IL.Celeste.Mod.UI.OuiMapList.ReloadItems += modMapListReloadItems;
             IL.Celeste.Mod.UI.OuiMapList.CreateMenu += modMapListCreateMenu;
+            IL.Celeste.Mod.UI.OuiFileSelectSlotLevelSetPicker.changeStartingLevelSet += modFileSelectChangeStartingLevelSet;
 
             On.Celeste.SaveData.RegisterHeartGem += onRegisterHeartGem;
             On.Celeste.SaveData.RegisterPoemEntry += onRegisterPoemEntry;
@@ -97,6 +95,7 @@ namespace Celeste.Mod.CollabUtils2 {
             IL.Celeste.Mod.UI.OuiMapSearch.ReloadItems -= modMapSearch;
             IL.Celeste.Mod.UI.OuiMapList.ReloadItems -= modMapListReloadItems;
             IL.Celeste.Mod.UI.OuiMapList.CreateMenu -= modMapListCreateMenu;
+            IL.Celeste.Mod.UI.OuiFileSelectSlotLevelSetPicker.changeStartingLevelSet -= modFileSelectChangeStartingLevelSet;
 
             On.Celeste.SaveData.RegisterHeartGem -= onRegisterHeartGem;
             On.Celeste.SaveData.RegisterPoemEntry -= onRegisterPoemEntry;
@@ -205,6 +204,45 @@ namespace Celeste.Mod.CollabUtils2 {
                 cursor.Emit(OpCodes.Ldfld, cursor.Instrs[cursor.Index - 5].Operand as FieldReference);
                 cursor.EmitDelegate<Func<bool, AreaData, bool>>((orig, areaData) =>
                     orig && !IsCollabLevelSet(areaData.GetLevelSet()));
+            }
+        }
+
+        private static void modFileSelectChangeStartingLevelSet(ILContext il) {
+            ILCursor cursor = new ILCursor(il);
+
+            // set ourselves just after the moving operation in changeStartingLevelSet.
+            if (cursor.TryGotoNext(MoveType.AfterLabel,
+                instr => instr.MatchLdarg(0),
+                instr => instr.MatchLdsfld<AreaData>("Areas"),
+                instr => instr.MatchLdloc(0),
+                instr => instr.OpCode == OpCodes.Callvirt && (instr.Operand as MethodReference).Name == "get_Item")) {
+
+                Logger.Log("CollabUtils2/LobbyHelper", $"Hiding collab entries in starting level set select at {cursor.Index} in IL for OuiFileSelectSlotLevelSetPicker.changeStartingLevelSet");
+
+                cursor.Emit(OpCodes.Ldloc_0);
+                cursor.Emit(OpCodes.Ldarg_1);
+                cursor.EmitDelegate<Func<int, int, int>>((id, direction) => {
+                    string currentLevelSet = AreaData.Areas[id].GetLevelSet();
+
+                    // repeat the move until the current level set isn't a collab level set anymore.
+                    while (IsCollabLevelSet(currentLevelSet)) {
+                        if (direction > 0) {
+                            id = AreaData.Areas.FindLastIndex(area => area.GetLevelSet() == currentLevelSet) + direction;
+                        } else {
+                            id = AreaData.Areas.FindIndex(area => area.GetLevelSet() == currentLevelSet) + direction;
+                        }
+
+                        if (id >= AreaData.Areas.Count)
+                            id = 0;
+                        if (id < 0)
+                            id = AreaData.Areas.Count - 1;
+
+                        currentLevelSet = AreaData.Areas[id].GetLevelSet();
+                    }
+
+                    return id;
+                });
+                cursor.Emit(OpCodes.Stloc_0);
             }
         }
 
