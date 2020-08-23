@@ -6,6 +6,7 @@ using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
 using MonoMod.Utils;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -62,6 +63,7 @@ namespace Celeste.Mod.CollabUtils2 {
             On.Celeste.SaveData.RegisterPoemEntry += onRegisterPoemEntry;
             On.Celeste.SaveData.RegisterCompletion += onRegisterCompletion;
             On.Celeste.SaveData.AfterInitialize += onSaveDataAfterInitialize;
+            On.Celeste.OuiChapterSelectIcon.AssistModeUnlockRoutine += onAssistUnlockRoutine;
             Everest.Events.Journal.OnEnter += onJournalEnter;
             On.Celeste.OuiFileSelectSlot.Show += onOuiFileSelectSlotShow;
 
@@ -76,6 +78,7 @@ namespace Celeste.Mod.CollabUtils2 {
             On.Celeste.SaveData.RegisterPoemEntry -= onRegisterPoemEntry;
             On.Celeste.SaveData.RegisterCompletion -= onRegisterCompletion;
             On.Celeste.SaveData.AfterInitialize -= onSaveDataAfterInitialize;
+            On.Celeste.OuiChapterSelectIcon.AssistModeUnlockRoutine -= onAssistUnlockRoutine;
             Everest.Events.Journal.OnEnter -= onJournalEnter;
             On.Celeste.OuiFileSelectSlot.Show -= onOuiFileSelectSlotShow;
 
@@ -171,6 +174,24 @@ namespace Celeste.Mod.CollabUtils2 {
             LevelSetStats stats = self.GetLevelSetStatsFor("SpringCollab2020/0-Lobbies");
             if (stats != null && stats.UnlockedAreas > 0) { // we at least completed Prologue.
                 stats.UnlockedAreas = stats.Areas.Count - 1;
+            }
+        }
+
+        private static IEnumerator onAssistUnlockRoutine(On.Celeste.OuiChapterSelectIcon.orig_AssistModeUnlockRoutine orig, OuiChapterSelectIcon self, Action onComplete) {
+            IEnumerator origRoutine = orig(self, onComplete);
+            while (origRoutine.MoveNext()) {
+                yield return origRoutine.Current;
+            }
+
+            if (AreaData.Get(self.Area).GetLevelSet() == "SpringCollab2020/0-Lobbies") {
+                // we just assist unlocked the lobbies!
+                LevelSetStats stats = SaveData.Instance.GetLevelSetStatsFor("SpringCollab2020/0-Lobbies");
+                stats.UnlockedAreas = stats.Areas.Count - 1;
+                List<OuiChapterSelectIcon> icons = new DynData<OuiChapterSelect>((self.Scene as Overworld).GetUI<OuiChapterSelect>()).Get<List<OuiChapterSelectIcon>>("icons");
+                icons[self.Area + 1].AssistModeUnlockable = false;
+                for (int i = self.Area + 2; i <= SaveData.Instance.MaxArea; i++) {
+                    icons[i].Show();
+                }
             }
         }
 
