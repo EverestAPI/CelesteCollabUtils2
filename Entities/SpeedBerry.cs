@@ -51,7 +51,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             Follower.PersistentFollow = true;
             var listener = new TransitionListener() {
                 OnOutBegin = () => {
-                    SceneAs<Level>().Session.DoNotLoad.Add(ID);
+                    SceneAs<Level>()?.Session.DoNotLoad.Add(ID);
                     transitioned = true;
                     transitionStart = Position;
                     transitionTarget = new Vector2(
@@ -59,7 +59,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                         Calc.Clamp(transitionStart.Y, SceneAs<Level>().Bounds.Top + 8f, SceneAs<Level>().Bounds.Bottom - 8f));
                 },
                 OnOut = percent => {
-                    if (SceneAs<Level>().Tracker.GetEntity<Player>()?.CollideCheck<SpeedBerryCollectTrigger>() ?? false) {
+                    if (SceneAs<Level>()?.Tracker.GetEntity<Player>()?.CollideCheck<SpeedBerryCollectTrigger>() ?? false) {
                         // as soon as the transition is over, the berry will be collected, so be sure to drag it on the new screen
                         // so that the player actually sees it collect.
                         Position = Vector2.Lerp(transitionStart, transitionTarget, Ease.SineOut(percent));
