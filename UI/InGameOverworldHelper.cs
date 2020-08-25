@@ -129,7 +129,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
             DynData<OuiChapterPanel> data = new DynData<OuiChapterPanel>(self);
             data["hasCollabCredits"] = true;
 
-            data["chapter"] = Dialog.Clean(new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea").Name + "_author");
+            if (!isPanelShowingLobby()) {
+                data["chapter"] = Dialog.Clean(new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea").Name + "_author");
+            }
 
             /*
             (data.modes as IList).Add(
@@ -296,7 +298,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(-2f) || instr.MatchLdcR4(-18f))) {
                 Logger.Log("CollabUtils2/InGameOverworldHelper", $"Modding chapter panel title position at {cursor.Index} in IL for OuiChapterPanel.Render");
                 cursor.EmitDelegate<Func<float, float>>(orig => {
-                    if (Engine.Scene == overworldWrapper?.Scene) {
+                    if (Engine.Scene == overworldWrapper?.Scene && !isPanelShowingLobby()) {
                         return orig == -18f ? -49f : 43f;
                     } else {
                         return orig;
@@ -327,11 +329,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 Logger.Log("CollabUtils2/InGameOverworldHelper", $"Modding chapter panel card at {cursor.Index} in IL for OuiChapterPanel.Render");
 
                 cursor.EmitDelegate<Func<string, string>>(orig => {
-                    if (Engine.Scene == overworldWrapper?.Scene) {
-                        return orig == "areaselect/cardtop_golden" ? "CollabUtils2/chapterCard/cardtop_silver" : "CollabUtils2/chapterCard/card_silver";
-                    }
                     if (isPanelShowingLobby()) {
                         return orig == "areaselect/cardtop_golden" ? "CollabUtils2/chapterCard/cardtop_rainbow" : "CollabUtils2/chapterCard/card_rainbow";
+                    }
+                    if (Engine.Scene == overworldWrapper?.Scene && !LobbyHelper.IsHeartSide(overworldWrapper.WrappedScene?.GetUI<OuiChapterPanel>().Area.GetSID())) {
+                        return orig == "areaselect/cardtop_golden" ? "CollabUtils2/chapterCard/cardtop_silver" : "CollabUtils2/chapterCard/card_silver";
                     }
                     return orig;
                 });
@@ -408,11 +410,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("collectables/goldberry"))) {
                 Logger.Log("CollabUtils2/InGameOverworldHelper", $"Changing strawberry icon w/ silver one at {cursor.Index} in IL for StrawberriesCounter.Render");
                 cursor.EmitDelegate<Func<string, string>>(orig => {
-                    if (Engine.Scene == overworldWrapper?.Scene) {
-                        return "CollabUtils2/silverberry";
-                    }
                     if (isPanelShowingLobby()) {
                         return "CollabUtils2/rainbowberry";
+                    }
+                    if (Engine.Scene == overworldWrapper?.Scene && !LobbyHelper.IsHeartSide(overworldWrapper.WrappedScene?.GetUI<OuiChapterPanel>().Area.GetSID())) {
+                        return "CollabUtils2/silverberry";
                     }
                     return orig;
                 });
@@ -547,6 +549,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private static bool isPanelShowingLobby(OuiChapterPanel panel = null) {
+            if (overworldWrapper != null) {
+                panel = overworldWrapper.WrappedScene?.GetUI<OuiChapterPanel>();
+            }
             if (panel == null) {
                 panel = (Engine.Scene as Overworld)?.GetUI<OuiChapterPanel>();
             }
