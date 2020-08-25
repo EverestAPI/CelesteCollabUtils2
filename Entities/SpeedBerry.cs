@@ -125,7 +125,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 if (BronzeTime < TimeSpan.FromTicks(TimerDisplay.GetSpentTime()).TotalSeconds) {
                     // Time ran out
                     TimeRanOut = true;
-                } else if ((Follower.Leader?.Entity as Player)?.CollideCheck<SpeedBerryCollectTrigger>() ?? false) {
+                } else if (Follower.Leader?.Entity is Player leaderPlayer && !leaderPlayer.Dead && leaderPlayer.CollideCheck<SpeedBerryCollectTrigger>()) {
                     // collect the speed berry!
                     TimerDisplay.EndTimer();
                     OnCollect();
