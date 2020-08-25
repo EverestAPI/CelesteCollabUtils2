@@ -33,6 +33,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         private bool transitioned = false;
         private bool collected = false;
+        public bool restored = false;
 
         private Vector2 transitionStart;
         private Vector2 transitionTarget;
@@ -48,6 +49,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             BronzeTime = data.Float("bronzeTime", 15f);
             SilverTime = data.Float("silverTime", 10f);
             GoldTime = data.Float("goldTime", 5f);
+            restored = data.Bool("restored", false);
             Follower.PersistentFollow = true;
             var listener = new TransitionListener() {
                 OnOutBegin = () => {
@@ -84,7 +86,9 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         public override void Awake(Scene scene) {
             Session session = (scene as Level).Session;
-            if (!(SaveData.Instance.CheatMode || SaveData.Instance.Areas_Safe[session.Area.ID].Modes[(int) session.Area.Mode].Completed)) {
+            if (!restored && (session.FurthestSeenLevel != session.Level ||
+                (!SaveData.Instance.CheatMode && !SaveData.Instance.Areas_Safe[session.Area.ID].Modes[(int) session.Area.Mode].Completed))) {
+
                 // the berry shouldn't spawn
                 RemoveSelf();
                 return;
@@ -173,8 +177,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         private void dissolve() {
             Level level = Scene as Level;
-            Session session = level.Session;
-            session.DoNotLoad.Remove(ID);
+            level.Session.DoNotLoad.Remove(ID);
             Collidable = false;
             foreach (Player player in Scene.Tracker.GetEntities<Player>()) {
                 player.Die(Vector2.Zero, true, true);

@@ -55,6 +55,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     EntityData newData = storedSpeedBerry.EntityData;
                     Vector2 lastPos = newData.Position;
                     newData.Position = self.Position + new Vector2(8, -16);
+                    newData.Values["restored"] = true;
                     scene.Add(berry = new SpeedBerry(newData, Vector2.Zero, storedSpeedBerry.ID));
                     newData.Position = lastPos;
                     berry.TimerDisplay = storedSpeedBerry.TimerDisplay;
