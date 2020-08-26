@@ -2,6 +2,7 @@
 using Monocle;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Celeste.Mod.CollabUtils2.UI {
     class OuiJournalCollabProgressInOverworld : OuiJournalPage {
@@ -99,10 +100,12 @@ namespace Celeste.Mod.CollabUtils2.UI {
                             lobbySpeedBerryLevel = 4;
                         }
 
-                        if (!CollabMapDataProcessor.SilverBerries.TryGetValue(lobbyMap.GetLevelSet(), out Dictionary<string, EntityID> levelSetBerries)
+                        bool goldenBerryNotObtained = !lobbyMap.Modes[0].Strawberries.Any(berry => areaData.Mode[0].MapData.Goldenberries.Any(golden => golden.ID == berry.ID && golden.Level.Name == berry.Level));
+                        bool silverBerryNotObtained = !CollabMapDataProcessor.SilverBerries.TryGetValue(lobbyMap.GetLevelSet(), out Dictionary<string, EntityID> levelSetBerries)
                             || !levelSetBerries.TryGetValue(lobbyMap.GetSID(), out EntityID berryID)
-                            || !lobbyMap.Modes[0].Strawberries.Contains(berryID)) {
+                            || !lobbyMap.Modes[0].Strawberries.Contains(berryID);
 
+                        if (goldenBerryNotObtained && silverBerryNotObtained) {
                             lobbySilverBerriesObtained = false;
                         }
 
@@ -138,7 +141,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     if (lobbyLevelsDone) {
                         AreaStats stats = SaveData.Instance.GetAreaStatsFor(areaData.ToKey());
                         if (lobbySilverBerriesObtained) {
-                            row.Add(new IconCell("CollabUtils2/silver_strawberry"));
+                            row.Add(new IconCell("CollabUtils2/golden_strawberry"));
                         } else {
                             row.Add(new TextCell(Dialog.Deaths(lobbySumOfBestDeaths), TextJustify, 0.5f, TextColor));
                         }
