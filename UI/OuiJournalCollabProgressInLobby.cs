@@ -2,6 +2,7 @@
 using Monocle;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Celeste.Mod.CollabUtils2.UI {
     class OuiJournalCollabProgressInLobby : OuiJournalPage {
@@ -90,6 +91,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
                             // silver berry was obtained!
                             row.Add(new IconCell("CollabUtils2/silver_strawberry"));
+                        } else if (stats.Modes[0].Strawberries.Any(berry => areaData.Mode[0].MapData.Goldenberries.Any(golden => golden.ID == berry.ID && golden.Level.Name == berry.Level))) {
+                            // golden berry was obtained!
+                            row.Add(new IconCell("CollabUtils2/golden_strawberry"));
                         } else {
                             row.Add(new TextCell(Dialog.Deaths(item.Modes[0].BestDeaths), currentPage.TextJustify, 0.5f, currentPage.TextColor));
                         }
