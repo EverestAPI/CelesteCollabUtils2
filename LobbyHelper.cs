@@ -416,8 +416,8 @@ namespace Celeste.Mod.CollabUtils2 {
                 cursor.Index--;
                 cursor.Emit(OpCodes.Ldarg_0);
                 cursor.EmitDelegate<Func<string, OuiFileSelectSlot, string>>((orig, self) => {
-                    if (self.SaveData?.LevelSet == "SpringCollab2020/0-Lobbies") {
-                        return self.SaveData.LevelSet.DialogKeyify();
+                    if (self.SaveData?.LevelSet.StartsWith("SpringCollab2020/") ?? false) {
+                        return "SpringCollab2020_0_Lobbies";
                     }
                     return orig;
                 });
