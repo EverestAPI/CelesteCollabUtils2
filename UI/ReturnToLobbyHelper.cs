@@ -87,7 +87,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 temporaryRoomHolder = CollabModule.Instance.Session.LobbyRoom;
                 temporarySpawnPointHolder = new Vector2(CollabModule.Instance.Session.LobbySpawnPointX, CollabModule.Instance.Session.LobbySpawnPointY);
             }
-            if (mode == LevelExit.Mode.GiveUp && CollabModule.Instance.Session.LobbySID != null) {
+            if ((mode == LevelExit.Mode.GiveUp || mode == LevelExit.Mode.Completed) && CollabModule.Instance.Session.LobbySID != null) {
                 // be sure that Return to Map and such from a collab entry returns to the lobby, not to the collab entry. 
                 SaveData.Instance.LastArea_Safe = AreaData.Get(CollabModule.Instance.Session.LobbySID).ToKey();
             }
