@@ -412,7 +412,7 @@ namespace Celeste.Mod.CollabUtils2 {
 
             // Restore the last area if it was replaced at the beginning of this method.
             if (savedLastArea != null) {
-                self.SaveData.LastArea_Safe = savedLastArea;
+                self.SaveData.LastArea_Safe = savedLastArea.Value;
             }
         }
 
