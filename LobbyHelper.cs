@@ -355,6 +355,13 @@ namespace Celeste.Mod.CollabUtils2 {
         }
 
         private static void onOuiFileSelectSlotShow(On.Celeste.OuiFileSelectSlot.orig_Show orig, OuiFileSelectSlot self) {
+            // If we are currently in a collab map, display the lobby level set stats instead.
+            AreaKey? savedLastArea = null;
+            if (self.SaveData?.LevelSet != null && self.SaveData.LevelSet.StartsWith("SpringCollab2020/") && self.SaveData.LevelSet != "SpringCollab2020/0-Lobbies") {
+                savedLastArea = self.SaveData.LastArea_Safe;
+                self.SaveData.LastArea_Safe = AreaData.Get("SpringCollab2020/0-Lobbies/0-Prologue").ToKey();
+            }
+
             orig(self);
 
             if (self.SaveData?.LevelSet == "SpringCollab2020/0-Lobbies") {
@@ -401,6 +408,11 @@ namespace Celeste.Mod.CollabUtils2 {
 
                 self.Strawberries.Amount = totalStrawberries;
                 self.Strawberries.OutOf = maxStrawberryCount;
+            }
+
+            // Restore the last area if it was replaced at the beginning of this method.
+            if (savedLastArea != null) {
+                self.SaveData.LastArea_Safe = savedLastArea;
             }
         }
 
