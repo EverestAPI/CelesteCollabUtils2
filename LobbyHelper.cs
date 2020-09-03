@@ -358,8 +358,11 @@ namespace Celeste.Mod.CollabUtils2 {
             // If we are currently in a collab map, display the lobby level set stats instead.
             AreaKey? savedLastArea = null;
             if (self.SaveData?.LevelSet != null && self.SaveData.LevelSet.StartsWith("SpringCollab2020/") && self.SaveData.LevelSet != "SpringCollab2020/0-Lobbies") {
-                savedLastArea = self.SaveData.LastArea_Safe;
-                self.SaveData.LastArea_Safe = AreaData.Get("SpringCollab2020/0-Lobbies/0-Prologue").ToKey();
+                AreaData collabPrologue = AreaData.Get("SpringCollab2020/0-Lobbies/0-Prologue");
+                if (collabPrologue != null) {
+                    savedLastArea = self.SaveData.LastArea_Safe;
+                    self.SaveData.LastArea_Safe = collabPrologue.ToKey();
+                }
             }
 
             orig(self);
