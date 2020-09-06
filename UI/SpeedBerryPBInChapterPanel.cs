@@ -61,7 +61,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 cursor.Emit(OpCodes.Ldarg_0);
                 cursor.Emit(OpCodes.Ldfld, typeof(OuiChapterPanel).GetField("contentOffset", BindingFlags.NonPublic | BindingFlags.Instance));
                 cursor.EmitDelegate<Action<Vector2>>(contentOffset => {
-                    speedBerryPBDisplay.Position = contentOffset + new Vector2(0f, 170f) + speedBerryPBOffset;
+                    if (speedBerryPBDisplay != null) {
+                        speedBerryPBDisplay.Position = contentOffset + new Vector2(0f, 170f) + speedBerryPBOffset;
+                    }
                 });
             }
         }
@@ -69,15 +71,17 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private static void modOuiChapterPanelUpdateStats(On.Celeste.OuiChapterPanel.orig_UpdateStats orig, OuiChapterPanel self, bool wiggle, bool? overrideStrawberryWiggle, bool? overrideDeathWiggle, bool? overrideHeartWiggle) {
             orig(self, wiggle, overrideStrawberryWiggle, overrideDeathWiggle, overrideHeartWiggle);
 
-            if (CollabMapDataProcessor.SpeedBerries.TryGetValue(self.Area.GetSID(), out CollabMapDataProcessor.SpeedBerryInfo speedBerryInfo)
-                && CollabModule.Instance.SaveData.SpeedBerryPBs.TryGetValue(self.Area.GetSID(), out long speedBerryPB)) {
+            if (speedBerryPBDisplay != null) {
+                if (CollabMapDataProcessor.SpeedBerries.TryGetValue(self.Area.GetSID(), out CollabMapDataProcessor.SpeedBerryInfo speedBerryInfo)
+                    && CollabModule.Instance.SaveData.SpeedBerryPBs.TryGetValue(self.Area.GetSID(), out long speedBerryPB)) {
 
-                speedBerryPBDisplay.Visible = true;
-                speedBerryPBDisplay.Icon = GFX.Gui[getRankIcon(speedBerryInfo, speedBerryPB)];
-                speedBerryPBDisplay.Color = getRankColor(speedBerryInfo, speedBerryPB);
-                speedBerryPBDisplay.Text = Dialog.Time(speedBerryPB);
-            } else {
-                speedBerryPBDisplay.Visible = false;
+                    speedBerryPBDisplay.Visible = true;
+                    speedBerryPBDisplay.Icon = GFX.Gui[getRankIcon(speedBerryInfo, speedBerryPB)];
+                    speedBerryPBDisplay.Color = getRankColor(speedBerryInfo, speedBerryPB);
+                    speedBerryPBDisplay.Text = Dialog.Time(speedBerryPB);
+                } else {
+                    speedBerryPBDisplay.Visible = false;
+                }
             }
         }
 
@@ -89,7 +93,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             // we want to catch the result of (float)(this.deaths.Visible ? -40 : 0) and transform it to shift the things up if the speed berry PB is there.
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchConvR4())) {
                 Logger.Log("CollabUtils2/SpeedBerryPBInChapterPanel", $"Modifying strawberry/death counter positioning at {cursor.Index} in CIL code for OuiChapterPanel.SetStatsPosition");
-                cursor.EmitDelegate<Func<float, float>>(position => speedBerryPBDisplay.Visible ? position - 40 : position);
+                cursor.EmitDelegate<Func<float, float>>(position => (speedBerryPBDisplay?.Visible ?? false) ? position - 40 : position);
             }
 
             cursor.Index = 0;
@@ -129,7 +133,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(120f) || instr.MatchLdcR4(-120f))) {
                 Logger.Log("CollabUtils2/SpeedBerryPBInChapterPanel", $"Modifying column spacing at {cursor.Index} in CIL code for OuiChapterPanel.SetStatsPosition");
                 cursor.EmitDelegate<Func<float, float>>(orig => {
-                    if (speedBerryPBDisplay.Visible) {
+                    if (speedBerryPBDisplay?.Visible ?? false) {
                         return orig + 30f * Math.Sign(orig);
                     }
                     return orig;
