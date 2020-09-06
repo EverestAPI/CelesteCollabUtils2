@@ -69,9 +69,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     if (lobbyMapLevelSetName != null) {
                         lobbyMapLevelSet = SaveData.Instance.GetLevelSetStatsFor(lobbyMapLevelSetName);
                     }
-                    if (lobbyMapLevelSet == null) {
-                        continue;
-                    }
 
                     int lobbyStrawberries = item.TotalStrawberries;
                     int lobbyTotalStrawberries = areaData.Mode[0].TotalStrawberries;
@@ -83,7 +80,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     int lobbySpeedBerryLevel = 1;
                     bool lobbySilverBerriesObtained = true;
 
-                    foreach (AreaStats lobbyMap in lobbyMapLevelSet.Areas) {
+                    foreach (AreaStats lobbyMap in lobbyMapLevelSet?.Areas ?? new List<AreaStats>()) {
                         AreaData lobbyAreaData = AreaData.Get(lobbyMap.ID_Safe);
                         lobbyStrawberries += lobbyMap.TotalStrawberries;
                         lobbyTotalStrawberries += lobbyAreaData.Mode[0].TotalStrawberries;
@@ -126,10 +123,15 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
                     string heartTexture = MTN.Journal.Has("CollabUtils2Hearts/" + lobbyMapLevelSetName) ? "CollabUtils2Hearts/" + lobbyMapLevelSetName : "heartgem0";
 
+                    string areaName = Dialog.Clean(areaData.Name);
+                    if (Dialog.Has(areaData.Name + "_journal")) {
+                        areaName = Dialog.Clean(areaData.Name + "_journal");
+                    }
+
                     Row row = table.AddRow()
-                        .Add(new TextCell(Dialog.Clean(areaData.Name), new Vector2(1f, 0.5f), 0.6f, TextColor))
+                        .Add(new TextCell(areaName, new Vector2(1f, 0.5f), 0.6f, TextColor))
                         .Add(null)
-                        .Add(new IconCell(lobbyLevelsDone ? heartTexture : "dot"))
+                        .Add(new IconCell(item.Modes[0].HeartGem ? heartTexture : "dot"))
                         .Add(new TextCell(strawberryText, TextJustify, 0.5f, TextColor));
 
                     if (lobbyTotalTime > 0) {
@@ -140,7 +142,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
                     if (lobbyLevelsDone) {
                         AreaStats stats = SaveData.Instance.GetAreaStatsFor(areaData.ToKey());
-                        if (lobbySilverBerriesObtained) {
+                        if (lobbyMapLevelSet == null) {
+                            row.Add(new TextCell(Dialog.Deaths(item.Modes[0].BestDeaths), TextJustify, 0.5f, TextColor));
+                            sumOfBestDeaths += item.Modes[0].BestDeaths;
+                        } else if (lobbySilverBerriesObtained) {
                             row.Add(new IconCell("CollabUtils2/golden_strawberry"));
                         } else {
                             row.Add(new TextCell(Dialog.Deaths(lobbySumOfBestDeaths), TextJustify, 0.5f, TextColor));
@@ -156,7 +161,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         row.Add(new IconCell("dot"));
                     }
 
-                    if (lobbySpeedBerryLevel < 4) {
+                    if (lobbyMapLevelSet == null) {
+                        row.Add(new TextCell("-", TextJustify, 0.5f, TextColor)).Add(null);
+                    } else if (lobbySpeedBerryLevel < 4) {
                         row.Add(new TextCell(Dialog.Time(lobbySumOfBestTimes), TextJustify, 0.5f, getRankColor(lobbySpeedBerryLevel)));
                         row.Add(new IconCell(getRankIcon(lobbySpeedBerryLevel)));
                         sumOfBestTimes += lobbySumOfBestTimes;
