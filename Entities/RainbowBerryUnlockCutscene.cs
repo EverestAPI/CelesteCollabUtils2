@@ -15,10 +15,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         private Image[] silverBerries;
 
-        private float initialLightingAlphaAdd = 0f;
-        private float initialBloomBase = 0f;
-        private Coroutine fadeCoroutine;
-
         public RainbowBerryUnlockCutscene(RainbowBerry strawberry, HoloRainbowBerry holoBerry, int silverBerryCount) {
             this.strawberry = strawberry;
             this.holoBerry = holoBerry;
@@ -80,11 +76,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             system.Tag = Tags.FrozenUpdate;
             level.Add(system);
 
-            // fade the lighting to default.
-            initialLightingAlphaAdd = level.Session.LightingAlphaAdd;
-            initialBloomBase = level.Bloom.Base;
-            Add(fadeCoroutine = new Coroutine(fadeRoutine(level, true)));
-
             // start the spin
             float angleSep = (float) Math.PI * 2f / silverBerryCount;
             float angle = (float) Math.PI / 2f;
@@ -117,38 +108,17 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             strawberry.CollectedSeeds();
             yield return 0.5f;
 
-            // fade the lighting back.
-            Add(fadeCoroutine = new Coroutine(fadeRoutine(level, false)));
-
             // pan back to the player
-            yield return CameraTo(player.CameraTarget, 1.5f, Ease.CubeOut);
+            yield return CameraTo(player.CameraTarget, 1f, Ease.CubeOut);
 
             // cutscene is over!
             level.EndCutscene();
             OnEnd(level);
         }
 
-        private IEnumerator fadeRoutine(Level level, bool fadeIn) {
-            for (float f = 0; f < 1.5f; f += Engine.DeltaTime) {
-                float fadeProgress = fadeIn ? f / 1.5f : (1.5f - f) / 1.5f;
-                level.Session.LightingAlphaAdd = MathHelper.Lerp(initialLightingAlphaAdd, 0, fadeProgress);
-                level.Lighting.Alpha = level.BaseLightingAlpha + level.Session.LightingAlphaAdd;
-                level.Bloom.Base = MathHelper.Lerp(initialBloomBase, AreaData.Get(SceneAs<Level>()).BloomBase, fadeProgress);
-                yield return null;
-            }
-        }
-
         public override void OnEnd(Level level) {
             if (WasSkipped) {
                 Audio.Stop(sfx);
-
-                // restore the lighting.
-                if (fadeCoroutine != null) {
-                    Remove(fadeCoroutine);
-                    level.Session.LightingAlphaAdd = initialLightingAlphaAdd;
-                    level.Lighting.Alpha = level.BaseLightingAlpha + level.Session.LightingAlphaAdd;
-                    level.Bloom.Base = initialBloomBase;
-                }
             }
             Player player = Scene.Tracker.GetEntity<Player>();
             if (player != null) {

@@ -15,6 +15,9 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         private string levelSet;
 
+        internal HoloRainbowBerry HologramForCutscene;
+        internal int CutsceneTotalBerries;
+
         public static void LoadContent() {
             SpriteBank = new SpriteBank(GFX.Game, "Graphics/CollabUtils2/RainbowBerry.xml");
         }
@@ -61,11 +64,9 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                         Collidable = false;
                         self.Get<BloomPoint>("bloom").Visible = (self.Get<VertexLight>("light").Visible = false);
 
-                        // and spawn the unlock cutscene.
-                        scene.Add(new RainbowBerryUnlockCutscene(this, hologram, totalBerries));
-
-                        // save that the cutscene happened so that it doesn't happen again.
-                        CollabModule.Instance.SaveData.CombinedRainbowBerries.Add((Scene as Level).Session.Area.GetSID());
+                        // now we wait for the player to enter the trigger. filling the HologramForCutscene field will tell the trigger to create the cutscene.
+                        HologramForCutscene = hologram;
+                        CutsceneTotalBerries = totalBerries;
                     }
                 }
             }

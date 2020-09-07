@@ -171,18 +171,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             }
         }
 
-        public override void Awake(Scene scene) {
-            base.Awake(scene);
-
-            Player player = scene.Tracker.GetEntity<Player>();
-            if (!Opened && Requires <= HeartGems && player != null) {
-                // we got all hearts! trigger the cutscene.
-                scene.Add(new MiniHeartDoorUnlockCutscene(this, player));
-                // and save this progress.
-                CollabModule.Instance.SaveData.OpenedMiniHeartDoors.Add((Scene as Level).Session.Area.GetSID());
-            }
-        }
-
         public override void Update() {
             base.Update();
 
