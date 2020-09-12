@@ -33,6 +33,11 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
 
                 // then, fill in the journal with our custom pages.
                 journal.Pages.AddRange(OuiJournalCollabProgressInLobby.GeneratePages(journal, forceArea.GetLevelSet()));
+
+                // and add the map if we have it as well.
+                if (MTN.Journal.Has("collabLobbyMaps/" + forceArea.GetLevelSet())) {
+                    journal.Pages.Add(new OuiJournalLobbyMap(journal, MTN.Journal["collabLobbyMaps/" + forceArea.GetLevelSet()]));
+                }
             }
         }
 
