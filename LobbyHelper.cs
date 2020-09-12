@@ -57,6 +57,22 @@ namespace Celeste.Mod.CollabUtils2 {
         }
 
         /// <summary>
+        /// Returns the SID of the lobby corresponding to this gym.
+        /// </summary>
+        /// <param name="gymSID">The gym SID</param>
+        /// <returns>The SID of the lobby for this gym, or null if the given SID does not belong to a collab or has no matching lobby.</returns>
+        public static string GetLobbyForGym(string gymSID) {
+            if (gymSID.StartsWith("SpringCollab2020/0-Gyms/")) {
+                // build the expected lobby name (SpringCollab2020/0-Gyms/1-Beginner => SpringCollab2020/0-Lobbies/1-Beginner) and check it exists before returning it.
+                string expectedLobbyName = gymSID.Replace("/0-Gyms/", "/0-Lobbies/");
+                if (AreaData.Get(expectedLobbyName) != null) {
+                    return expectedLobbyName;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
         /// Check if the given SID matches a collab heart side level.
         /// </summary>
         /// <param name="sid">The SID for a map</param>

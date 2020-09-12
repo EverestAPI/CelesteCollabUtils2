@@ -60,6 +60,18 @@ namespace Celeste.Mod.CollabUtils2.UI {
             temporaryLobbySIDHolder = null;
             temporaryRoomHolder = null;
             temporarySpawnPointHolder = Vector2.Zero;
+
+            if (CollabModule.Instance.Session.LobbySID == null) {
+                Session session = SaveData.Instance.CurrentSession_Safe;
+                string lobbySID = LobbyHelper.GetLobbyForLevelSet(session.Area.GetLevelSet());
+                if (lobbySID == null) {
+                    lobbySID = LobbyHelper.GetLobbyForGym(session.Area.GetSID());
+                }
+                if (lobbySID != null) {
+                    Logger.Log(LogLevel.Warn, "CollabUtils2/ReturnToLobbyHelper", $"We are in {session.Area.GetSID()} without a Return to Lobby button! Setting it to {lobbySID}.");
+                    CollabModule.Instance.Session.LobbySID = lobbySID;
+                }
+            }
         }
 
         private static void onCreatePauseMenuButtons(Level level, TextMenu menu, bool minimal) {
@@ -132,7 +144,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private static void onLevelLoaderConstructor(On.Celeste.LevelLoader.orig_ctor orig, LevelLoader self, Session session, Vector2? startPosition) {
             if (Engine.Scene is Level level && level.Session != session && session.Area.ID == level.Session.Area.ID) {
-                Logger.Log("CollabUtils2/ReturnToLobbyHelper", "Teleporting within the level: conserving mod session");
+                Logger.Log(LogLevel.Info, "CollabUtils2/ReturnToLobbyHelper", "Teleporting within the level: conserving mod session");
                 temporaryLobbySIDHolder = CollabModule.Instance.Session.LobbySID;
                 temporaryRoomHolder = CollabModule.Instance.Session.LobbyRoom;
                 temporarySpawnPointHolder = new Vector2(CollabModule.Instance.Session.LobbySpawnPointX, CollabModule.Instance.Session.LobbySpawnPointY);

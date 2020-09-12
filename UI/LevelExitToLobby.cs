@@ -46,8 +46,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 newSession = new Session(AreaData.Get(targetSID).ToKey());
                 newSession.FirstLevel = false;
                 newSession.StartedFromBeginning = false;
-                newSession.Level = targetRoom;
-                newSession.RespawnPoint = targetSpawnPoint;
+                newSession.Level = targetRoom ?? newSession.MapData.StartLevel().Name;
+                newSession.RespawnPoint = targetRoom == null ? (Vector2?) null : targetSpawnPoint;
                 SaveData.Instance.CurrentSession_Safe = newSession;
             }
 
