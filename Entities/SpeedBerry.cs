@@ -31,13 +31,29 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         private Sprite sprite;
 
-        private bool transitioned = false;
         private bool collected = false;
         public bool restored = false;
 
         private Vector2 transitionStart;
         private Vector2 transitionTarget;
         private bool forcePositionToTransitionTarget;
+
+        public static void Load() {
+            On.Celeste.Player.OnTransition += onTransitionEnd;
+        }
+
+        public static void Unload() {
+            On.Celeste.Player.OnTransition -= onTransitionEnd;
+        }
+
+        private static void onTransitionEnd(On.Celeste.Player.orig_OnTransition orig, Player self) {
+            orig(self);
+
+            SpeedBerry speedBerry = self.Scene?.Tracker.GetEntity<SpeedBerry>();
+            if (speedBerry != null) {
+                speedBerry.TimerDisplay?.StartTimer();
+            }
+        }
 
         public static void LoadContent() {
             SpriteBank = new SpriteBank(GFX.Game, "Graphics/CollabUtils2/SpeedBerry.xml");
@@ -54,7 +70,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             var listener = new TransitionListener() {
                 OnOutBegin = () => {
                     SceneAs<Level>()?.Session.DoNotLoad.Add(ID);
-                    transitioned = true;
                     transitionStart = Position;
                     transitionTarget = new Vector2(
                         Calc.Clamp(transitionStart.X, SceneAs<Level>().Bounds.Left + 8f, SceneAs<Level>().Bounds.Right - 8f),
@@ -154,11 +169,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
             if (TimeRanOut) {
                 dissolve();
-            }
-
-            if (transitioned) {
-                transitioned = false;
-                TimerDisplay?.StartTimer();
             }
 
             base.Update();
