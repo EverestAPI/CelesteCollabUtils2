@@ -22,6 +22,8 @@ namespace Celeste.Mod.CollabUtils2 {
         }
 
         public override void Load() {
+            Logger.SetLogLevel("CollabUtils2", LogLevel.Info);
+
             InGameOverworldHelper.Load();
             ReturnToLobbyHelper.Load();
             StrawberryHooks.Load();
