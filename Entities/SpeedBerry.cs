@@ -59,13 +59,13 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             SpriteBank = new SpriteBank(GFX.Game, "Graphics/CollabUtils2/SpeedBerry.xml");
         }
 
-        public SpeedBerry(EntityData data, Vector2 offset, EntityID id) : base(data, offset, id) {
+        public SpeedBerry(EntityData data, Vector2 offset, EntityID id, bool restored) : base(data, offset, id) {
             EntityData = data;
             new DynData<Strawberry>(this)["Golden"] = true;
             BronzeTime = data.Float("bronzeTime", 15f);
             SilverTime = data.Float("silverTime", 10f);
             GoldTime = data.Float("goldTime", 5f);
-            restored = data.Bool("restored", false);
+            this.restored = restored;
             Follower.PersistentFollow = true;
             var listener = new TransitionListener() {
                 OnOutBegin = () => {
@@ -98,6 +98,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 P_OrigGoldGlow = P_GoldGlow;
             }
         }
+
+        public SpeedBerry(EntityData data, Vector2 offset, EntityID id) : this(data, offset, id, restored: false) { }
 
         public override void Awake(Scene scene) {
             Session session = (scene as Level).Session;
