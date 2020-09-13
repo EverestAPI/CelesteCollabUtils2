@@ -97,6 +97,15 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 };
                 P_OrigGoldGlow = P_GoldGlow;
             }
+
+            // the speed berry most certainly shouldn't flip the "grabbed golden" switch in session.
+            PlayerCollider collider = Get<PlayerCollider>();
+            Action<Player> onPlayer = collider.OnCollide;
+            collider.OnCollide = player => {
+                bool bakGrabbedGolden = (Scene as Level).Session.GrabbedGolden;
+                onPlayer(player);
+                (Scene as Level).Session.GrabbedGolden = bakGrabbedGolden;
+            };
         }
 
         public SpeedBerry(EntityData data, Vector2 offset, EntityID id) : this(data, offset, id, restored: false) { }
