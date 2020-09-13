@@ -15,7 +15,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private Sprite sprite;
         private Sprite white;
         private string spriteName;
-        private bool collected;
+        private bool inCollectAnimation = false;
 
         private Wiggler scaleWiggler;
 
@@ -54,8 +54,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             AreaKey area = (scene as Level).Session.Area;
 
             string spritePath = "CollabUtils2/miniheart/" + spriteName + "/";
-            collected = SaveData.Instance.Areas_Safe[area.ID].Modes[(int) area.Mode].HeartGem;
-            if (collected) {
+            bool alreadyCollectedInSave = SaveData.Instance.Areas_Safe[area.ID].Modes[(int) area.Mode].HeartGem;
+            if (alreadyCollectedInSave) {
                 spritePath = "CollabUtils2/miniheart/ghost/ghost";
             }
 
@@ -100,7 +100,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     };
                     break;
             }
-            if (collected) {
+            if (alreadyCollectedInSave) {
                 heartColor = Color.White * 0.8f;
                 shineParticle = new ParticleType(HeartGem.P_BlueShine) {
                     Color = Calc.HexToColor("7589FF")
@@ -139,7 +139,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         private IEnumerator SmashRoutine(Player player, Level level) {
             level.CanRetry = false;
-            collected = true;
+            inCollectAnimation = true;
 
             Collidable = false;
 
@@ -231,7 +231,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 SceneAs<Level>().Particles.Emit(shineParticle, 1, Center + sprite.Position, Vector2.One * 4f);
             }
 
-            if (collected && (Scene.Tracker.GetEntity<Player>()?.Dead ?? true)) {
+            if (inCollectAnimation && (Scene.Tracker.GetEntity<Player>()?.Dead ?? true)) {
                 InterruptCollection();
             }
         }
