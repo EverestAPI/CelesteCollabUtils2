@@ -18,6 +18,9 @@ modoptions_collab_speedberrytimerposition= Speed Berry Timer Position
 modoptions_collab_speedberrytimerposition_topleft= Top-Left
 modoptions_collab_speedberrytimerposition_topcenter= Top-Center
 
+modoptions_collab_displayendscreenforallmaps= Display End Screen For All Maps
+modoptions_collab_displayendscreenforallmaps_description= Required for verification of speedrun.com IL submissions
+
 # SHIP COLLAB-SPECIFIC DIALOG WITH THE COLLAB MOD, NOT THE COLLAB UTILS.
 
 area_1_collabcredits= 

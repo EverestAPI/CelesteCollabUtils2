@@ -35,6 +35,7 @@ namespace Celeste.Mod.CollabUtils2 {
             CustomCrystalHeartHelper.Load();
             GoldenBerryPlayerRespawnPoint.Load();
             SpeedBerry.Load();
+            AreaCompleteInfoInLevel.Load();
         }
 
         public override void Unload() {
@@ -49,6 +50,7 @@ namespace Celeste.Mod.CollabUtils2 {
             CustomCrystalHeartHelper.Unload();
             GoldenBerryPlayerRespawnPoint.Unload();
             SpeedBerry.Unload();
+            AreaCompleteInfoInLevel.Unload();
         }
 
         public override void LoadContent(bool firstLoad) {
