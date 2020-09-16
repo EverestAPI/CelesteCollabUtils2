@@ -73,6 +73,18 @@ namespace Celeste.Mod.CollabUtils2 {
         }
 
         /// <summary>
+        /// Returns the name of the collab the level with the given SID is part of.
+        /// </summary>
+        /// <param name="sid">A map SID</param>
+        /// <returns>The name of the collab the map is part of, or null if it is a non-collab map</returns>
+        public static string GetCollabNameForSID(string sid) {
+            if (sid.StartsWith("SpringCollab2020/")) {
+                return "SpringCollab2020";
+            }
+            return null;
+        }
+
+        /// <summary>
         /// Check if the given SID matches a collab heart side level.
         /// </summary>
         /// <param name="sid">The SID for a map</param>

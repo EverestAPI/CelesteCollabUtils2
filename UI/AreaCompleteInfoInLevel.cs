@@ -23,11 +23,24 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private string version = Celeste.Instance.Version.ToString();
 
         public static void Load() {
+            On.Celeste.AreaComplete.InitAreaCompleteInfoForEverest += onAreaCompleteInit;
             versionNumberAndVariantsHook = new ILHook(typeof(AreaComplete).GetMethod("orig_VersionNumberAndVariants"), shiftVersionNumberAndVariantsUp);
         }
 
         public static void Unload() {
+            On.Celeste.AreaComplete.InitAreaCompleteInfoForEverest -= onAreaCompleteInit;
             versionNumberAndVariantsHook?.Dispose();
+        }
+
+        private static void onAreaCompleteInit(On.Celeste.AreaComplete.orig_InitAreaCompleteInfoForEverest orig, bool pieScreen) {
+            orig(pieScreen);
+
+            if (Settings.Instance.SpeedrunClock > SpeedrunType.Off) {
+                string mapSID = (Engine.Scene as AreaComplete)?.Session.Area.GetSID();
+                if (mapSID != null) {
+                    addCollabVersionToEndscreen(mapSID);
+                }
+            }
         }
 
         private static void shiftVersionNumberAndVariantsUp(ILContext il) {
@@ -56,15 +69,20 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             AreaComplete.InitAreaCompleteInfoForEverest(pieScreen: false);
 
-            // add the collab version after the Everest version
-            string collabName = (scene as Level).Session.Area.GetSID();
-            collabName = collabName.Substring(0, collabName.IndexOf("/"));
-            areaCompleteVersionFull.SetValue(null, areaCompleteVersionFull.GetValue(null).ToString() + "\ncollab " +
-                (Everest.Modules.Where(m => m.Metadata?.Name == collabName).FirstOrDefault()?.Metadata.Version ?? new Version(0, 0)));
+            addCollabVersionToEndscreen((scene as Level).Session.Area.GetSID());
 
             speedrunTimerChapterString = TimeSpan.FromTicks((scene as Level).Session.Time).ShortGameplayFormat();
             speedrunTimerFileString = Dialog.FileTime(SaveData.Instance.Time);
             SpeedrunTimerDisplay.CalculateBaseSizes();
+        }
+
+        private static void addCollabVersionToEndscreen(string levelSID) {
+            // add the collab version after the Everest version
+            string collabName = LobbyHelper.GetCollabNameForSID(levelSID);
+            if (collabName != null) {
+                areaCompleteVersionFull.SetValue(null, areaCompleteVersionFull.GetValue(null).ToString() + "\ncollab " +
+                    (Everest.Modules.Where(m => m.Metadata?.Name == collabName).FirstOrDefault()?.Metadata.Version ?? new Version(0, 0)));
+            }
         }
 
         public override void Update() {
