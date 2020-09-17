@@ -59,13 +59,12 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private float fadeTime;
         private bool timerEnded;
         private float drawLerp;
-        private bool tweenStarted;
 
         private Vector2 offscreenPosition;
         private Vector2 onscreenPosition;
 
         private Wiggler wiggler;
-        private Tween tween;
+        private bool tweenActive;
 
         private MTexture bg = GFX.Gui["CollabUtils2/extendedStrawberryCountBG"];
 
@@ -84,12 +83,18 @@ namespace Celeste.Mod.CollabUtils2.UI {
             TrackedBerry = berry;
             timerEnded = false;
             fadeTime = 3f;
-            Get<Tween>()?.RemoveSelf();
-            tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.CubeInOut, 0.6f, true);
-            tween.OnUpdate = t => {
+
+            createTween(0.6f, t => {
                 Position = Vector2.Lerp(offscreenPosition, onscreenPosition, t.Eased);
-            };
+            });
+        }
+
+        private void createTween(float fadeTime, Action<Tween> onUpdate) {
+            Tween tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.CubeInOut, fadeTime, true);
+            tween.OnUpdate = onUpdate;
+            tween.OnComplete = _ => tweenActive = false;
             Add(tween);
+            tweenActive = true;
         }
 
         public long GetSpentTime() {
@@ -135,9 +140,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 fadeTime -= Engine.DeltaTime;
                 if (fadeTime <= 0f) {
                     SceneAs<Level>().Remove(this);
-                } else if (!tweenStarted && fadeTime <= 1.5f) {
-                    tween.Start();
-                    tweenStarted = true;
+                } else if (!tweenActive && fadeTime <= 1.5f) {
+                    createTween(1.5f, t => {
+                        Position = Vector2.Lerp(onscreenPosition, offscreenPosition, t.Eased);
+                    });
                 }
             }
 
@@ -154,7 +160,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 offscreenPosition = new Vector2(-400f, 180f);
                 onscreenPosition = new Vector2(32f, 180f);
             }
-            if (!tween.Active) {
+            if (!tweenActive) {
                 Position = onscreenPosition;
             }
 
@@ -167,12 +173,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (!timerEnded) {
                 timerEnded = true;
                 fadeTime = 5f;
-                Get<Tween>()?.RemoveSelf();
-                tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.CubeInOut, 1.5f);
-                tween.OnUpdate = t => {
-                    Position = Vector2.Lerp(onscreenPosition, offscreenPosition, t.Eased);
-                };
-                Add(tween);
                 endChapterTimer = SceneAs<Level>().Session.Time;
                 wiggler.Start();
 
