@@ -1,4 +1,5 @@
-﻿using Mono.Cecil.Cil;
+﻿using Microsoft.Xna.Framework;
+using Mono.Cecil.Cil;
 using Monocle;
 using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
@@ -95,6 +96,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
             base.Render();
 
             AreaComplete.Info(speedrunTimerEase, speedrunTimerChapterString, speedrunTimerFileString, chapterSpeedrunText, version);
+
+            ActiveFont.DrawOutline(Dialog.Clean((Scene as Level).Session.Area.GetSID()),
+                new Vector2(960f, 900f), new Vector2(0.5f, 0.5f), Vector2.One * 0.5f, Color.White, 2f, Color.Black);
         }
 
         public override void SceneEnd(Scene scene) {
