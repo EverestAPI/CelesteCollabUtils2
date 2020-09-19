@@ -22,6 +22,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 EntityData goldenRespawn = levelData.Entities.FirstOrDefault(entityData => entityData.Name == "CollabUtils2/GoldenBerryPlayerRespawnPoint");
                 if (goldenRespawn != null) {
                     restartSession.RespawnPoint = goldenRespawn.Position + levelData.Position;
+                    restartSession.StartedFromBeginning = false;
                 }
             }
 
