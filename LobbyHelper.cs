@@ -390,6 +390,7 @@ namespace Celeste.Mod.CollabUtils2 {
                 if (collabPrologue != null) {
                     savedLastArea = self.SaveData.LastArea_Safe;
                     self.SaveData.LastArea_Safe = collabPrologue.ToKey();
+                    self.Strawberries.CanWiggle = false; // prevent the strawberry collect sound from playing.
                 }
             }
 
