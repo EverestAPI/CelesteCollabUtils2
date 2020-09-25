@@ -109,6 +109,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
         public void StartTimer() {
             if (startChapterTimer == -1) {
                 startChapterTimer = SceneAs<Level>().Session.Time;
+
+                if (CollabModule.Instance.Settings.HideSpeedBerryTimerDuringGameplay) {
+                    // hide speed berry timer.
+                    createTween(0.6f, t => {
+                        Position = Vector2.Lerp(onscreenPosition, offscreenPosition, t.Eased);
+                    });
+                }
             }
         }
 
@@ -161,7 +168,12 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 onscreenPosition = new Vector2(32f, 180f);
             }
             if (!tweenActive) {
-                Position = onscreenPosition;
+                // timer is currently on-screen if the hide option is disabled, if the timer didn't start yet, or if it ended.
+                if (!CollabModule.Instance.Settings.HideSpeedBerryTimerDuringGameplay || startChapterTimer == -1 || endChapterTimer != -1) {
+                    Position = onscreenPosition;
+                } else {
+                    Position = offscreenPosition;
+                }
             }
 
             Depth = startChapterTimer == -1 ? 100 : -100;
@@ -186,6 +198,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 }
                 if (newPB) {
                     CollabModule.Instance.SaveData.SpeedBerryPBs[SceneAs<Level>().Session.Area.GetSID()] = time;
+                }
+
+                if (CollabModule.Instance.Settings.HideSpeedBerryTimerDuringGameplay) {
+                    // display speed berry timer.
+                    createTween(0.6f, t => {
+                        Position = Vector2.Lerp(offscreenPosition, onscreenPosition, t.Eased);
+                    });
                 }
             }
         }
