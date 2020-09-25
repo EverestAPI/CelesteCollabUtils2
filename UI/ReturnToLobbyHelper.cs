@@ -79,6 +79,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 int returnToMapIndex = menu.GetItems().FindIndex(item =>
                     item.GetType() == typeof(TextMenu.Button) && ((TextMenu.Button) item).Label == Dialog.Clean("MENU_PAUSE_RETURN"));
 
+                if (returnToMapIndex == -1) {
+                    // fall back to the bottom of the menu.
+                    returnToMapIndex = menu.GetItems().Count - 1;
+                }
+
                 TextMenu.Button returnToLobbyButton = new TextMenu.Button(Dialog.Clean("collabutils2_returntolobby"));
                 returnToLobbyButton.Pressed(() => {
                     level.PauseMainMenuOpen = false;
