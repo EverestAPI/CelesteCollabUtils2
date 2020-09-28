@@ -440,7 +440,7 @@ namespace Celeste.Mod.CollabUtils2 {
                     if (stats.Name.StartsWith($"{collab2}/")) {
                         totalStrawberries += stats.TotalStrawberries;
                         totalGoldenStrawberries += stats.TotalGoldenStrawberries;
-                        totalHeartGems += stats.TotalHeartGems;
+                        totalHeartGems += countTotalHeartGemsForMapsThatHaveHearts(stats);
                         totalCassettes += stats.TotalCassettes;
                         maxStrawberryCount += stats.MaxStrawberries;
                         maxGoldenStrawberryCount += stats.MaxGoldenStrawberries;
@@ -450,7 +450,7 @@ namespace Celeste.Mod.CollabUtils2 {
                         maxCrystalHeartsExcludingCSides += stats.MaxHeartGemsExcludingCSides;
                     }
                 }
-
+                
                 DynData<OuiFileSelectSlot> slotData = new DynData<OuiFileSelectSlot>(self);
                 slotData["totalGoldenStrawberries"] = totalGoldenStrawberries;
                 slotData["totalHeartGems"] = totalHeartGems;
@@ -472,6 +472,23 @@ namespace Celeste.Mod.CollabUtils2 {
             if (savedLastArea != null) {
                 self.SaveData.LastArea_Safe = savedLastArea.Value;
             }
+        }
+
+        private static int countTotalHeartGemsForMapsThatHaveHearts(LevelSetStats levelSetStats) {
+            return levelSetStats.AreasIncludingCeleste.Sum((AreaStats area) => {
+                int totalHeartGems = 0;
+                ModeProperties[] propertiesOfAllModes = AreaData.Get(area.GetSID())?.Mode ?? new ModeProperties[0];
+                for (int i = 0; i < propertiesOfAllModes.Length && i < area.Modes.Length; i++) {
+                    if (area.Modes[i].HeartGem) {
+                        // the crystal heart of this map/mode was collected, so check if it has one before counting it in.
+                        ModeProperties modeProperties = propertiesOfAllModes[i];
+                        if (modeProperties?.MapData != null && modeProperties.MapData.Area.Mode <= AreaMode.CSide) {
+                            totalHeartGems += (modeProperties.MapData.DetectedHeartGem ? 1 : 0);
+                        }
+                    }
+                }
+                return totalHeartGems;
+            });
         }
 
         private static void modSelectSlotLevelSetDisplayName(ILContext il) {
