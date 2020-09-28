@@ -36,6 +36,8 @@ namespace Celeste.Mod.CollabUtils2 {
             GoldenBerryPlayerRespawnPoint.Load();
             SpeedBerry.Load();
             AreaCompleteInfoInLevel.Load();
+
+            Everest.Content.OnUpdate += onModAssetUpdate;
         }
 
         public override void Unload() {
@@ -51,6 +53,20 @@ namespace Celeste.Mod.CollabUtils2 {
             GoldenBerryPlayerRespawnPoint.Unload();
             SpeedBerry.Unload();
             AreaCompleteInfoInLevel.Unload();
+
+            Everest.Content.OnUpdate -= onModAssetUpdate;
+        }
+
+        public override void Initialize() {
+            base.Initialize();
+
+            LobbyHelper.OnInitialize();
+        }
+
+        private void onModAssetUpdate(ModAsset oldAsset, ModAsset newAsset) {
+            if (newAsset?.PathVirtual == "CollabUtils2CollabID") {
+                LobbyHelper.LoadCollabIDFile(newAsset);
+            }
         }
 
         public override void LoadContent(bool firstLoad) {

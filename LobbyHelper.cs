@@ -9,11 +9,12 @@ using MonoMod.Utils;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 
 namespace Celeste.Mod.CollabUtils2 {
-    class LobbyHelper {
+    static class LobbyHelper {
 
         private static bool unpauseTimerOnNextAction = false;
 
@@ -21,14 +22,36 @@ namespace Celeste.Mod.CollabUtils2 {
         private static ILHook hookOnOuiJournalPoemLines;
         private static ILHook hookOnLevelSetSwitch;
 
+        private static HashSet<string> collabNames = new HashSet<string>();
+
+        internal static void OnInitialize() {
+            foreach (ModAsset asset in
+                Everest.Content.Mods
+                .Select(mod => mod.Map.TryGetValue("CollabUtils2CollabID", out ModAsset asset) ? asset : null)
+                .Where(asset => asset != null)
+            ) {
+                LoadCollabIDFile(asset);
+            }
+        }
+
+        internal static void LoadCollabIDFile(ModAsset asset) {
+            string fileContents;
+            using (StreamReader reader = new StreamReader(asset.Stream)) {
+                fileContents = reader.ReadToEnd();
+            }
+            Logger.Log(LogLevel.Info, "CollabUtils2/LobbyHelper", $"Registered new collab ID: {fileContents.Trim()}");
+            collabNames.Add(fileContents.Trim());
+        }
+
         /// <summary>
         /// Returns the level set the given lobby SID is associated to, or null if the SID given is not a lobby.
         /// </summary>
         /// <param name="sid">The SID for a map</param>
         /// <returns>The level set name for this lobby, or null if the SID given is not a lobby</returns>
         public static string GetLobbyLevelSet(string sid) {
-            if (sid.StartsWith("SpringCollab2020/0-Lobbies/") && sid != "SpringCollab2020/0-Lobbies/0-Prologue") {
-                return "SpringCollab2020/" + sid.Substring("SpringCollab2020/0-Lobbies/".Length);
+            string collab = collabNames.FirstOrDefault(collabName => sid.StartsWith($"{collabName}/0-Lobbies/") && sid != $"{collabName}/0-Lobbies/0-Prologue");
+            if (collab != null) {
+                return $"{collab}/{sid.Substring($"{collab}/0-Lobbies/".Length)}";
             }
             return null;
         }
@@ -37,7 +60,7 @@ namespace Celeste.Mod.CollabUtils2 {
         /// Returns true if the given level set is a hidden level set from a collab.
         /// </summary>
         public static bool IsCollabLevelSet(string levelSet) {
-            return levelSet.StartsWith("SpringCollab2020/") && levelSet != "SpringCollab2020/0-Lobbies";
+            return collabNames.Any(collabName => levelSet.StartsWith($"{collabName}/") && levelSet != $"{collabName}/0-Lobbies");
         }
 
         /// <summary>
@@ -46,9 +69,10 @@ namespace Celeste.Mod.CollabUtils2 {
         /// <param name="levelSet">The level set name</param>
         /// <returns>The SID of the lobby for this level set, or null if the given level set does not belong to a collab or has no matching lobby.</returns>
         public static string GetLobbyForLevelSet(string levelSet) {
-            if (levelSet.StartsWith("SpringCollab2020/")) {
+            string collab = collabNames.FirstOrDefault(collabName => levelSet.StartsWith($"{collabName}/"));
+            if (collab != null) {
                 // build the expected lobby name (SpringCollab2020/1-Beginner => SpringCollab2020/0-Lobbies/1-Beginner) and check it exists before returning it.
-                string expectedLobbyName = "SpringCollab2020/0-Lobbies/" + levelSet.Substring("SpringCollab2020/".Length);
+                string expectedLobbyName = $"{collab}/0-Lobbies/{levelSet.Substring($"{collab}/".Length)}";
                 if (AreaData.Get(expectedLobbyName) != null) {
                     return expectedLobbyName;
                 }
@@ -62,7 +86,7 @@ namespace Celeste.Mod.CollabUtils2 {
         /// <param name="gymSID">The gym SID</param>
         /// <returns>The SID of the lobby for this gym, or null if the given SID does not belong to a collab or has no matching lobby.</returns>
         public static string GetLobbyForGym(string gymSID) {
-            if (gymSID.StartsWith("SpringCollab2020/0-Gyms/")) {
+            if (collabNames.Any(collabName => gymSID.StartsWith($"{collabName}/0-Gyms/"))) {
                 // build the expected lobby name (SpringCollab2020/0-Gyms/1-Beginner => SpringCollab2020/0-Lobbies/1-Beginner) and check it exists before returning it.
                 string expectedLobbyName = gymSID.Replace("/0-Gyms/", "/0-Lobbies/");
                 if (AreaData.Get(expectedLobbyName) != null) {
@@ -78,10 +102,7 @@ namespace Celeste.Mod.CollabUtils2 {
         /// <param name="sid">A map SID</param>
         /// <returns>The name of the collab the map is part of, or null if it is a non-collab map</returns>
         public static string GetCollabNameForSID(string sid) {
-            if (sid.StartsWith("SpringCollab2020/")) {
-                return "SpringCollab2020";
-            }
-            return null;
+            return collabNames.FirstOrDefault(collabName => sid.StartsWith($"{collabName}/"));
         }
 
         /// <summary>
@@ -90,7 +111,7 @@ namespace Celeste.Mod.CollabUtils2 {
         /// <param name="sid">The SID for a map</param>
         /// <returns>true if this is a collab heart side, false otherwise.</returns>
         public static bool IsHeartSide(string sid) {
-            return sid.StartsWith("SpringCollab2020/") && sid.EndsWith("/ZZ-HeartSide");
+            return collabNames.Any(collabName => sid.StartsWith($"{collabName}/")) && sid.EndsWith("/ZZ-HeartSide");
         }
 
         public static void Load() {
@@ -342,10 +363,12 @@ namespace Celeste.Mod.CollabUtils2 {
         private static void onSaveDataAfterInitialize(On.Celeste.SaveData.orig_AfterInitialize orig, SaveData self) {
             orig(self);
 
-            // be sure that all lobbies are unlocked.
-            LevelSetStats stats = self.GetLevelSetStatsFor("SpringCollab2020/0-Lobbies");
-            if (stats != null && stats.UnlockedAreas > 0) { // we at least completed Prologue.
-                stats.UnlockedAreas = stats.Areas.Count - 1;
+            foreach (string collabName in collabNames) {
+                // be sure that all lobbies are unlocked.
+                LevelSetStats stats = self.GetLevelSetStatsFor($"{collabName}/0-Lobbies");
+                if (stats != null && (stats.UnlockedAreas > 0 || AreaData.Get($"{collabName}/0-Lobbies/0-Prologue") == null)) { // we at least completed Prologue.
+                    stats.UnlockedAreas = stats.Areas.Count - 1;
+                }
             }
         }
 
@@ -355,9 +378,10 @@ namespace Celeste.Mod.CollabUtils2 {
                 yield return origRoutine.Current;
             }
 
-            if (AreaData.Get(self.Area).GetLevelSet() == "SpringCollab2020/0-Lobbies") {
+            string collab = collabNames.FirstOrDefault(collabName => AreaData.Get(self.Area).GetLevelSet() == $"{collabName}/0-Lobbies");
+            if (collab != null) {
                 // we just assist unlocked the lobbies!
-                LevelSetStats stats = SaveData.Instance.GetLevelSetStatsFor("SpringCollab2020/0-Lobbies");
+                LevelSetStats stats = SaveData.Instance.GetLevelSetStatsFor($"{collab}/0-Lobbies");
                 stats.UnlockedAreas = stats.Areas.Count - 1;
                 List<OuiChapterSelectIcon> icons = new DynData<OuiChapterSelect>((self.Scene as Overworld).GetUI<OuiChapterSelect>()).Get<List<OuiChapterSelectIcon>>("icons");
                 icons[self.Area + 1].AssistModeUnlockable = false;
@@ -368,7 +392,7 @@ namespace Celeste.Mod.CollabUtils2 {
         }
 
         private static void onJournalEnter(OuiJournal journal, Oui from) {
-            if (SaveData.Instance.GetLevelSet() == "SpringCollab2020/0-Lobbies") {
+            if (collabNames.Any(collabName => SaveData.Instance.GetLevelSet() == $"{collabName}/0-Lobbies")) {
                 // customize the journal in the overworld for the collab.
                 for (int i = 0; i < journal.Pages.Count; i++) {
                     if (journal.Pages[i].GetType() != typeof(OuiJournalCover) && journal.Pages[i].GetType() != typeof(OuiJournalPoem)) {
@@ -385,18 +409,20 @@ namespace Celeste.Mod.CollabUtils2 {
         private static void onOuiFileSelectSlotShow(On.Celeste.OuiFileSelectSlot.orig_Show orig, OuiFileSelectSlot self) {
             // If we are currently in a collab map, display the lobby level set stats instead.
             AreaKey? savedLastArea = null;
-            if (self.SaveData?.LevelSet != null && self.SaveData.LevelSet.StartsWith("SpringCollab2020/") && self.SaveData.LevelSet != "SpringCollab2020/0-Lobbies") {
-                AreaData collabPrologue = AreaData.Get("SpringCollab2020/0-Lobbies/0-Prologue");
-                if (collabPrologue != null) {
+            string collab = collabNames.FirstOrDefault(collabName => self.SaveData?.LevelSet != null && self.SaveData.LevelSet.StartsWith($"{collabName}/") && self.SaveData.LevelSet != $"{collabName}/0-Lobbies");
+            if (collab != null) {
+                AreaData firstMapFromCollab = AreaData.Areas.FirstOrDefault(area => area.GetLevelSet() == $"{collab}/0-Lobbies");
+                if (firstMapFromCollab != null) {
                     savedLastArea = self.SaveData.LastArea_Safe;
-                    self.SaveData.LastArea_Safe = collabPrologue.ToKey();
+                    self.SaveData.LastArea_Safe = firstMapFromCollab.ToKey();
                     self.Strawberries.CanWiggle = false; // prevent the strawberry collect sound from playing.
                 }
             }
 
             orig(self);
 
-            if (self.SaveData?.LevelSet == "SpringCollab2020/0-Lobbies") {
+            string collab2 = collabNames.FirstOrDefault(collabName => self.SaveData?.LevelSet == $"{collabName}/0-Lobbies");
+            if (collab2 != null) {
                 // recompute the stats for the collab.
                 int totalStrawberries = 0;
                 int totalGoldenStrawberries = 0;
@@ -409,9 +435,9 @@ namespace Celeste.Mod.CollabUtils2 {
                 int maxCrystalHearts = 0;
                 int maxCrystalHeartsExcludingCSides = 0;
 
-                // aggregate all stats for SpringCollab2020 level sets.
+                // aggregate all stats for the collab level sets.
                 foreach (LevelSetStats stats in self.SaveData.LevelSets) {
-                    if (stats.Name.StartsWith("SpringCollab2020/")) {
+                    if (stats.Name.StartsWith($"{collab2}/")) {
                         totalStrawberries += stats.TotalStrawberries;
                         totalGoldenStrawberries += stats.TotalGoldenStrawberries;
                         totalHeartGems += stats.TotalHeartGems;
@@ -460,8 +486,9 @@ namespace Celeste.Mod.CollabUtils2 {
                 cursor.Index--;
                 cursor.Emit(OpCodes.Ldarg_0);
                 cursor.EmitDelegate<Func<string, OuiFileSelectSlot, string>>((orig, self) => {
-                    if (self.SaveData?.LevelSet.StartsWith("SpringCollab2020/") ?? false) {
-                        return "SpringCollab2020_0_Lobbies";
+                    string collab = collabNames.FirstOrDefault(collabName => self.SaveData?.LevelSet.StartsWith($"{collabName}/") ?? false);
+                    if (collab != null) {
+                        return $"{collab.DialogKeyify()}_0_Lobbies";
                     }
                     return orig;
                 });
@@ -479,7 +506,7 @@ namespace Celeste.Mod.CollabUtils2 {
                 cursor.Emit(OpCodes.Ldfld, typeof(OuiJournalPoem).GetNestedType("PoemLine", BindingFlags.NonPublic).GetField("Text"));
 
                 cursor.EmitDelegate<Func<string, string, string>>((orig, poem) => {
-                    if (SaveData.Instance?.LevelSet == "SpringCollab2020/0-Lobbies") {
+                    if (collabNames.Any(collabName => SaveData.Instance?.LevelSet == $"{collabName}/0-Lobbies")) {
                         foreach (AreaData area in AreaData.Areas) {
                             string levelSetName = GetLobbyLevelSet(area.GetSID());
                             if (levelSetName != null
