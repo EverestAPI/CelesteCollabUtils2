@@ -136,6 +136,9 @@ namespace Celeste.Mod.CollabUtils2 {
 
             hookOnOuiFileSelectRender = new ILHook(typeof(OuiFileSelectSlot).GetMethod("orig_Render"), modSelectSlotLevelSetDisplayName);
             hookOnOuiJournalPoemLines = new ILHook(typeof(OuiJournalPoem).GetNestedType("PoemLine", BindingFlags.NonPublic).GetMethod("Render"), modJournalPoemHeartColors);
+
+            // allowing player to open journal when on ground
+            On.Celeste.Level.Update += onLevelUpdate;
         }
 
         public static void Unload() {
@@ -158,6 +161,8 @@ namespace Celeste.Mod.CollabUtils2 {
 
             hookOnOuiFileSelectRender?.Dispose();
             hookOnOuiJournalPoemLines?.Dispose();
+
+            On.Celeste.Level.Update -= onLevelUpdate;
         }
 
         public static void OnSessionCreated() {
@@ -536,6 +541,18 @@ namespace Celeste.Mod.CollabUtils2 {
                     }
                     return orig;
                 });
+            }
+        }
+
+        private static void onLevelUpdate(On.Celeste.Level.orig_Update orig, Level self) {
+            orig(self);
+            Player player = self.Tracker.GetEntity<Player>();
+            if (Input.MenuJournal.Pressed && player != null && !player.Dead && player.OnGround()) {
+                Session session = SaveData.Instance.CurrentSession_Safe;
+                string levelSet = GetLobbyLevelSet(session.Area.GetSID());
+                if (levelSet != null) {
+                    InGameOverworldHelper.OpenJournal(player, levelSet);
+                }
             }
         }
     }
