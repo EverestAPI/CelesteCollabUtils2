@@ -136,7 +136,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             if (TimerDisplay != null) {
                 string nextRank = TimerDisplay.GetNextRank(out _).ToLowerInvariant();
                 if (nextRank != "none") {
-                    sprite.Play("idle_" + nextRank);
+                    playAnimationSpeedrunToolSafe(sprite, "idle_" + nextRank);
                 }
             }
         }
@@ -173,12 +173,12 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     if (nextRank == "bronze" && sprite.CurrentAnimationID != "explosion"
                         && TimeSpan.FromTicks(TimerDisplay.GetSpentTime()).TotalMilliseconds + 1200 > nextTime * 1000) {
 
-                        sprite.Play("explosion");
+                        playAnimationSpeedrunToolSafe(sprite, "explosion");
                     }
 
                     // the current animation does not match the expected animation.
                     if (nextRank != "gold" && sprite.CurrentAnimationID != "explosion" && !sprite.CurrentAnimationID.Contains(nextRank)) {
-                        sprite.Play("transition_to_" + nextRank);
+                        playAnimationSpeedrunToolSafe(sprite, "transition_to_" + nextRank);
                     }
 
                     if (nextRank == "bronze") {
@@ -204,8 +204,16 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
             // replace the collect animation with the matching color collect animation.
             if (sprite.CurrentAnimationID == "collect") {
-                sprite.Play("collect_" + TimerDisplay.GetNextRank(out _).ToLowerInvariant());
+                playAnimationSpeedrunToolSafe(sprite, "collect_" + TimerDisplay.GetNextRank(out _).ToLowerInvariant());
             }
+        }
+
+        private static void playAnimationSpeedrunToolSafe(Sprite sprite, string animation) {
+            if (sprite.Texture?.AtlasPath?.StartsWith("collectables/speedrun_tool_goldberry/") ?? false) {
+                // this means Speedrun Tool replaced the sprite, so replace it again or we are going to crash.
+                SpriteBank.CreateOn(sprite, "speedBerry");
+            }
+            sprite.Play(animation);
         }
 
         private void dissolve() {
