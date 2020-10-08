@@ -38,12 +38,23 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private Vector2 transitionTarget;
         private bool forcePositionToTransitionTarget;
 
+        private static bool transitionJustTriggered = false;
+
         public static void Load() {
+            On.Celeste.Level.NextLevel += onTransitionTriggered;
             On.Celeste.Player.OnTransition += onTransitionEnd;
         }
 
         public static void Unload() {
+            On.Celeste.Level.NextLevel -= onTransitionTriggered;
             On.Celeste.Player.OnTransition -= onTransitionEnd;
+        }
+
+        private static void onTransitionTriggered(On.Celeste.Level.orig_NextLevel orig, Level self, Vector2 at, Vector2 dir) {
+            orig(self, at, dir);
+
+            // this flag will prevent the speed berry from exploding on the same frame as a transition, because that causes a crash.
+            transitionJustTriggered = true;
         }
 
         private static void onTransitionEnd(On.Celeste.Player.orig_OnTransition orig, Player self) {
@@ -178,9 +189,10 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 }
             }
 
-            if (TimeRanOut) {
+            if (TimeRanOut && !transitionJustTriggered) {
                 dissolve();
             }
+            transitionJustTriggered = false;
 
             base.Update();
 
