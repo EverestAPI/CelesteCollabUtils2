@@ -88,13 +88,22 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         lobbySumOfBestDeaths += lobbyMap.Modes[0].BestDeaths;
                         lobbyTotalTime += lobbyMap.TotalTimePlayed;
 
-                        if (CollabMapDataProcessor.SpeedBerries.TryGetValue(lobbyMap.GetSID(), out CollabMapDataProcessor.SpeedBerryInfo mapSpeedBerryInfo)
-                            && CollabModule.Instance.SaveData.SpeedBerryPBs.TryGetValue(lobbyMap.GetSID(), out long mapSpeedBerryPB)) {
 
-                            lobbySpeedBerryLevel = Math.Max(getRankLevel(mapSpeedBerryInfo, mapSpeedBerryPB), lobbySpeedBerryLevel);
-                            lobbySumOfBestTimes += mapSpeedBerryPB;
+                        if (CollabModule.Instance.Settings.BestTimeToDisplayInJournal == CollabSettings.BestTimeInJournal.SpeedBerry) {
+                            if (CollabMapDataProcessor.SpeedBerries.TryGetValue(lobbyMap.GetSID(), out CollabMapDataProcessor.SpeedBerryInfo mapSpeedBerryInfo)
+                                && CollabModule.Instance.SaveData.SpeedBerryPBs.TryGetValue(lobbyMap.GetSID(), out long mapSpeedBerryPB)) {
+
+                                lobbySpeedBerryLevel = Math.Max(getRankLevel(mapSpeedBerryInfo, mapSpeedBerryPB), lobbySpeedBerryLevel);
+                                lobbySumOfBestTimes += mapSpeedBerryPB;
+                            } else {
+                                lobbySpeedBerryLevel = 4;
+                            }
                         } else {
-                            lobbySpeedBerryLevel = 4;
+                            if (lobbyMap.Modes[0].BestTime > 0f) {
+                                lobbySumOfBestTimes += lobbyMap.Modes[0].BestTime;
+                            } else {
+                                lobbySpeedBerryLevel = 4;
+                            }
                         }
 
                         bool goldenBerryNotObtained = !lobbyMap.Modes[0].Strawberries.Any(berry => areaData.Mode[0].MapData.Goldenberries.Any(golden => golden.ID == berry.ID && golden.Level.Name == berry.Level));
@@ -164,9 +173,14 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     if (lobbyMapLevelSet == null) {
                         row.Add(new TextCell("-", TextJustify, 0.5f, TextColor)).Add(null);
                     } else if (lobbySpeedBerryLevel < 4) {
-                        row.Add(new TextCell(Dialog.Time(lobbySumOfBestTimes), TextJustify, 0.5f, getRankColor(lobbySpeedBerryLevel)));
-                        row.Add(new IconCell(getRankIcon(lobbySpeedBerryLevel)));
-                        sumOfBestTimes += lobbySumOfBestTimes;
+                        if (CollabModule.Instance.Settings.BestTimeToDisplayInJournal == CollabSettings.BestTimeInJournal.SpeedBerry) {
+                            row.Add(new TextCell(Dialog.Time(lobbySumOfBestTimes), TextJustify, 0.5f, getRankColor(lobbySpeedBerryLevel)));
+                            row.Add(new IconCell(getRankIcon(lobbySpeedBerryLevel)));
+                            sumOfBestTimes += lobbySumOfBestTimes;
+                        } else {
+                            row.Add(new TextCell(Dialog.Time(lobbySumOfBestTimes), TextJustify, 0.5f, TextColor)).Add(null);
+                            sumOfBestTimes += lobbySumOfBestTimes;
+                        }
                     } else {
                         row.Add(new IconCell("dot")).Add(null);
                         allSpeedBerriesDone = false;

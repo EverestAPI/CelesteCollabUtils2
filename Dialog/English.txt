@@ -22,6 +22,10 @@ modoptions_collab_hidespeedberrytimerduringgameplay= Hide Berry Timer During Gam
 modoptions_collab_displayendscreenforallmaps= Display End Screen For All Maps
 modoptions_collab_displayendscreenforallmaps_description= Required for verification of speedrun.com IL submissions
 
+modoptions_collab_besttimetodisplayinjournal= Best Time To Display In Journal
+modoptions_collab_besttimetodisplayinjournal_speedberry= Speed Berry
+modoptions_collab_besttimetodisplayinjournal_chaptertimer= Chapter Time
+
 # SHIP COLLAB-SPECIFIC DIALOG WITH THE COLLAB MOD, NOT THE COLLAB UTILS.
 
 area_1_collabcredits= 
