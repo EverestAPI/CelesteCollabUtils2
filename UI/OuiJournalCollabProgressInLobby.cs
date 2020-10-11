@@ -83,21 +83,22 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         row.Add(new IconCell("dot"));
                     }
 
-                    if (item.Modes[0].SingleRunCompleted) {
-                        AreaStats stats = SaveData.Instance.GetAreaStatsFor(areaData.ToKey());
-                        if (CollabMapDataProcessor.SilverBerries.TryGetValue(areaData.GetLevelSet(), out Dictionary<string, EntityID> levelSetBerries)
-                            && levelSetBerries.TryGetValue(areaData.GetSID(), out EntityID berryID)
-                            && stats.Modes[0].Strawberries.Contains(berryID)) {
 
-                            // silver berry was obtained!
-                            row.Add(new IconCell("CollabUtils2/silver_strawberry"));
-                        } else if (stats.Modes[0].Strawberries.Any(berry => areaData.Mode[0].MapData.Goldenberries.Any(golden => golden.ID == berry.ID && golden.Level.Name == berry.Level))) {
-                            // golden berry was obtained!
-                            row.Add(new IconCell("CollabUtils2/golden_strawberry"));
-                        } else {
-                            row.Add(new TextCell(Dialog.Deaths(item.Modes[0].BestDeaths), currentPage.TextJustify, 0.5f, currentPage.TextColor));
-                        }
+                    AreaStats stats = SaveData.Instance.GetAreaStatsFor(areaData.ToKey());
+                    if (CollabMapDataProcessor.SilverBerries.TryGetValue(areaData.GetLevelSet(), out Dictionary<string, EntityID> levelSetBerries)
+                        && levelSetBerries.TryGetValue(areaData.GetSID(), out EntityID berryID)
+                        && stats.Modes[0].Strawberries.Contains(berryID)) {
+
+                        // silver berry was obtained!
+                        row.Add(new IconCell("CollabUtils2/silver_strawberry"));
+                    } else if (stats.Modes[0].Strawberries.Any(berry => areaData.Mode[0].MapData.Goldenberries.Any(golden => golden.ID == berry.ID && golden.Level.Name == berry.Level))) {
+                        // golden berry was obtained!
+                        row.Add(new IconCell("CollabUtils2/golden_strawberry"));
+                    } else if (item.Modes[0].SingleRunCompleted) {
+                        row.Add(new TextCell(Dialog.Deaths(item.Modes[0].BestDeaths), currentPage.TextJustify, 0.5f, currentPage.TextColor));
+                        sumOfBestDeaths += item.Modes[0].BestDeaths;
                     } else {
+                        // the player didn't ever do a single run.
                         row.Add(new IconCell("dot"));
                         allLevelsDone = false;
                     }
@@ -131,7 +132,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
                     totalStrawberries += item.TotalStrawberries;
                     totalDeaths += item.Modes[0].Deaths;
-                    sumOfBestDeaths += item.Modes[0].BestDeaths;
                     totalTime += item.TotalTimePlayed;
 
                     if (!item.Modes[0].HeartGem) {

@@ -60,6 +60,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             bool allLevelsDone = true;
             bool allSpeedBerriesDone = true;
+            bool allMapsCompletedInSingleRun = true;
 
             foreach (AreaStats item in SaveData.Instance.Areas_Safe) {
                 AreaData areaData = AreaData.Get(item.ID_Safe);
@@ -79,15 +80,15 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     bool lobbyLevelsDone = true;
                     int lobbySpeedBerryLevel = 1;
                     bool lobbySilverBerriesObtained = true;
+                    bool lobbyAllMapsCompletedInSingleRun = true;
 
                     foreach (AreaStats lobbyMap in lobbyMapLevelSet?.Areas ?? new List<AreaStats>()) {
                         AreaData lobbyAreaData = AreaData.Get(lobbyMap.ID_Safe);
                         lobbyStrawberries += lobbyMap.TotalStrawberries;
                         lobbyTotalStrawberries += lobbyAreaData.Mode[0].TotalStrawberries;
                         lobbyDeaths += lobbyMap.Modes[0].Deaths;
-                        lobbySumOfBestDeaths += lobbyMap.Modes[0].BestDeaths;
                         lobbyTotalTime += lobbyMap.TotalTimePlayed;
-
+                        lobbyAllMapsCompletedInSingleRun &= lobbyMap.Modes[0].SingleRunCompleted;
 
                         if (CollabModule.Instance.Settings.BestTimeToDisplayInJournal == CollabSettings.BestTimeInJournal.SpeedBerry) {
                             if (CollabMapDataProcessor.SpeedBerries.TryGetValue(lobbyMap.GetSID(), out CollabMapDataProcessor.SpeedBerryInfo mapSpeedBerryInfo)
@@ -113,6 +114,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
                         if (goldenBerryNotObtained && silverBerryNotObtained) {
                             lobbySilverBerriesObtained = false;
+                            lobbySumOfBestDeaths += lobbyMap.Modes[0].BestDeaths;
                         }
 
                         if (!lobbyMap.Modes[0].HeartGem) {
@@ -156,8 +158,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
                             sumOfBestDeaths += item.Modes[0].BestDeaths;
                         } else if (lobbySilverBerriesObtained) {
                             row.Add(new IconCell("CollabUtils2/golden_strawberry"));
-                        } else {
+                        } else if (lobbyAllMapsCompletedInSingleRun) {
                             row.Add(new TextCell(Dialog.Deaths(lobbySumOfBestDeaths), TextJustify, 0.5f, TextColor));
+                        } else {
+                            row.Add(new IconCell("dot"));
                         }
                     } else {
                         row.Add(new IconCell("dot"));
@@ -190,6 +194,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     totalDeaths += lobbyDeaths;
                     sumOfBestDeaths += lobbySumOfBestDeaths;
                     totalTime += lobbyTotalTime;
+                    allMapsCompletedInSingleRun &= lobbyAllMapsCompletedInSingleRun;
 
                     if (!lobbyLevelsDone) {
                         allLevelsDone = false;
@@ -203,7 +208,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 .Add(null)
                 .Add(new TextCell(totalStrawberries.ToString(), TextJustify, 0.6f, TextColor))
                 .Add(new TextCell(Dialog.Deaths(totalDeaths), TextJustify, 0.6f, TextColor))
-                .Add(new TextCell(allLevelsDone ? Dialog.Deaths(sumOfBestDeaths) : "-", TextJustify, 0.6f, TextColor))
+                .Add(new TextCell(allLevelsDone && allMapsCompletedInSingleRun ? Dialog.Deaths(sumOfBestDeaths) : "-", TextJustify, 0.6f, TextColor))
                 .Add(new TextCell(Dialog.Time(totalTime), TextJustify, 0.6f, TextColor))
                 .Add(new TextCell(allSpeedBerriesDone ? Dialog.Time(sumOfBestTimes) : "-", TextJustify, 0.6f, TextColor)).Add(null);
 
