@@ -107,7 +107,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                             }
                         }
 
-                        bool goldenBerryNotObtained = !lobbyMap.Modes[0].Strawberries.Any(berry => areaData.Mode[0].MapData.Goldenberries.Any(golden => golden.ID == berry.ID && golden.Level.Name == berry.Level));
+                        bool goldenBerryNotObtained = !lobbyMap.Modes[0].Strawberries.Any(berry => lobbyAreaData.Mode[0].MapData.Goldenberries.Any(golden => golden.ID == berry.ID && golden.Level.Name == berry.Level));
                         bool silverBerryNotObtained = !CollabMapDataProcessor.SilverBerries.TryGetValue(lobbyMap.GetLevelSet(), out Dictionary<string, EntityID> levelSetBerries)
                             || !levelSetBerries.TryGetValue(lobbyMap.GetSID(), out EntityID berryID)
                             || !lobbyMap.Modes[0].Strawberries.Contains(berryID);
