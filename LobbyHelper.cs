@@ -370,6 +370,15 @@ namespace Celeste.Mod.CollabUtils2 {
                     stats.UnlockedAreas = stats.Areas.Count - 1;
                 }
             }
+
+            if (self.CurrentSession_Safe != null && !self.CurrentSession_Safe.InArea) {
+                // we aren't in a level; check if we have a hidden level set selected (this should only happen with Alt-F4).
+                string lobby = GetLobbyForLevelSet(self.LastArea_Safe.GetLevelSet());
+                if (lobby != null) {
+                    // we are! we should change the selected level to the matching lobby instead.
+                    self.LastArea_Safe = AreaData.Get(lobby).ToKey();
+                }
+            }
         }
 
         private static IEnumerator onAssistUnlockRoutine(On.Celeste.OuiChapterSelectIcon.orig_AssistModeUnlockRoutine orig, OuiChapterSelectIcon self, Action onComplete) {
@@ -450,7 +459,7 @@ namespace Celeste.Mod.CollabUtils2 {
                         maxCrystalHeartsExcludingCSides += stats.MaxHeartGemsExcludingCSides;
                     }
                 }
-                
+
                 DynData<OuiFileSelectSlot> slotData = new DynData<OuiFileSelectSlot>(self);
                 slotData["totalGoldenStrawberries"] = totalGoldenStrawberries;
                 slotData["totalHeartGems"] = totalHeartGems;
