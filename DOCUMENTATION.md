@@ -32,7 +32,7 @@ _Some features like speed berries don't require this, but if you plan to structu
 As an example, we will set up the _2021 Season Collab_, with 4 lobbies: Spring, Summer, Fall and Winter.
 
 1. Pick a unique name for your collab, preferably with just letters and numbers (no spaces or symbols). For example, _2021SeasonCollab_
-2. Get an everest.yaml file (check the [Mod Structure page](https://github.com/EverestAPI/Resources/wiki/Mod-Structure) if you don't know how to do that). Give your mod the `Name` you choose:
+2. Get an everest.yaml file (check the [Mod Structure page](https://github.com/EverestAPI/Resources/wiki/Mod-Structure) if you don't know how to do that). Give your mod the `Name` you chose:
 ```yaml
 - Name: 2021SeasonCollab
   Version: 1.0.0
@@ -130,6 +130,7 @@ To make the heart on the chapter panel mini as well, and customize it if you wan
     <Loop id="spin" path="" frames="0*10,1-10" delay="0.08"/>
     <Loop id="fastspin" path="" frames="1-10" delay="0.08"/>
   </crystalHeart_2021SeasonCollab_1_Spring>
+</Sprites>
 ```
 
 You can use the hearts from the 2020 Spring Collab by replacing "bgr" in the path with "imd", "adv", "exp" or "gdm".
@@ -150,7 +151,7 @@ You can pick which heart to use by changing the `path`: you can use the vanilla 
 
 ### Mini Heart Doors
 
-They're pretty much heart gates, but you can customize its height, and make it count the hearts on the level set you want. It also opens with a cutscene, instead of Maddy having to stand next to it.
+They're pretty much heart gates, but you can customize their height, and make them count the hearts on the level set you want. They also open with a cutscene, instead of Maddy having to stand next to them.
 
 If you followed the setup at the beginning of this document, the level set should look like `CollabName/LobbyName`. For example, `2021SeasonCollab/1-Spring`
 
@@ -231,10 +232,17 @@ The trigger is the zone in which the player will be able to bring up the journal
 
 If you followed the setup at the beginning of this document, the level set should look like `CollabName/LobbyName`. For example, `2021SeasonCollab/1-Spring`
 
-**If you have a heart side** or similar (a level that only unlocks after you beat all other maps in the lobby), name the bin `ZZ-HeartSide.bin` and place it along with the other maps in the lobby; it will be hidden from the journal until it's unlocked, and will be displayed separately (much like Farewell in the vanilla journal).
+**If you have a heart side** or similar (a level that only unlocks after you beat all other maps in the lobby), name the bin `ZZ-HeartSide.bin` and place it along with the other maps in the lobby; it will be hidden from the journal until it's unlocked (all mini hearts in the lobby have been collected), and will be displayed separately (much like Farewell in the vanilla journal).
 
-#### Customizing the hearts in the journal
+#### More customization for the journal
 
-If you want the hearts to have a custom color or graphic in the journal for a lobby, you can put the image for it in `Graphics/Atlases/Journal/CollabUtils2Hearts/CollabName/LobbyName.png`.
+**If you want the hearts to have a custom color or graphic** in the journal for a lobby, you can put the image for it in `Graphics/Atlases/Journal/CollabUtils2Hearts/CollabName/LobbyName.png`.
 
 If you don't define this, the blue heart will be used by default.
+
+You can also **define a custom display name for a lobby** in the overworld journal, by adding an entry in English.txt. Define a new dialog with the same ID as the map name + a `_journal` suffix:
+```
+2021SeasonCollab_0_Lobbies_2_Summer_journal= Summer
+```
+
+This is useful to make the journal say "Beginner Difficulty" instead of "Beginner Lobby" for example.
