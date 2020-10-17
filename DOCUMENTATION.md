@@ -11,7 +11,7 @@ If anything is wrong or unclear, yell at max480 (max480#4596 on [the Celeste Dis
 
 _You will need a mod folder for this. Head to the [Mod Structure page on the Everest wiki](https://github.com/EverestAPI/Resources/wiki/Mod-Structure) if you don't have that yet._
 
-Note that this setup is unnecessary if you only want to use **speed berries**, **golden berry respawn points** and **chapter panel triggers** (though you need to follow it if you want some maps to be hidden in chapter select). 
+Note that this setup is unnecessary if you only want to use **speed berries**, **golden berry respawn points** and **chapter panel triggers** (though you need to follow it if you want some maps to be hidden in chapter select), or if you just want to **reskin crystal hearts**. 
 In other situations, you need to set up your mod for everything to work. This section will explain you how.
 
 As an example, we will set up the _2021 Season Collab_, with 4 lobbies: Spring, Summer, Fall and Winter.
@@ -161,4 +161,24 @@ To stop the timer and collect the berry, you need to place a **Speed Berry Colle
 
 :warning: If the player crosses a Golden Berry Collect Trigger, the speed berry will collect but the timer will not stop. This is an odd interaction, and you should make sure to have the player cross a speed berry collect trigger first.
 
+## Triggers
 
+### Chapter Panel Trigger
+
+This trigger will bring up the chapter panel, like in chapter select, but within a map. This is intended for lobbies.
+
+The trigger is the zone in which the player will be able to bring up the chapter panel by pressing Talk. The node is where the speech bubble will be.
+
+The chapter panel works in the same way as the ones in chapter select (for chapter naming, the icon and colors). The only differences are:
+- Instead of showing a chapter number, it will display **a map author**. To define that, use English.txt and define a new dialog with the same ID as the map name + an `_author` suffix:
+```
+2021SeasonCollab_1_Spring_map1_author= by Matt Makes Games
+```
+
+- Instead of showing checkpoints, it will display **credits**. To define them, use English.txt and define a new dialog with the same ID as the map name + a `_collabcredits` suffix:
+```
+2021SeasonCollab_1_Spring_map1_collabcredits=
+  Map by Maddy Thorson
+  Code by Noel Berry
+  Art by Pedro Medeiros
+```
