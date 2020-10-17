@@ -16,6 +16,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private static ILHook versionNumberAndVariantsHook;
 
+        private static bool isCollabEndscreen = false;
+
         private float speedrunTimerEase = 0f;
 
         private string speedrunTimerChapterString;
@@ -25,11 +27,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         public static void Load() {
             On.Celeste.AreaComplete.InitAreaCompleteInfoForEverest += onAreaCompleteInit;
+            On.Celeste.AreaComplete.DisposeAreaCompleteInfoForEverest += onAreaCompleteDispose;
             versionNumberAndVariantsHook = new ILHook(typeof(AreaComplete).GetMethod("orig_VersionNumberAndVariants"), shiftVersionNumberAndVariantsUp);
         }
 
         public static void Unload() {
             On.Celeste.AreaComplete.InitAreaCompleteInfoForEverest -= onAreaCompleteInit;
+            On.Celeste.AreaComplete.DisposeAreaCompleteInfoForEverest -= onAreaCompleteDispose;
             versionNumberAndVariantsHook?.Dispose();
         }
 
@@ -44,15 +48,19 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
         }
 
+        private static void onAreaCompleteDispose(On.Celeste.AreaComplete.orig_DisposeAreaCompleteInfoForEverest orig) {
+            orig();
+
+            isCollabEndscreen = false;
+        }
+
         private static void shiftVersionNumberAndVariantsUp(ILContext il) {
             ILCursor cursor = new ILCursor(il);
 
             if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(1020f))) {
                 Logger.Log("CollabUtils2/AreaCompleteInfoInLevel", $"Shifting version number and variants up at {cursor.Index} in IL for AreaComplete.orig_VersionNumberAndVariants");
-
-                cursor.Emit(OpCodes.Ldsfld, areaCompleteVersionFull);
-                cursor.EmitDelegate<Func<float, string, float>>((orig, versionFull) => {
-                    if (versionFull.Contains("\ncollab ")) {
+                cursor.EmitDelegate<Func<float, float>>(orig => {
+                    if (isCollabEndscreen) {
                         // shift the text up to leave more space for the collab version.
                         orig -= 32f;
                     }
@@ -81,8 +89,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
             // add the collab version after the Everest version
             string collabName = LobbyHelper.GetCollabNameForSID(levelSID);
             if (collabName != null) {
-                areaCompleteVersionFull.SetValue(null, areaCompleteVersionFull.GetValue(null).ToString() + "\ncollab " +
+                string collabNameFormatted = Dialog.Clean($"endscreen_collabname_{collabName}");
+                areaCompleteVersionFull.SetValue(null, areaCompleteVersionFull.GetValue(null).ToString() + $"\n{collabNameFormatted} " +
                     (Everest.Modules.Where(m => m.Metadata?.Name == collabName).FirstOrDefault()?.Metadata.Version ?? new Version(0, 0)));
+
+                isCollabEndscreen = true;
             }
         }
 
