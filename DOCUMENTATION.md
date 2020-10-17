@@ -182,3 +182,13 @@ The chapter panel works in the same way as the ones in chapter select (for chapt
   Code by Noel Berry
   Art by Pedro Medeiros
 ```
+
+#### The "Return to Lobby" option
+
+When using a Chapter Panel Trigger, you can make a "Return to Lobby" button appear in the pause menu. This depends on the "return to lobby mode" you set on the chapter panel trigger:
+- "Set Return to Here": when the player will hit Return to Lobby, they will be returned to the current map and room, on the spawn point that is closest to the chapter panel trigger. Useful for lobby > map teleports.
+- "Remove Return": the "Return to Lobby" button will be removed from the pause menu. Useful for lobby > lobby or map > lobby teleports.
+- "Do Not Change Return": the "Return to Lobby" button won't be changed. Useful for teleports within maps.
+
+If you followed the collab structure described at the beginning of this document, you'll also get a fallback measure: if someone uses the `load` command to teleport straight into a map, the collab utils will automatically add a "Return to Lobby" button to the corresponding lobby. 
+Since this is a fallback, using it will bring the player back to the starting point of the lobby.
