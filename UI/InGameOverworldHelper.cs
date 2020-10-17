@@ -73,10 +73,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
             orig(self, checkpoint);
         }
 
-        public static void LoadContent() {
-            HeartSpriteBank = new SpriteBank(GFX.Gui, "Graphics/CollabUtils2/CrystalHeartSwaps.xml");
-        }
-
         private static void OnPause(Level level, int startIndex, bool minimal, bool quickReset) {
             if (overworldWrapper != null) {
                 Close(level, true, true);

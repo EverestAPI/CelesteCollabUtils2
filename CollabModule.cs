@@ -1,7 +1,10 @@
 ﻿using Celeste.Mod.CollabUtils2.Entities;
 using Celeste.Mod.CollabUtils2.Triggers;
 using Celeste.Mod.CollabUtils2.UI;
+using Monocle;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Celeste.Mod.CollabUtils2 {
     public class CollabModule : EverestModule {
@@ -67,13 +70,17 @@ namespace Celeste.Mod.CollabUtils2 {
             if (newAsset?.PathVirtual == "CollabUtils2CollabID") {
                 LobbyHelper.LoadCollabIDFile(newAsset);
             }
+            if (newAsset != null && newAsset.PathVirtual.StartsWith("Graphics/CollabUtils2/CrystalHeartSwaps_")) {
+                reloadCrystalHeartSwapSpriteBanks();
+            }
         }
 
         public override void LoadContent(bool firstLoad) {
             SilverBerry.LoadContent();
             RainbowBerry.LoadContent();
             SpeedBerry.LoadContent();
-            InGameOverworldHelper.LoadContent();
+
+            reloadCrystalHeartSwapSpriteBanks();
         }
 
         public override void LoadSession(int index, bool forceNew) {
@@ -89,6 +96,31 @@ namespace Celeste.Mod.CollabUtils2 {
             base.PrepareMapDataProcessors(context);
 
             context.Add<CollabMapDataProcessor>();
+        }
+
+        private static void reloadCrystalHeartSwapSpriteBanks() {
+            // let's get an empty sprite bank.
+            SpriteBank crystalHeartSwaps = new SpriteBank(GFX.Gui, "Graphics/CollabUtils2/Empty.xml");
+
+            // get all the "CrystalHeartSwaps" xmls across the loaded mods.
+            foreach (string xmlPath in Everest.Content.Map
+                .Where(path => path.Value.Type == typeof(AssetTypeXml) && path.Key.StartsWith("Graphics/CollabUtils2/CrystalHeartSwaps_"))
+                .Select(path => path.Key)) {
+
+                // load the xml and merge it into the crystalHeartSwaps bank.
+                SpriteBank newHeartSwaps = new SpriteBank(GFX.Gui, xmlPath + ".xml");
+
+                foreach (KeyValuePair<string, SpriteData> kvpBank in newHeartSwaps.SpriteData) {
+                    crystalHeartSwaps.SpriteData[kvpBank.Key] = kvpBank.Value;
+                }
+
+                Logger.Log("CollabUtils2/CollabModule", $"Loaded {newHeartSwaps.SpriteData.Count} sprite(s) from {xmlPath}");
+            }
+
+            // we are done loading all crystal heart swaps! this is the one we are going to use in chapter panels.
+            InGameOverworldHelper.HeartSpriteBank = crystalHeartSwaps;
+
+            Logger.Log(LogLevel.Info, "CollabUtils2/CollabModule", $"Reloaded CrystalHeartSwaps.xml: {crystalHeartSwaps.SpriteData.Count} sprite(s) are registered");
         }
     }
 }
