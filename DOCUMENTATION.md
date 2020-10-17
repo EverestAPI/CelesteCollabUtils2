@@ -169,6 +169,8 @@ This trigger will bring up the chapter panel, like in chapter select, but within
 
 The trigger is the zone in which the player will be able to bring up the chapter panel by pressing Talk. The node is where the speech bubble will be.
 
+The "Map" setting should be the path to your bin, without the .bin at the end. If you followed the collab structure, it should look like `CollabName/LobbyName/binname` (for example `2021SeasonCollab/2-Summer/map3`).
+
 The chapter panel works in the same way as the ones in chapter select (for chapter naming, the icon and colors). The only differences are:
 - Instead of showing a chapter number, it will display **a map author**. To define that, use English.txt and define a new dialog with the same ID as the map name + an `_author` suffix:
 ```
@@ -183,6 +185,8 @@ The chapter panel works in the same way as the ones in chapter select (for chapt
   Art by Pedro Medeiros
 ```
 
+If you don't define this dialog ID, the credits page will be skipped.
+
 #### The "Return to Lobby" option
 
 When using a Chapter Panel Trigger, you can make a "Return to Lobby" button appear in the pause menu. This depends on the "return to lobby mode" you set on the chapter panel trigger:
@@ -192,3 +196,30 @@ When using a Chapter Panel Trigger, you can make a "Return to Lobby" button appe
 
 If you followed the collab structure described at the beginning of this document, you'll also get a fallback measure: if someone uses the `load` command to teleport straight into a map, the collab utils will automatically add a "Return to Lobby" button to the corresponding lobby. 
 Since this is a fallback, using it will bring the player back to the starting point of the lobby.
+
+#### Customizing the skull (death counter) for a lobby
+
+If you want to have custom skulls for a lobby, drop the skull on the following paths:
+- `Graphics/Atlases/Gui/CollabUtils2/skulls/CollabName/LobbyName.png`: for the chapter panel
+- `Graphics/Atlases/Journal/CollabUtils2Skulls/CollabName/LobbyName.png`: for the "deaths" column in the journal
+- `Graphics/Atlases/Journal/CollabUtils2MinDeaths/CollabName/LobbyName.png`: for the "minimum deaths" column in the journal
+
+If you don't define those images, they will use A-side skulls instead.
+
+You can take the skulls that ship with the collab utils as a reference.
+
+### Journal Trigger
+
+This trigger allows you to bring up a journal similar to the overworld, but showing your progress on a particular level set. This journal will also include speed berry PBs.
+
+The trigger is the zone in which the player will be able to bring up the journal by pressing Talk. The node is where the speech bubble will be.
+
+If you followed the setup at the beginning of this document, the level set should look like `CollabName/LobbyName`. For example, `2021SeasonCollab/1-Spring`
+
+**If you have a heart side** or similar (a level that only unlocks after you beat all other maps in the lobby), name the bin `ZZ-HeartSide.bin` and place it along with the other maps in the lobby; it will be hidden from the journal until it's unlocked, and will be displayed separately (much like Farewell in the vanilla journal).
+
+#### Customizing the hearts in the journal
+
+If you want the hearts to have a custom color or graphic in the journal for a lobby, you can put the image for it in `Graphics/Atlases/Journal/CollabUtils2Hearts/CollabName/LobbyName.png`.
+
+If you don't define this, the blue heart will be used by default.
