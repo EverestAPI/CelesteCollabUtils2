@@ -7,12 +7,27 @@ This doc will explain you how to set up that structure and how the entities work
 
 If anything is wrong or unclear, yell at max480 (max480#4596 on [the Celeste Discord](https://discord.gg/celeste)) about that.
 
-## Setting up your mod for full use of the collab utils
+## Table of Contents
+
+- [Setting up your mod as a collab](#setting-up-your-mod-as-a-collab)
+- [Entities](#entities)
+  - [Golden Berry Respawn Points](#golden-berry-respawn-points)
+  - [Silver Berries](#silver-berries)
+  - [Mini Hearts](#mini-hearts)
+  - [Mini Heart Doors](#mini-heart-doors)
+  - [Rainbow Berries](#rainbow-berries)
+  - [Speed Berries](#speed-berries)
+- [Triggers](#triggers)
+  - [Chapter Panel Trigger](#chapter-panel-trigger)
+  - [Journal Trigger](#journal-trigger)
+
+## Setting up your mod as a collab
 
 _You will need a mod folder for this. Head to the [Mod Structure page on the Everest wiki](https://github.com/EverestAPI/Resources/wiki/Mod-Structure) if you don't have that yet._
 
-Note that this setup is unnecessary if you only want to use **speed berries**, **golden berry respawn points** and **chapter panel triggers** (though you need to follow it if you want some maps to be hidden in chapter select), or if you just want to **reskin crystal hearts**. 
-In other situations, you need to set up your mod for everything to work. This section will explain you how.
+For the collab utils to fully function, you should organize your map .bins for it to be recognized as a collab, and to associate the lobbies to the maps that are in it.
+
+_Some features like speed berries don't require this, but if you plan to structure your mod like the Spring Collab (using mini hearts, lobbies, silver berries etc), you should definitely follow this._
 
 As an example, we will set up the _2021 Season Collab_, with 4 lobbies: Spring, Summer, Fall and Winter.
 
