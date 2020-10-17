@@ -6,7 +6,7 @@ using ..Ahorn, Maple
     map::String="Celeste/1-ForsakenCity", returnToLobbyMode::String="SetReturnToHere")
 
 const placements = Ahorn.PlacementDict(
-    "Chapter Panel Trigger (Collab Utils 2)" => Ahorn.EntityPlacement(
+    "Chapter Panel Trigger (Collab Utils 2 / READ DOCS)" => Ahorn.EntityPlacement(
         ChapterPanelTrigger,
         "rectangle",
     ),

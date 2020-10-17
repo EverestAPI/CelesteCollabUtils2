@@ -6,7 +6,7 @@ using ..Ahorn, Maple
     levelset::String="Celeste")
 
 const placements = Ahorn.PlacementDict(
-    "Journal Trigger (Collab Utils 2)" => Ahorn.EntityPlacement(
+    "Journal Trigger (Collab Utils 2 / READ DOCS)" => Ahorn.EntityPlacement(
         JournalTrigger,
         "rectangle",
     ),

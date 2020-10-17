@@ -5,7 +5,7 @@ using ..Ahorn, Maple
 @mapdef Entity "CollabUtils2/SilverBerry" SilverBerry(x::Integer, y::Integer)
 
 const placements = Ahorn.PlacementDict(
-    "Silver Berry (Collab Utils 2)" => Ahorn.EntityPlacement(
+    "Silver Berry (Collab Utils 2 / READ DOCS)" => Ahorn.EntityPlacement(
         SilverBerry
     )
 )

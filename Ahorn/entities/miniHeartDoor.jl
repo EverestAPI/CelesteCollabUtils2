@@ -6,7 +6,7 @@ using ..Ahorn, Maple
     requires::Integer=0, startHidden::Bool=false, levelSet::String="SpringCollab2020/1-Beginner", color::String="beginner")
 
 const placements = Ahorn.PlacementDict(
-    "Mini Heart Door (Collab Utils 2)" => Ahorn.EntityPlacement(
+    "Mini Heart Door (Collab Utils 2 / READ DOCS)" => Ahorn.EntityPlacement(
         MiniHeartDoor,
         "rectangle"
     )

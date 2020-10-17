@@ -5,7 +5,7 @@ using ..Ahorn, Maple
 @mapdef Entity "CollabUtils2/MiniHeart" MiniHeart(x::Integer, y::Integer, sprite::String="beginner")
 
 const placements = Ahorn.PlacementDict(
-    "Mini Heart (Collab Utils 2)" => Ahorn.EntityPlacement(
+    "Mini Heart (Collab Utils 2 / READ DOCS)" => Ahorn.EntityPlacement(
         MiniHeart
     )
 )
