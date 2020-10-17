@@ -245,4 +245,4 @@ You can also **define a custom display name for a lobby** in the overworld journ
 2021SeasonCollab_0_Lobbies_2_Summer_journal= Summer
 ```
 
-This is useful to make the journal say "Beginner Difficulty" instead of "Beginner Lobby" for example.
+This is useful to make the journal say "Beginner Difficulty" instead of "Beginner Lobby" for example. This is optional; if you don't define it, the map name will be displayed instead.
