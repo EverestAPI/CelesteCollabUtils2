@@ -32,8 +32,12 @@ jobs:
         GITHUB_SHA: ${{ github.sha }}
         DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
       run: |
+        echo "This documentation is formatted in Markdown." > documentation.txt
+        echo "To view it in its formatted form for easier reading, visit this link: https://github.com/EverestAPI/CelesteCollabUtils2/blob/master/DOCUMENTATION.md" >> documentation.txt
+        echo "" >> documentation.txt
+        cat DOCUMENTATION.md >> documentation.txt
         ZIPNAME=$ZIPNAME-${GITHUB_SHA:0:8}.zip
-        zip -qq -r $ZIPNAME everest.yaml bin/Debug/net452 Ahorn Graphics Audio Dialog
+        zip -qq -r $ZIPNAME everest.yaml bin/Debug/net452 Ahorn Graphics Audio Dialog documentation.txt
         url=$(curl -H 'Content-Type: multipart/form-data' -X POST -F "file=@$ZIPNAME" "$DISCORD_WEBHOOK" | grep -Po 'cdn.discordapp.com\/.*?\.zip' | tr -d '\n')
         msg=$(git log -n 1 "--format=%B" | head -n 1 | tr -d '\n')
         curl -H 'Content-Type: application/json' -X POST -d "$(jq -n \
