@@ -97,6 +97,8 @@ Maps/
             4-Winter.bin
 ```
 
+- When in a lobby, **session flags will be set for every map the player has beaten in this lobby**. These flags are named `CollabUtils2_MapCompleted_{binname}`. In the example above, if you beat map3, the session flag `CollabUtils2_MapCompleted_map3` will be set when you enter the `2-Summer` lobby. For example, you can use this to make stylegrounds (dis)appear, or to trigger flag-controlled entities like flag switch gates (from max480's Helping Hand) or flag temple gates (from Pandora's Box), allowing you to open/close paths.
+
 ## Entities
 
 ### Golden Berry Respawn Points
