@@ -163,7 +163,7 @@ namespace Celeste.Mod.CollabUtils2 {
         public static void OnSessionCreated() {
             Session session = SaveData.Instance.CurrentSession_Safe;
             string levelSet = GetLobbyLevelSet(session.Area.GetSID());
-            if (levelSet != null) {
+            if (levelSet != null && SaveData.Instance.GetLevelSetStatsFor(levelSet) != null) {
                 // set session flags for each completed map in the level set.
                 // this will allow, for example, stylegrounds to get activated after completing a map.
                 foreach (string mapName in SaveData.Instance.GetLevelSetStatsFor(levelSet).Areas
