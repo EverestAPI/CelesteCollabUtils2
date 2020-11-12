@@ -138,7 +138,7 @@ To make the heart on the chapter panel mini as well, and customize it if you wan
 You can use the hearts from the 2020 Spring Collab by replacing "bgr" in the path with "imd", "adv", "exp" or "gdm".
 You can also use custom ones by dropping them somewhere in `Graphics/Atlases/Gui/YourCollabName` and changing the `path` (it works the same way as Sprites.xml).
 
-**Note that you can also use this file to reskin the crystal hearts on the chapter panel of any level**. For that, use the full path to the map, like you would for naming the map in English.txt:
+**Note that you can also use this file to reskin the crystal hearts of any level, on the chapter panel and on the poem screen**. For that, use the full path to the map, like you would for naming the map in English.txt:
 
 ```xml
   <crystalHeart_2021SeasonCollab_0_Lobbies_2_Summer path="collectables/heartgem/2/" start="idle">
@@ -150,6 +150,8 @@ You can also use custom ones by dropping them somewhere in `Graphics/Atlases/Gui
 ```
 
 You can pick which heart to use by changing the `path`: you can use the vanilla hearts (`collectables/heartgem/0/` with 0 = blue, 1 = red, 2 = yellow, 3 = grey/ghost), ones from the collab (`CollabUtils2/crystalHeart/expert/` for orange and `CollabUtils2/crystalHeart/grandmaster/` for purple), or custom ones by dropping them somewhere in `Graphics/Atlases/Gui/YourCollabName`.
+
+If you use one of the vanilla crystal heart sprites (`collectables/heartgem/1`, `collectables/heartgem/2`) or the "expert" or "grandmaster" sprites that ship with the collab utils (`CollabUtils2/crystalHeart/expert`, `CollabUtils2/crystalHeart/grandmaster`), the text color on the poem screen will be changed accordingly to red, yellow, orange or purple.
 
 ### Mini Heart Doors
 
