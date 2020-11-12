@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Monocle;
 using MonoMod.Utils;
+using System.Collections;
 
 namespace Celeste.Mod.CollabUtils2.UI {
     class ReturnToLobbyHelper {
@@ -10,20 +11,26 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private static Vector2 temporarySpawnPointHolder;
 
         public static void Load() {
-            On.Celeste.OuiChapterPanel.Start += modChapterPanelStart;
+            On.Celeste.OuiChapterPanel.StartRoutine += modChapterPanelStartRoutine;
             Everest.Events.Level.OnCreatePauseMenuButtons += onCreatePauseMenuButtons;
             On.Celeste.LevelExit.ctor += onLevelExitConstructor;
             On.Celeste.LevelLoader.ctor += onLevelLoaderConstructor;
         }
 
         public static void Unload() {
-            On.Celeste.OuiChapterPanel.Start -= modChapterPanelStart;
+            On.Celeste.OuiChapterPanel.StartRoutine -= modChapterPanelStartRoutine;
             Everest.Events.Level.OnCreatePauseMenuButtons -= onCreatePauseMenuButtons;
             On.Celeste.LevelExit.ctor -= onLevelExitConstructor;
             On.Celeste.LevelLoader.ctor -= onLevelLoaderConstructor;
         }
 
-        private static void modChapterPanelStart(On.Celeste.OuiChapterPanel.orig_Start orig, OuiChapterPanel self, string checkpoint) {
+        private static IEnumerator modChapterPanelStartRoutine(On.Celeste.OuiChapterPanel.orig_StartRoutine orig, OuiChapterPanel self, string checkpoint) {
+            // wait for the "chapter start" animation to finish.
+            IEnumerator origRoutine = orig(self, checkpoint);
+            while (origRoutine.MoveNext()) {
+                yield return origRoutine.Current;
+            }
+
             DynData<Overworld> data = new DynData<Overworld>(self.Overworld);
             AreaData forceArea = self.Overworld == null ? null : data.Get<AreaData>("collabInGameForcedArea");
             if (forceArea != null) {
@@ -45,10 +52,18 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     if (player != null) {
                         temporarySpawnPointHolder = (Engine.Scene as Level).GetSpawnPoint(player.Position);
                     }
+                } else if (returnToLobbyMode == ChapterPanelTrigger.ReturnToLobbyMode.RemoveReturn) {
+                    // make sure the "temporary" variables are empty.
+                    temporaryLobbySIDHolder = null;
+                    temporaryRoomHolder = null;
+                    temporarySpawnPointHolder = Vector2.Zero;
                 }
+            } else {
+                // current chapter panel isn't in-game: make sure the "temporary" variables are empty.
+                temporaryLobbySIDHolder = null;
+                temporaryRoomHolder = null;
+                temporarySpawnPointHolder = Vector2.Zero;
             }
-
-            orig(self, checkpoint);
         }
 
         public static void OnSessionCreated() {
