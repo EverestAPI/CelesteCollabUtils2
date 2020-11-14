@@ -187,9 +187,14 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private static int OnChapterPanelGetModeHeight(On.Celeste.OuiChapterPanel.orig_GetModeHeight orig, OuiChapterPanel self) {
+            // force the chapter panel to be bigger if deaths > 0 (we force deaths to display even if the player didn't beat the map) or if there is a speed berry PB,
+            // because in these cases we have stuff to display in the chapter panel, and vanilla wouldn't display anything.
             AreaModeStats areaModeStats = self.RealStats.Modes[(int) self.Area.Mode];
-            if (Engine.Scene == overworldWrapper?.Scene && areaModeStats.Deaths > 0 && !AreaData.Get(self.Area).Interlude_Safe)
+            if (Engine.Scene == overworldWrapper?.Scene && !AreaData.Get(self.Area).Interlude_Safe
+                && (areaModeStats.Deaths > 0 || CollabModule.Instance.SaveData.SpeedBerryPBs.ContainsKey(self.Area.GetSID()))) {
+
                 return 540;
+            }
 
             return orig(self);
         }
