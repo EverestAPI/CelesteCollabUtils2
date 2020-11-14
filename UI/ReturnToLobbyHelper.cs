@@ -51,6 +51,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     Player player = Engine.Scene.Tracker.GetEntity<Player>();
                     if (player != null) {
                         temporarySpawnPointHolder = (Engine.Scene as Level).GetSpawnPoint(player.Position);
+                    } else {
+                        // player is dead, presumably? AAAAA
+                        // let's use camera position instead.
+                        temporarySpawnPointHolder = (Engine.Scene as Level).GetSpawnPoint((Engine.Scene as Level).Camera.Position + new Vector2(320 / 2, 180 / 2));
                     }
                 } else if (returnToLobbyMode == ChapterPanelTrigger.ReturnToLobbyMode.RemoveReturn) {
                     // make sure the "temporary" variables are empty.

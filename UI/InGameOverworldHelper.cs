@@ -45,6 +45,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
             IL.Celeste.StrawberriesCounter.Render += ModStrawberriesCounterRender;
             On.Celeste.MapData.Load += ModMapDataLoad;
             On.Celeste.OuiChapterPanel.Start += OnOuiChapterPanelStart;
+            On.Celeste.Player.Die += OnPlayerDie;
+            On.Celeste.Mod.AssetReloadHelper.ReloadLevel += OnReloadLevel;
         }
 
         public static void Unload() {
@@ -63,6 +65,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
             IL.Celeste.StrawberriesCounter.Render -= ModStrawberriesCounterRender;
             On.Celeste.MapData.Load -= ModMapDataLoad;
             On.Celeste.OuiChapterPanel.Start -= OnOuiChapterPanelStart;
+            On.Celeste.Player.Die -= OnPlayerDie;
+            On.Celeste.Mod.AssetReloadHelper.ReloadLevel -= OnReloadLevel;
         }
 
         private static void OnOuiChapterPanelStart(On.Celeste.OuiChapterPanel.orig_Start orig, OuiChapterPanel self, string checkpoint) {
@@ -77,6 +81,35 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (overworldWrapper != null) {
                 Close(level, true, true);
             }
+        }
+
+        private static PlayerDeadBody OnPlayerDie(On.Celeste.Player.orig_Die orig, Player self, Vector2 direction, bool evenIfInvincible, bool registerDeathInStats) {
+            PlayerDeadBody result = orig(self, direction, evenIfInvincible, registerDeathInStats);
+            if (result != null && self.Scene is Level level && overworldWrapper != null) {
+                // the player died, so we should close the "in-game overworld" before weird stuff happens.
+                Close(level, true, true);
+            }
+            return result;
+        }
+
+        private static void OnReloadLevel(On.Celeste.Mod.AssetReloadHelper.orig_ReloadLevel orig) {
+            if (overworldWrapper != null) {
+                Level level = Engine.Scene as Level;
+                if (level == null) {
+                    level = AssetReloadHelper.ReturnToScene as Level;
+                }
+
+                if (level != null) {
+                    // the level is about to get reloaded: make sure to unlock player movement if it is locked.
+                    // (no need to close the in-game overworld, the reload will do that for us.)
+                    Player player = level.Tracker.GetEntity<Player>();
+                    if (player != null && player.StateMachine.State == Player.StDummy) {
+                        player.StateMachine.State = Player.StNormal;
+                    }
+                }
+            }
+
+            orig();
         }
 
         private static bool OnSetMusic(On.Celeste.Audio.orig_SetMusic orig, string path, bool startPlaying, bool allowFadeOut) {
