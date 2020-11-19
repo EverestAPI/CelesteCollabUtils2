@@ -526,7 +526,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             new DynData<Overworld>(overworldWrapper.WrappedScene).Set("collabInGameForcedArea", area);
             callback?.Invoke(overworldWrapper.WrappedScene);
 
-            overworldWrapper.Add(new Coroutine(UpdateRoutine()));
+            overworldWrapper.Add(new Coroutine(UpdateRoutine(overworldWrapper)));
         }
 
         public static void Close(Level level, bool removeScene, bool resetPlayer) {
@@ -556,9 +556,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
             Close(level, false, true);
         }
 
-        private static IEnumerator UpdateRoutine() {
-            Level level = overworldWrapper.Scene as Level;
-            Overworld overworld = overworldWrapper.WrappedScene;
+        private static IEnumerator UpdateRoutine(SceneWrappingEntity<Overworld> wrapper) {
+            Level level = wrapper.Scene as Level;
+            Overworld overworld = wrapper.WrappedScene;
 
             while (overworldWrapper?.Scene == Engine.Scene) {
                 if (overworld.Next is OuiChapterSelect) {
@@ -579,6 +579,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 }
 
                 yield return null;
+            }
+
+            if (wrapper.Scene != null) {
+                wrapper.RemoveSelf();
             }
         }
 
