@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Monocle;
 using MonoMod.Utils;
+using System.Text.RegularExpressions;
 
 namespace Celeste.Mod.CollabUtils2 {
     class CustomCrystalHeartHelper {
@@ -66,6 +67,12 @@ namespace Celeste.Mod.CollabUtils2 {
                         break;
                     case "CollabUtils2/crystalHeart/grandmaster/spin00":
                         selfData["Color"] = Calc.HexToColor("d9a2ff");
+                        break;
+                    default:
+                        Match match = Regex.Match(self.Heart.Texture.AtlasPath, "poemtextcolor_([0-9a-fA-F]{6})");
+                        if (match.Success) {
+                            selfData["Color"] = Calc.HexToColor(match.Groups[1].Value);
+                        }
                         break;
                 }
             }

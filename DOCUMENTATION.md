@@ -151,7 +151,9 @@ You can also use custom ones by dropping them somewhere in `Graphics/Atlases/Gui
 
 You can pick which heart to use by changing the `path`: you can use the vanilla hearts (`collectables/heartgem/0/` with 0 = blue, 1 = red, 2 = yellow, 3 = grey/ghost), ones from the collab (`CollabUtils2/crystalHeart/expert/` for orange and `CollabUtils2/crystalHeart/grandmaster/` for purple), or custom ones by dropping them somewhere in `Graphics/Atlases/Gui/YourCollabName`.
 
-If you use one of the vanilla crystal heart sprites (`collectables/heartgem/1/`, `collectables/heartgem/2/`) or the "expert" or "grandmaster" sprites that ship with the collab utils (`CollabUtils2/crystalHeart/expert/`, `CollabUtils2/crystalHeart/grandmaster/`), the text color on the poem screen will be changed accordingly to red, yellow, orange or purple.
+If you use one of the vanilla crystal heart sprites (`collectables/heartgem/1/`, `collectables/heartgem/2/`) or the "expert" or "grandmaster" sprites that ship with the collab utils (`CollabUtils2/crystalHeart/expert/`, `CollabUtils2/crystalHeart/grandmaster/`), the text color on the poem screen will be changed accordingly to red, yellow, orange or purple. 
+
+If you want a custom text color on the poem screen, include `poemtextcolor_[hexcode]` somewhere in the texture path: for example `path="MyMod/customcrystalheart_poemtextcolor_ff0000/"`.
 
 ### Mini Heart Doors
 
