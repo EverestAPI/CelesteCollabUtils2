@@ -13,6 +13,7 @@ If anything is wrong or unclear, yell at max480 (max480#4596 on [the Celeste Dis
 - [Entities](#entities)
   - [Golden Berry Respawn Points](#golden-berry-respawn-points)
   - [Silver Berries](#silver-berries)
+  - [Silver Blocks](#silver-blocks)
   - [Mini Hearts](#mini-hearts)
   - [Mini Heart Doors](#mini-heart-doors)
   - [Rainbow Berries](#rainbow-berries)
@@ -112,6 +113,10 @@ This one works with everything triggering a "golden berry restart" (this include
 Those work pretty much like golden berries, and can be collected by crossing a Golden Berry Collect Trigger or when hitting a mini heart.
 
 They are intended for collab entries, and count towards unlocking the rainbow berry.
+
+### Silver Blocks
+
+Same as Golden Blocks, except appearing only when the player carries a silver berry. (Golden Blocks appear when the player carries a golden, silver or speed berry, for technical reasons.)
 
 ### Mini Hearts
 

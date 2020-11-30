@@ -39,6 +39,7 @@ namespace Celeste.Mod.CollabUtils2 {
             GoldenBerryPlayerRespawnPoint.Load();
             SpeedBerry.Load();
             AreaCompleteInfoInLevel.Load();
+            SilverBlock.Load();
 
             Everest.Content.OnUpdate += onModAssetUpdate;
         }
@@ -56,6 +57,7 @@ namespace Celeste.Mod.CollabUtils2 {
             GoldenBerryPlayerRespawnPoint.Unload();
             SpeedBerry.Unload();
             AreaCompleteInfoInLevel.Unload();
+            SilverBlock.Unload();
 
             Everest.Content.OnUpdate -= onModAssetUpdate;
         }
