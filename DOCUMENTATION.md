@@ -169,6 +169,8 @@ If you followed the setup at the beginning of this document, the level set shoul
 To trigger the unlock cutscene when the player comes back to the lobby with enough crystal hearts to open the gate, drop a **Mini Heart Door Unlock Cutscene Trigger** around the door.
 The cutscene will trigger as soon as the player enters it if the conditions are met, and it will only happen once per save file.
 
+If you have multiple heart doors in your lobby, and don't want them to open all at the same time (for example because they are referring to different level sets), give your doors different _IDs_ (with the "Door Id" field). You should then use the same ID in the unlock cutscene trigger lo link the door to its trigger.
+
 ### Rainbow Berries
 
 This is a special berry that will appear as a hologram until the player got all silver berries in the level set they're associated to. **Only silver berries count**, golden berries are excluded from this counter.

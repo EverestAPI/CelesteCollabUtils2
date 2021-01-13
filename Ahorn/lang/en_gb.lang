@@ -16,6 +16,7 @@ placements.entities.CollabUtils2/MiniHeartDoor.tooltips.requires=Determines the 
 placements.entities.CollabUtils2/MiniHeartDoor.tooltips.startHidden=Whether the door should start hidden and come crashing down when the player approaches.\nWill destroy dash blocks as it crashes down.
 placements.entities.CollabUtils2/MiniHeartDoor.tooltips.levelSet=The heart door will be unlocked by collecting mini hearts in this level set.
 placements.entities.CollabUtils2/MiniHeartDoor.tooltips.color=The color of the door. Also supports hex color codes.
+placements.entities.CollabUtils2/MiniHeartDoor.tooltips.doorID=An identifier for this door (should be unique in the lobby). Only useful if you have multiple heart doors in the same lobby, otherwise you can leave that empty.
 
 # Map Swap Trigger
 placements.triggers.CollabUtils2/MapSwapTrigger.tooltips.map=The SID (string ID) of the map this trigger will teleport to.
@@ -26,3 +27,6 @@ placements.triggers.CollabUtils2/MapSwapTrigger.tooltips.room=The name of the ro
 placements.entities.CollabUtils2/SpeedBerry.tooltips.goldTime=The time (in seconds) required to get the Gold speed berry rank.
 placements.entities.CollabUtils2/SpeedBerry.tooltips.silverTime=The time (in seconds) required to get the Silver speed berry rank.
 placements.entities.CollabUtils2/SpeedBerry.tooltips.bronzeTime=The time (in seconds) required to get the Bronze speed berry rank.
+
+# Mini Heart Door Unlock Cutscene Trigger
+placements.triggers.CollabUtils2/MiniHeartDoorUnlockCutsceneTrigger.tooltips.doorID=The ID of the door this cutscene should unlock. Only useful if you have multiple heart doors in the same lobby, otherwise you can leave that empty.

@@ -3,7 +3,7 @@
 using ..Ahorn, Maple
 
 @mapdef Entity "CollabUtils2/MiniHeartDoor" MiniHeartDoor(x::Integer, y::Integer, width::Integer=40, height::Integer=Maple.defaultBlockHeight,
-    requires::Integer=0, startHidden::Bool=false, levelSet::String="SpringCollab2020/1-Beginner", color::String="beginner")
+    requires::Integer=0, startHidden::Bool=false, levelSet::String="SpringCollab2020/1-Beginner", color::String="beginner", doorID::String="")
 
 const placements = Ahorn.PlacementDict(
     "Mini Heart Door (Collab Utils 2 / READ DOCS)" => Ahorn.EntityPlacement(

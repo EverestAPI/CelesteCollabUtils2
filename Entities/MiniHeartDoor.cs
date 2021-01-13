@@ -134,6 +134,11 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         private float height;
 
+        public string DoorID;
+        public string GetDoorSaveDataID(Scene scene) {
+            return (scene as Level).Session.Area.GetSID() + (string.IsNullOrEmpty(DoorID) ? "" : ":" + DoorID);
+        }
+
         public MiniHeartDoor(EntityData data, Vector2 offset) : base(data, offset) {
             height = data.Height;
             levelSet = data.Attr("levelSet");
@@ -142,13 +147,13 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             if (colors.ContainsKey(color)) {
                 color = colors[color];
             }
+
+            DoorID = data.Attr("doorID");
         }
 
         public override void Added(Scene scene) {
-            if (CollabModule.Instance.SaveData.OpenedMiniHeartDoors.Contains((scene as Level).Session.Area.GetSID())) {
-                // the gate was already opened on that save: open the door right away.
-                (scene as Level).Session.SetFlag("opened_heartgem_door_" + Requires);
-            }
+            // if the gate was already opened on that save, open the door right away by setting the flag.
+            (scene as Level).Session.SetFlag("opened_heartgem_door_" + Requires, CollabModule.Instance.SaveData.OpenedMiniHeartDoors.Contains(GetDoorSaveDataID(scene)));
 
             base.Added(scene);
 
