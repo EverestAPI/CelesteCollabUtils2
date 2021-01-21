@@ -109,6 +109,20 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     return orig;
                 });
             }
+
+            // add a patch at the place where the vanilla opened_heartgem_door_[heartcount] gets set.
+            if (refToThis != null && cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("opened_heartgem_door_"))) {
+                Logger.Log("CollabUtils2/MiniHeartDoor", $"Making mini heart door save its session flag at {cursor.Index} in IL for HeartGemDoor.Routine");
+
+                cursor.Emit(OpCodes.Ldarg_0);
+                cursor.Emit(OpCodes.Ldfld, refToThis);
+                cursor.EmitDelegate<Action<HeartGemDoor>>(self => {
+                    if (self is MiniHeartDoor door) {
+                        // mini heart doors use their own flags, that allow better differenciation between themselves by using entity ID.
+                        (door.Scene as Level).Session.SetFlag("opened_mini_heart_door_" + door.entityID, true);
+                    }
+                });
+            }
         }
 
         private static void modDoorColor(ILContext il) {
@@ -134,12 +148,13 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         private float height;
 
+        private EntityID entityID;
         public string DoorID;
         public string GetDoorSaveDataID(Scene scene) {
             return (scene as Level).Session.Area.GetSID() + (string.IsNullOrEmpty(DoorID) ? "" : ":" + DoorID);
         }
 
-        public MiniHeartDoor(EntityData data, Vector2 offset) : base(data, offset) {
+        public MiniHeartDoor(EntityData data, Vector2 offset, EntityID entityID) : base(data, offset) {
             height = data.Height;
             levelSet = data.Attr("levelSet");
 
@@ -148,12 +163,14 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 color = colors[color];
             }
 
+            this.entityID = entityID;
             DoorID = data.Attr("doorID");
         }
 
         public override void Added(Scene scene) {
-            // if the gate was already opened on that save, open the door right away by setting the flag.
-            (scene as Level).Session.SetFlag("opened_heartgem_door_" + Requires, CollabModule.Instance.SaveData.OpenedMiniHeartDoors.Contains(GetDoorSaveDataID(scene)));
+            // if the gate was already opened on that save or in that session, open the door right away by setting the flag.
+            (scene as Level).Session.SetFlag("opened_heartgem_door_" + Requires,
+                (scene as Level).Session.GetFlag("opened_mini_heart_door_" + entityID) || CollabModule.Instance.SaveData.OpenedMiniHeartDoors.Contains(GetDoorSaveDataID(scene)));
 
             base.Added(scene);
 
