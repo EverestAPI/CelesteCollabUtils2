@@ -5,7 +5,7 @@ using MonoMod.Utils;
 using System.Collections;
 
 namespace Celeste.Mod.CollabUtils2.UI {
-    class LevelExitToLobby : Scene {
+    public class LevelExitToLobby : Scene {
         private string targetSID;
         private string targetRoom;
         private Vector2 targetSpawnPoint;
