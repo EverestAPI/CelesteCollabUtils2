@@ -249,7 +249,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 return;
             }
 
-            data["collabCredits"] = Dialog.Clean(new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea").Name + "_collabcredits");
+            string areaName = new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea").Name;
+            data["collabCredits"] = Dialog.Clean(areaName + "_collabcredits");
+            data["collabCreditsTags"] = (areaName + "_collabcreditstags").DialogCleanOrNull();
             self.Focused = false;
             self.Overworld.ShowInputUI = !selectingMode;
             self.Add(new Coroutine(ChapterPanelSwapRoutine(self, data)));
@@ -303,7 +305,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private static void OnChapterPanelDrawCheckpoint(On.Celeste.OuiChapterPanel.orig_DrawCheckpoint orig, OuiChapterPanel self, Vector2 center, object option, int checkpointIndex) {
-            string collabCredits = new DynData<OuiChapterPanel>(self).Get<string>("collabCredits");
+            DynData<OuiChapterPanel> selfData = new DynData<OuiChapterPanel>(self);
+            string collabCredits = selfData.Get<string>("collabCredits");
             if (collabCredits == null) {
                 orig(self, center, option, checkpointIndex);
                 return;
@@ -313,15 +316,82 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 return;
             }
 
-            Vector2 size = ActiveFont.Measure(collabCredits);
-            float scale = Math.Min(1f, Math.Min(410f / size.Y, 800f / size.X));
+            // panel height is 730 pixels when completely open. Tags should fade out quicker than text, because they are near the bottom of the panel,
+            // and it looks bad more quickly when the panel closes.
+            float alphaText = Calc.ClampedMap(selfData.Get<float>("height"), 600, 730);
+            float alphaTags = Calc.ClampedMap(selfData.Get<float>("height"), 700, 730);
 
+            float heightTakenByTags = 0f;
+
+            // draw tags.
+            string collabCreditsTagsString = selfData.Get<string>("collabCreditsTags");
+            if (collabCreditsTagsString != null) {
+                // split on newlines to separate tags.
+                string[] collabCreditsTags = collabCreditsTagsString.Split('\n');
+
+                // split tags in lines, fitting as many tags as possible on each line.
+                List<List<string>> lines = new List<List<string>>();
+                List<float> lineWidths = new List<float>();
+
+                // this block is responsible for splitting tags in lines.
+                {
+                    List<string> line = new List<string>();
+                    float lineWidth = 0f;
+                    for (int i = 0; i < collabCreditsTags.Length; i++) {
+                        float advanceX = ActiveFont.Measure(collabCreditsTags[i].Trim()).X * 0.5f + 30f; // 30 = margin between tags
+                        if (lineWidth + advanceX > 800f) {
+                            // we exceeded the limit. we need a line break!
+                            lines.Add(line.ToList());
+                            lineWidths.Add(lineWidth);
+
+                            line.Clear();
+                            lineWidth = 0f;
+                        }
+
+                        // add the tag to the current line.
+                        line.Add(collabCreditsTags[i].Trim());
+                        lineWidth += advanceX;
+                    }
+
+                    // add the last line.
+                    lines.Add(line.ToList());
+                    lineWidths.Add(lineWidth);
+                }
+
+                // now, draw the tags bottom up.
+                float y = center.Y + 230f;
+                for (int i = lines.Count - 1; i >= 0; i--) {
+                    // starting position is all the way left.
+                    float x = center.X - (lineWidths[i] / 2f) + 15f;
+
+                    foreach (string tag in lines[i]) {
+                        // black edge > BaseColor text background > TextColor tag text
+                        float width = ActiveFont.Measure(tag).X * 0.5f;
+                        Draw.Rect(x - 10, y - 6, width + 20, 44, Color.Black * alphaTags);
+                        Draw.Rect(x - 6, y - 2, width + 12, 36, self.Data.TitleBaseColor * alphaTags);
+                        ActiveFont.Draw(tag, new Vector2(x, y), Vector2.Zero, Vector2.One * 0.5f, self.Data.TitleTextColor * alphaTags);
+
+                        // advance the position to the next tag.
+                        x += width + 30f;
+                    }
+
+                    // move up 1 line.
+                    y -= 52f;
+                    heightTakenByTags += 52f;
+                }
+            }
+
+            // compute the maximum scale the credits can take (max 1) to fit the remaining space.
+            Vector2 size = ActiveFont.Measure(collabCredits);
+            float scale = Math.Min(1f, Math.Min((410f - heightTakenByTags) / size.Y, 800f / size.X));
+
+            // draw the credits.
             ActiveFont.Draw(
                 collabCredits,
-                center + new Vector2(0f, 40f),
+                center + new Vector2(0f, 40f - heightTakenByTags / 2f),
                 Vector2.One * 0.5f,
                 Vector2.One * scale,
-                Color.Black * 0.8f
+                Color.Black * 0.8f * alphaText
             );
         }
 

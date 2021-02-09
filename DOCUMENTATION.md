@@ -218,6 +218,14 @@ The chapter panel works in the same way as the ones in chapter select (for chapt
 
 If you don't define this dialog ID, the credits page will be skipped.
 
+- You can also add **tags** to the credits: those will be displayed in smaller text under credits, each in its own rectangle. To define them, use English.txt and define a new dialog with the same ID as the map name + a `_collabcreditstags` suffix, and write 1 tag per line:
+```
+2021SeasonCollab_1_Spring_map1_collabcreditstags=
+  Tag 1
+  Tag 2
+  Tag 3
+```
+
 #### The "Return to Lobby" option
 
 When using a Chapter Panel Trigger, you can make a "Return to Lobby" button appear in the pause menu. This depends on the "return to lobby mode" you set on the chapter panel trigger:
