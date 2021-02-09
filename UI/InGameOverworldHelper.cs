@@ -429,10 +429,19 @@ namespace Celeste.Mod.CollabUtils2.UI {
             cursor.Index = 0;
 
             // 3. Turn the chapter card silver or rainbow instead of gold when relevant.
-            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("areaselect/cardtop_golden") || instr.MatchLdstr("areaselect/card_golden"))) {
+            while (cursor.TryGotoNext(MoveType.After,
+                instr => instr.MatchLdstr("areaselect/cardtop_golden") || instr.MatchLdstr("areaselect/card_golden"),
+                instr => instr.MatchLdarg(0),
+                instr => instr.MatchCall<OuiChapterPanel>("_ModCardTexture"))) {
+
                 Logger.Log("CollabUtils2/InGameOverworldHelper", $"Modding chapter panel card at {cursor.Index} in IL for OuiChapterPanel.Render");
 
                 cursor.EmitDelegate<Func<string, string>>(orig => {
+                    if (orig != "areaselect/cardtop_golden" && orig != "areaselect/card_golden") {
+                        // chapter card was reskinned through Everest, so don't change it.
+                        return orig;
+                    }
+
                     if (isPanelShowingLobby()) {
                         return orig == "areaselect/cardtop_golden" ? "CollabUtils2/chapterCard/cardtop_rainbow" : "CollabUtils2/chapterCard/card_rainbow";
                     }
