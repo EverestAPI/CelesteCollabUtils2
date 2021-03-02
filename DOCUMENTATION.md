@@ -160,6 +160,10 @@ If you use one of the vanilla crystal heart sprites (`collectables/heartgem/1/`,
 
 If you want a custom text color on the poem screen, include `poemtextcolor_[hexcode]` somewhere in the texture path: for example `path="MyMod/customcrystalheart_poemtextcolor_ff0000/"`.
 
+### Fake Mini Hearts
+
+Those look exactly like Mini Hearts, but disappear for 3 seconds when dashed into, like vanilla fake hearts.
+
 ### Mini Heart Doors
 
 They're pretty much heart gates, but you can customize their height, and make them count the hearts on the level set you want. They also open with a cutscene, instead of Maddy having to stand next to them.
