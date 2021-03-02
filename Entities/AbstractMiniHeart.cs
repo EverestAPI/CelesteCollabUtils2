@@ -1,10 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using Monocle;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
     // This is all code in common between mini hearts and fake mini hearts.
