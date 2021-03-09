@@ -111,7 +111,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private static bool OnSetMusic(On.Celeste.Audio.orig_SetMusic orig, string path, bool startPlaying, bool allowFadeOut) {
             // while the in-game chapter panel / journal is open, block all music changes except for muting it (which happens when entering a level).
-            if (path != null && overworldWrapper != null) {
+            if (path != null && overworldWrapper?.Scene == Engine.Scene) {
                 return false;
             }
 
@@ -120,7 +120,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private static bool OnSetAmbience(On.Celeste.Audio.orig_SetAmbience orig, string path, bool startPlaying) {
             // while the in-game chapter panel / journal is open, block all ambience changes except for muting it (which happens when entering a level).
-            if (path != null && overworldWrapper != null) {
+            if (path != null && overworldWrapper?.Scene == Engine.Scene) {
                 return false;
             }
 
