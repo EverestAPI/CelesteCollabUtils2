@@ -71,6 +71,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 (overworldWrapper.Scene as Level).PauseLock = true;
 
                 if (checkpoint != "collabutils_continue") {
+                    // "continue" was not selected, so drop the saved state to start over.
                     CollabModule.Instance.SaveData.SessionsPerLevel.Remove(self.Area.GetSID());
                 }
             }
@@ -214,11 +215,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private static bool OnSaveDataFoundAnyCheckpoints(On.Celeste.SaveData.orig_FoundAnyCheckpoints orig, SaveData self, AreaKey area) {
             // if this is a collab chapter panel, display the second page (containing the credits) if they are defined in English.txt.
-            // otherwise, if there is a savestate, also display the chapter panel.
+            // otherwise, if there is a saved state, also display the chapter panel.
             if (Engine.Scene == overworldWrapper?.Scene)
                 return orig(self, area) ||
-                Dialog.Has(new DynData<Overworld>(overworldWrapper.WrappedScene).Get<AreaData>("collabInGameForcedArea").Name + "_collabcredits")
-                || CollabModule.Instance.SaveData.SessionsPerLevel.ContainsKey(area.GetSID());
+                Dialog.Has(new DynData<Overworld>(overworldWrapper.WrappedScene).Get<AreaData>("collabInGameForcedArea").Name + "_collabcredits") ||
+                CollabModule.Instance.SaveData.SessionsPerLevel.ContainsKey(area.GetSID());
 
             return orig(self, area);
         }
@@ -241,6 +242,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 (!Dialog.Has(new DynData<Overworld>(overworldWrapper.WrappedScene).Get<AreaData>("collabInGameForcedArea").Name + "_collabcredits")
                 && !CollabModule.Instance.SaveData.SessionsPerLevel.ContainsKey(self.Area.GetSID()))) {
 
+                // this isn't an in-game chapter panel, or there is no custom second page (no credits, no saved state) => use vanilla
                 orig(self);
                 return;
             }

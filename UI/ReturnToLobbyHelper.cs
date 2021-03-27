@@ -114,7 +114,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     returnToMapIndex = menu.GetItems().Count - 1;
                 }
 
-                // Saving isn't allowed: Return to Lobby
+                // add the "Return to Lobby" button
                 TextMenu.Button returnToLobbyButton = new TextMenu.Button(Dialog.Clean("collabutils2_returntolobby"));
                 returnToLobbyButton.Pressed(() => {
                     level.PauseMainMenuOpen = false;

@@ -1,7 +1,7 @@
 ﻿# Chapter Panel Trigger
 placements.triggers.CollabUtils2/ChapterPanelTrigger.tooltips.map=The SID (string ID) of the map that will be entered with the trigger.
 placements.triggers.CollabUtils2/ChapterPanelTrigger.tooltips.returnToLobbyMode=Determines how "Return to Lobby" will behave after entering this map.\n- SetReturnToHere: the Return to Lobby button will return the player to the nearest spawn point in the current map.\n- RemoveReturn: the Return to Lobby button will disappear from the pause menu.\n- DoNotChangeReturn: the current Return to Lobby button will not be changed.
-placements.triggers.CollabUtils2/ChapterPanelTrigger.tooltips.allowSaving=If selected, the player will be allowed to save in the map this trigger teleports to, with the "Save & Return to Lobby" option.
+placements.triggers.CollabUtils2/ChapterPanelTrigger.tooltips.allowSaving=If selected, the player will be allowed to save in the map this trigger teleports to, by selecting "Save" when returning to lobby. Not compatible with maps that have checkpoints.
 
 # Journal Trigger
 placements.triggers.CollabUtils2/JournalTrigger.tooltips.levelset=The levelset for which the journal will be opened with the trigger.
