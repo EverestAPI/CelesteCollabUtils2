@@ -10,6 +10,9 @@
     <PackageReference Include="MonoMod.RuntimeDetour" Version="20.5.2.5" PrivateAssets="all" ExcludeAssets="runtime">
       <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="YamlDotNet" Version="8.0.0" PrivateAssets="all" ExcludeAssets="runtime">
+      <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <Choose>
@@ -17,7 +20,6 @@
       <ItemGroup>
         <Reference Include="Celeste" HintPath="..\..\Celeste.exe" Private="false" />
         <Reference Include="MMHOOK_Celeste" HintPath="..\..\MMHOOK_Celeste.dll" Private="false" />
-        <Reference Include="YamlDotNet" HintPath="..\..\YamlDotNet.dll" Private="false" />
       </ItemGroup>
 
       <Choose>
