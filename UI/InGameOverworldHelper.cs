@@ -73,6 +73,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 if (checkpoint != "collabutils_continue") {
                     // "continue" was not selected, so drop the saved state to start over.
                     CollabModule.Instance.SaveData.SessionsPerLevel.Remove(self.Area.GetSID());
+                    CollabModule.Instance.SaveData.ModSessionsPerLevel.Remove(self.Area.GetSID());
                 }
             }
 

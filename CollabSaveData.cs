@@ -14,7 +14,8 @@ namespace Celeste.Mod.CollabUtils2 {
         // flag used to show the "you can change the speed berry timer position in Mod Options" message only once per save
         public bool SpeedberryOptionMessageShown { get; set; } = false;
 
-        // sessions saved when using "save and return to lobby", in XML format
+        // sessions saved when using "save and return to lobby", in XML or YAML format
         public Dictionary<string, string> SessionsPerLevel = new Dictionary<string, string>();
+        public Dictionary<string, Dictionary<string, string>> ModSessionsPerLevel = new Dictionary<string, Dictionary<string, string>>();
     }
 }

@@ -1,8 +1,10 @@
 ﻿using Celeste.Mod.CollabUtils2.Triggers;
 using Microsoft.Xna.Framework;
 using Monocle;
+using MonoMod.RuntimeDetour;
 using MonoMod.Utils;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Xml.Serialization;
@@ -19,7 +21,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
             Everest.Events.Level.OnCreatePauseMenuButtons += onCreatePauseMenuButtons;
             On.Celeste.LevelExit.ctor += onLevelExitConstructor;
             On.Celeste.LevelLoader.ctor += onLevelLoaderConstructor;
-            On.Celeste.LevelEnter.Go += onLevelEnterGo;
+            On.Celeste.SaveData.StartSession += onSaveDataStartSession;
+
+            using (new DetourContext { Before = { "*" } }) {
+                On.Celeste.LevelEnter.Go += onLevelEnterGo;
+            }
         }
 
         public static void Unload() {
@@ -27,6 +33,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             Everest.Events.Level.OnCreatePauseMenuButtons -= onCreatePauseMenuButtons;
             On.Celeste.LevelExit.ctor -= onLevelExitConstructor;
             On.Celeste.LevelLoader.ctor -= onLevelLoaderConstructor;
+            On.Celeste.SaveData.StartSession -= onSaveDataStartSession;
             On.Celeste.LevelEnter.Go -= onLevelEnterGo;
         }
 
@@ -167,6 +174,16 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
                     level.DoScreenWipe(wipeIn: false, () => {
                         CollabModule.Instance.SaveData.SessionsPerLevel.Add(level.Session.Area.GetSID(), Encoding.UTF8.GetString(UserIO.Serialize(level.Session)));
+
+                        // save all mod sessions of mods that have mod sessions.
+                        Dictionary<string, string> modSessions = new Dictionary<string, string>();
+                        foreach (EverestModule mod in Everest.Modules) {
+                            if (mod._Session != null && !(mod._Session is EverestModuleBinarySession)) {
+                                modSessions[mod.Metadata.Name] = YamlHelper.Serializer.Serialize(mod._Session);
+                            }
+                        }
+                        CollabModule.Instance.SaveData.ModSessionsPerLevel.Add(level.Session.Area.GetSID(), modSessions);
+
                         Engine.Scene = new LevelExitToLobby(LevelExit.Mode.SaveAndQuit, level.Session);
                     });
 
@@ -239,7 +256,37 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 // and remove it from the save, so that the user won't be able to use it again unless they "save and return to lobby" again.
                 CollabModule.Instance.SaveData.SessionsPerLevel.Remove(session.Area.GetSID());
             }
+
+            // the mod sessions are loaded in SaveData.StartSession, but load them ahead of time here too for compatibility.
+            loadModSessions(session);
+
             orig(session, fromSaveData);
+        }
+
+        private static void onSaveDataStartSession(On.Celeste.SaveData.orig_StartSession orig, SaveData self, Session session) {
+            orig(self, session);
+
+            if (loadModSessions(session)) {
+                // remove the mod sessions from the save, so that the user won't be able to use them again unless they "save and return to lobby" again.
+                CollabModule.Instance.SaveData.ModSessionsPerLevel.Remove(session.Area.GetSID());
+            }
+        }
+
+        private static bool loadModSessions(Session session) {
+            if (CollabModule.Instance.SaveData.ModSessionsPerLevel.TryGetValue(session.Area.GetSID(), out Dictionary<string, string> sessions)) {
+                // restore all mod sessions we can restore.
+                foreach (EverestModule mod in Everest.Modules) {
+                    if (mod._Session != null && sessions.TryGetValue(mod.Metadata.Name, out string savedSession)) {
+                        // note: we are deserializing the session rather than just storing the object, because loading the session usually does that,
+                        // and a mod could react to a setter on its session being called.
+                        YamlHelper.DeserializerUsing(mod._Session).Deserialize(savedSession, mod.SessionType);
+                    }
+                }
+
+                return true;
+            }
+
+            return false;
         }
     }
 }
