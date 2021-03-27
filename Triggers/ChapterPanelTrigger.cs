@@ -19,6 +19,7 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
         public string map;
 
         public ReturnToLobbyMode returnToLobbyMode;
+        public bool savingAllowed;
 
         private readonly TalkComponent talkComponent;
 
@@ -26,11 +27,12 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
             : base(data, offset) {
             map = data.Attr("map");
             returnToLobbyMode = data.Enum("returnToLobbyMode", ReturnToLobbyMode.SetReturnToHere);
+            savingAllowed = data.Bool("allowSaving", defaultValue: true);
 
             Add(talkComponent = new TalkComponent(
                 new Rectangle(0, 0, data.Width, data.Height),
                 data.Nodes.Length != 0 ? (data.Nodes[0] - data.Position) : new Vector2(data.Width / 2f, data.Height / 2f),
-                player => InGameOverworldHelper.OpenChapterPanel(player, map, returnToLobbyMode)
+                player => InGameOverworldHelper.OpenChapterPanel(player, map, returnToLobbyMode, savingAllowed)
             ) { PlayerMustBeFacing = false });
         }
 

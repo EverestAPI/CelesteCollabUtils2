@@ -5,6 +5,9 @@ collabutils2_returntolobby= Return to Lobby
 collabutils2_restartspeedberry= Restart Speed Berry
 
 collabutils2_returntolobby_confirm_title= RETURN TO LOBBY?
+collabutils2_returntolobby_confirm_save= Save
+collabutils2_returntolobby_confirm_donotsave= Do Not Save
+collabutils2_returntolobby_confirm_cancel= Cancel
 
 collabutils2_speedberry_gold= Gold:
 collabutils2_speedberry_silver= Silver:

@@ -69,6 +69,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private static void OnOuiChapterPanelStart(On.Celeste.OuiChapterPanel.orig_Start orig, OuiChapterPanel self, string checkpoint) {
             if (overworldWrapper != null) {
                 (overworldWrapper.Scene as Level).PauseLock = true;
+
+                if (checkpoint != "collabutils_continue") {
+                    CollabModule.Instance.SaveData.SessionsPerLevel.Remove(self.Area.GetSID());
+                }
             }
 
             orig(self, checkpoint);
@@ -210,8 +214,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private static bool OnSaveDataFoundAnyCheckpoints(On.Celeste.SaveData.orig_FoundAnyCheckpoints orig, SaveData self, AreaKey area) {
             // if this is a collab chapter panel, display the second page (containing the credits) if they are defined in English.txt.
+            // otherwise, if there is a savestate, also display the chapter panel.
             if (Engine.Scene == overworldWrapper?.Scene)
-                return orig(self, area) || Dialog.Has(new DynData<Overworld>(overworldWrapper.WrappedScene).Get<AreaData>("collabInGameForcedArea").Name + "_collabcredits");
+                return orig(self, area) ||
+                Dialog.Has(new DynData<Overworld>(overworldWrapper.WrappedScene).Get<AreaData>("collabInGameForcedArea").Name + "_collabcredits")
+                || CollabModule.Instance.SaveData.SessionsPerLevel.ContainsKey(area.GetSID());
 
             return orig(self, area);
         }
@@ -230,7 +237,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private static void OnChapterPanelSwap(On.Celeste.OuiChapterPanel.orig_Swap orig, OuiChapterPanel self) {
-            if (Engine.Scene != overworldWrapper?.Scene || !Dialog.Has(new DynData<Overworld>(overworldWrapper.WrappedScene).Get<AreaData>("collabInGameForcedArea").Name + "_collabcredits")) {
+            if (Engine.Scene != overworldWrapper?.Scene ||
+                (!Dialog.Has(new DynData<Overworld>(overworldWrapper.WrappedScene).Get<AreaData>("collabInGameForcedArea").Name + "_collabcredits")
+                && !CollabModule.Instance.SaveData.SessionsPerLevel.ContainsKey(self.Area.GetSID()))) {
+
                 orig(self);
                 return;
             }
@@ -256,7 +266,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private static IEnumerator ChapterPanelSwapRoutine(OuiChapterPanel self, DynData<OuiChapterPanel> data) {
             float fromHeight = data.Get<float>("height");
-            int toHeight = 730;
+            int toHeight = Dialog.Has(new DynData<Overworld>(overworldWrapper.WrappedScene).Get<AreaData>("collabInGameForcedArea").Name + "_collabcredits") ? 730 : 300;
 
             data["resizing"] = true;
             m_PlayExpandSfx.Invoke(self, new object[] { fromHeight, (float) toHeight });
@@ -273,14 +283,29 @@ namespace Celeste.Mod.CollabUtils2.UI {
             IList checkpoints = data.Get<IList>("checkpoints");
             checkpoints.Clear();
 
+            bool hasContinueOption = CollabModule.Instance.SaveData.SessionsPerLevel.ContainsKey(self.Area.GetSID());
+
             checkpoints.Add(DynamicData.New(t_OuiChapterPanelOption)(new {
                 Label = Dialog.Clean("overworld_start", null),
                 BgColor = Calc.HexToColor("eabe26"),
                 Icon = GFX.Gui["areaselect/startpoint"],
                 CheckpointRotation = Calc.Random.Choose(-1, 1) * Calc.Random.Range(0.05f, 0.2f),
                 CheckpointOffset = new Vector2(Calc.Random.Range(-16, 16), Calc.Random.Range(-16, 16)),
-                Large = false
+                Large = false,
+                Siblings = hasContinueOption ? 2 : 1
             }));
+
+            if (hasContinueOption) {
+                checkpoints.Add(DynamicData.New(t_OuiChapterPanelOption)(new {
+                    Label = Dialog.Clean("file_continue", null),
+                    Icon = GFX.Gui["areaselect/checkpoint"],
+                    CheckpointRotation = Calc.Random.Choose(-1, 1) * Calc.Random.Range(0.05f, 0.2f),
+                    CheckpointOffset = new Vector2(Calc.Random.Range(-16, 16), Calc.Random.Range(-16, 16)),
+                    Large = false,
+                    Siblings = 2,
+                    CheckpointLevelName = "collabutils_continue"
+                }));
+            }
 
             data["option"] = 0;
 
@@ -555,10 +580,19 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
         }
 
-        public static void OpenChapterPanel(Player player, string sid, ChapterPanelTrigger.ReturnToLobbyMode returnToLobbyMode) {
+        public static void OpenChapterPanel(Player player, string sid, ChapterPanelTrigger.ReturnToLobbyMode returnToLobbyMode, bool savingAllowed) {
+            AreaData areaData = (AreaData.Get(sid) ?? AreaData.Get(0));
+            if (!Dialog.Has(areaData.Name + "_collabcredits") && areaData.Mode[0].Checkpoints.Length > 0) {
+                // saving isn't compatible with checkpoints, because both would appear on the same page.
+                savingAllowed = false;
+            }
+
             player.Drop();
             Open(player, AreaData.Get(sid) ?? AreaData.Get(0), out OuiHelper_EnterChapterPanel.Start,
-                overworld => new DynData<Overworld>(overworld).Set("returnToLobbyMode", returnToLobbyMode));
+                overworld => {
+                    new DynData<Overworld>(overworld).Set("returnToLobbyMode", returnToLobbyMode);
+                    new DynData<Overworld>(overworld).Set("saveAndReturnToLobbyAllowed", savingAllowed);
+                });
         }
 
         public static void OpenJournal(Player player, string levelset) {

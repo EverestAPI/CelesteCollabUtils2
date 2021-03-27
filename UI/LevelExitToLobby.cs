@@ -30,6 +30,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             CollabModule.Instance.Session.LobbyRoom = null;
             CollabModule.Instance.Session.LobbySpawnPointX = 0;
             CollabModule.Instance.Session.LobbySpawnPointY = 0;
+            CollabModule.Instance.Session.SaveAndReturnToLobbyAllowed = false;
 
             SaveLoadIcon.Show(this);
             Entity coroutineHolder;

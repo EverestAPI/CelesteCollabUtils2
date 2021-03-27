@@ -3,18 +3,23 @@ using Microsoft.Xna.Framework;
 using Monocle;
 using MonoMod.Utils;
 using System.Collections;
+using System.IO;
+using System.Text;
+using System.Xml.Serialization;
 
 namespace Celeste.Mod.CollabUtils2.UI {
     class ReturnToLobbyHelper {
         private static string temporaryLobbySIDHolder;
         private static string temporaryRoomHolder;
         private static Vector2 temporarySpawnPointHolder;
+        private static bool temporarySaveAllowedHolder;
 
         public static void Load() {
             On.Celeste.OuiChapterPanel.StartRoutine += modChapterPanelStartRoutine;
             Everest.Events.Level.OnCreatePauseMenuButtons += onCreatePauseMenuButtons;
             On.Celeste.LevelExit.ctor += onLevelExitConstructor;
             On.Celeste.LevelLoader.ctor += onLevelLoaderConstructor;
+            On.Celeste.LevelEnter.Go += onLevelEnterGo;
         }
 
         public static void Unload() {
@@ -22,6 +27,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             Everest.Events.Level.OnCreatePauseMenuButtons -= onCreatePauseMenuButtons;
             On.Celeste.LevelExit.ctor -= onLevelExitConstructor;
             On.Celeste.LevelLoader.ctor -= onLevelLoaderConstructor;
+            On.Celeste.LevelEnter.Go -= onLevelEnterGo;
         }
 
         private static IEnumerator modChapterPanelStartRoutine(On.Celeste.OuiChapterPanel.orig_StartRoutine orig, OuiChapterPanel self, string checkpoint) {
@@ -36,6 +42,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (forceArea != null) {
                 // current chapter panel is in-game: set up Return to Lobby.
                 ChapterPanelTrigger.ReturnToLobbyMode returnToLobbyMode = data.Get<ChapterPanelTrigger.ReturnToLobbyMode>("returnToLobbyMode");
+
+                temporarySaveAllowedHolder = data.Get<bool>("saveAndReturnToLobbyAllowed");
 
                 if (returnToLobbyMode == ChapterPanelTrigger.ReturnToLobbyMode.DoNotChangeReturn) {
                     // carry over current values.
@@ -76,9 +84,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
             CollabModule.Instance.Session.LobbyRoom = temporaryRoomHolder;
             CollabModule.Instance.Session.LobbySpawnPointX = temporarySpawnPointHolder.X;
             CollabModule.Instance.Session.LobbySpawnPointY = temporarySpawnPointHolder.Y;
+            CollabModule.Instance.Session.SaveAndReturnToLobbyAllowed = temporarySaveAllowedHolder;
             temporaryLobbySIDHolder = null;
             temporaryRoomHolder = null;
             temporarySpawnPointHolder = Vector2.Zero;
+            temporarySaveAllowedHolder = false;
 
             if (CollabModule.Instance.Session.LobbySID == null) {
                 Session session = SaveData.Instance.CurrentSession_Safe;
@@ -95,6 +105,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private static void onCreatePauseMenuButtons(Level level, TextMenu menu, bool minimal) {
             if (CollabModule.Instance.Session.LobbySID != null) {
+                // find the position just under "Return to Map".
                 int returnToMapIndex = menu.GetItems().FindIndex(item =>
                     item.GetType() == typeof(TextMenu.Button) && ((TextMenu.Button) item).Label == Dialog.Clean("MENU_PAUSE_RETURN"));
 
@@ -103,6 +114,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     returnToMapIndex = menu.GetItems().Count - 1;
                 }
 
+                // Saving isn't allowed: Return to Lobby
                 TextMenu.Button returnToLobbyButton = new TextMenu.Button(Dialog.Clean("collabutils2_returntolobby"));
                 returnToLobbyButton.Pressed(() => {
                     level.PauseMainMenuOpen = false;
@@ -122,6 +134,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 temporaryLobbySIDHolder = CollabModule.Instance.Session.LobbySID;
                 temporaryRoomHolder = CollabModule.Instance.Session.LobbyRoom;
                 temporarySpawnPointHolder = new Vector2(CollabModule.Instance.Session.LobbySpawnPointX, CollabModule.Instance.Session.LobbySpawnPointY);
+                temporarySaveAllowedHolder = CollabModule.Instance.Session.SaveAndReturnToLobbyAllowed;
             }
             if ((mode == LevelExit.Mode.GiveUp || mode == LevelExit.Mode.Completed) && CollabModule.Instance.Session.LobbySID != null) {
                 // be sure that Return to Map and such from a collab entry returns to the lobby, not to the collab entry. 
@@ -134,8 +147,37 @@ namespace Celeste.Mod.CollabUtils2.UI {
             TextMenu menu = new TextMenu();
             menu.AutoScroll = false;
             menu.Position = new Vector2((float) Engine.Width / 2f, (float) Engine.Height / 2f - 100f);
+
+            // RETURN TO LOBBY?
             menu.Add(new TextMenu.Header(Dialog.Clean("collabutils2_returntolobby_confirm_title")));
-            menu.Add(new TextMenu.Button(Dialog.Clean("menu_return_continue")).Pressed(() => {
+
+            // Save
+            if (CollabModule.Instance.Session.SaveAndReturnToLobbyAllowed) {
+                menu.Add(new TextMenu.Button(Dialog.Clean("collabutils2_returntolobby_confirm_save")).Pressed(() => {
+                    Engine.TimeRate = 1f;
+                    menu.Focused = false;
+                    Audio.SetMusic(null);
+                    Audio.BusStopAll("bus:/gameplay_sfx", immediate: true);
+
+                    // add a death, like vanilla Save & Quit
+                    level.Session.InArea = true;
+                    level.Session.Deaths++;
+                    level.Session.DeathsInCurrentLevel++;
+                    SaveData.Instance.AddDeath(level.Session.Area);
+
+                    level.DoScreenWipe(wipeIn: false, () => {
+                        CollabModule.Instance.SaveData.SessionsPerLevel.Add(level.Session.Area.GetSID(), Encoding.UTF8.GetString(UserIO.Serialize(level.Session)));
+                        Engine.Scene = new LevelExitToLobby(LevelExit.Mode.SaveAndQuit, level.Session);
+                    });
+
+                    foreach (LevelEndingHook component in level.Tracker.GetComponents<LevelEndingHook>()) {
+                        component.OnEnd?.Invoke();
+                    }
+                }));
+            }
+
+            // Do Not Save
+            menu.Add(new TextMenu.Button(Dialog.Clean(CollabModule.Instance.Session.SaveAndReturnToLobbyAllowed ? "collabutils2_returntolobby_confirm_donotsave" : "menu_return_continue")).Pressed(() => {
                 Engine.TimeRate = 1f;
                 menu.Focused = false;
                 Audio.SetMusic(null);
@@ -149,20 +191,27 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     component.OnEnd?.Invoke();
                 }
             }));
-            menu.Add(new TextMenu.Button(Dialog.Clean("menu_return_cancel")).Pressed(() => {
+
+            // Cancel
+            menu.Add(new TextMenu.Button(Dialog.Clean(CollabModule.Instance.Session.SaveAndReturnToLobbyAllowed ? "collabutils2_returntolobby_confirm_cancel" : "menu_return_cancel")).Pressed(() => {
                 menu.OnCancel();
             }));
+
+            // handle Pause button
             menu.OnPause = (menu.OnESC = () => {
                 menu.RemoveSelf();
                 level.Paused = false;
                 Engine.FreezeTimer = 0.15f;
                 Audio.Play("event:/ui/game/unpause");
             });
+
+            // handle Cancel button
             menu.OnCancel = () => {
                 Audio.Play("event:/ui/main/button_back");
                 menu.RemoveSelf();
                 level.Pause(returnIndex, minimal: false);
             };
+
             level.Add(menu);
         }
 
@@ -172,9 +221,25 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 temporaryLobbySIDHolder = CollabModule.Instance.Session.LobbySID;
                 temporaryRoomHolder = CollabModule.Instance.Session.LobbyRoom;
                 temporarySpawnPointHolder = new Vector2(CollabModule.Instance.Session.LobbySpawnPointX, CollabModule.Instance.Session.LobbySpawnPointY);
+                temporarySaveAllowedHolder = CollabModule.Instance.Session.SaveAndReturnToLobbyAllowed;
             }
 
             orig(self, session, startPosition);
+        }
+
+
+        private static void onLevelEnterGo(On.Celeste.LevelEnter.orig_Go orig, Session session, bool fromSaveData) {
+            if (CollabModule.Instance.SaveData.SessionsPerLevel.TryGetValue(session.Area.GetSID(), out string savedSessionXML)) {
+                // "save and return to lobby" was used: restore the session.
+                using (MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(savedSessionXML))) {
+                    session = (Session) new XmlSerializer(typeof(Session)).Deserialize(stream);
+                    fromSaveData = true;
+                }
+
+                // and remove it from the save, so that the user won't be able to use it again unless they "save and return to lobby" again.
+                CollabModule.Instance.SaveData.SessionsPerLevel.Remove(session.Area.GetSID());
+            }
+            orig(session, fromSaveData);
         }
     }
 }
