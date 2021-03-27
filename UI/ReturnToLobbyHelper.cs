@@ -160,6 +160,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             // Save
             if (CollabModule.Instance.Session.SaveAndReturnToLobbyAllowed) {
+                // add some explanatory text on the "Save" and "Do Not Save" options
+                menu.Add(new TextMenu.SubHeader(Dialog.Clean("collabutils2_returntolobby_confirm_note1")));
+                menu.Add(new TextMenuExt.SubHeaderExt(Dialog.Clean("collabutils2_returntolobby_confirm_note2")) { HeightExtra = 0f });
+                menu.Add(new TextMenu.SubHeader(""));
+
                 menu.Add(new TextMenu.Button(Dialog.Clean("collabutils2_returntolobby_confirm_save")).Pressed(() => {
                     Engine.TimeRate = 1f;
                     menu.Focused = false;

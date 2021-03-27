@@ -5,6 +5,8 @@ collabutils2_returntolobby= Return to Lobby
 collabutils2_restartspeedberry= Restart Speed Berry
 
 collabutils2_returntolobby_confirm_title= RETURN TO LOBBY?
+collabutils2_returntolobby_confirm_note1= If you choose "Save", you will be able to resume from where you left off
+collabutils2_returntolobby_confirm_note2= by coming back to the map in the lobby and choosing "Continue".
 collabutils2_returntolobby_confirm_save= Save
 collabutils2_returntolobby_confirm_donotsave= Do Not Save
 collabutils2_returntolobby_confirm_cancel= Cancel
