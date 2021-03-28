@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Monocle;
 using MonoMod.RuntimeDetour;
 using MonoMod.Utils;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -282,9 +283,15 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 // restore all mod sessions we can restore.
                 foreach (EverestModule mod in Everest.Modules) {
                     if (mod._Session != null && sessions.TryGetValue(mod.Metadata.Name, out string savedSession)) {
-                        // note: we are deserializing the session rather than just storing the object, because loading the session usually does that,
-                        // and a mod could react to a setter on its session being called.
-                        YamlHelper.DeserializerUsing(mod._Session).Deserialize(savedSession, mod.SessionType);
+                        try {
+                            // note: we are deserializing the session rather than just storing the object, because loading the session usually does that,
+                            // and a mod could react to a setter on its session being called.
+                            YamlHelper.DeserializerUsing(mod._Session).Deserialize(savedSession, mod.SessionType);
+                        } catch (Exception e) {
+                            // this is the same fallback message as the base EverestModule class if something goes wrong.
+                            Logger.Log(LogLevel.Warn, "CollabUtils2/ReturnToLobbyHelper", "Failed to load the session of " + mod.Metadata.Name + "!");
+                            Logger.LogDetailed(e);
+                        }
                     }
                 }
 
