@@ -251,9 +251,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         if (startChapterTimer == -1) {
                             string silverRankTimeString = TimeSpan.FromSeconds(TrackedBerry.SilverTime).ShortGameplayFormat();
                             string bronzeRankTimeString = TimeSpan.FromSeconds(TrackedBerry.BronzeTime).ShortGameplayFormat();
-                            drawNextRankTimeTopCenter(nextRankName, new Vector2(-300, 0), rankTimeString, rankTimeSize, fontOffset);
+                            drawNextRankTimeTopCenter(nextRankName, new Vector2(-320, 0), rankTimeString, rankTimeSize, fontOffset);
                             drawNextRankTimeTopCenter("Silver", new Vector2(0, 0), silverRankTimeString, new Vector2(getTimeWidth(silverRankTimeString), numberHeight) * targetTimeScale, fontOffset);
-                            drawNextRankTimeTopCenter("Bronze", new Vector2(300, 0), bronzeRankTimeString, new Vector2(getTimeWidth(bronzeRankTimeString), numberHeight) * targetTimeScale, fontOffset);
+                            drawNextRankTimeTopCenter("Bronze", new Vector2(320, 0), bronzeRankTimeString, new Vector2(getTimeWidth(bronzeRankTimeString), numberHeight) * targetTimeScale, fontOffset);
                         } else {
                             drawNextRankTimeTopCenter(nextRankName, Vector2.Zero, rankTimeString, rankTimeSize, fontOffset);
                         }
