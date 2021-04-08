@@ -491,7 +491,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             while (origc.MoveNext())
                 yield return origc.Current;
 
-            if (forceArea != null) {
+            if (forceArea != null && lastArea != null) {
                 save.LastArea = lastArea.Value;
                 lastArea = null;
             }
