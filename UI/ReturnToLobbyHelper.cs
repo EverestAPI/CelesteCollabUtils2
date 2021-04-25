@@ -185,7 +185,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         Dictionary<string, string> modSessions = new Dictionary<string, string>();
                         foreach (EverestModule mod in Everest.Modules) {
                             if (mod._Session != null && !(mod._Session is EverestModuleBinarySession)) {
-                                modSessions[mod.Metadata.Name] = YamlHelper.Serializer.Serialize(mod._Session);
+                                try {
+                                    modSessions[mod.Metadata.Name] = YamlHelper.Serializer.Serialize(mod._Session);
+                                } catch (Exception e) {
+                                    // this is the same fallback message as the base EverestModule class if something goes wrong.
+                                    Logger.Log(LogLevel.Warn, "CollabUtils2/ReturnToLobbyHelper", "Failed to save the session of " + mod.Metadata.Name + "!");
+                                    Logger.LogDetailed(e);
+                                }
                             }
                         }
                         CollabModule.Instance.SaveData.ModSessionsPerLevel.Add(level.Session.Area.GetSID(), modSessions);
