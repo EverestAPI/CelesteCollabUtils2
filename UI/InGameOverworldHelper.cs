@@ -162,7 +162,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             data["hasCollabCredits"] = true;
 
             if (!isPanelShowingLobby()) {
-                data["chapter"] = Dialog.Clean(new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea").Name + "_author");
+                data["chapter"] = (new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea").Name + "_author").DialogCleanOrNull() ?? "";
             }
 
             /*
@@ -474,6 +474,21 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         return orig == "areaselect/cardtop_golden" ? "CollabUtils2/chapterCard/cardtop_silver" : "CollabUtils2/chapterCard/card_silver";
                     }
                     return orig;
+                });
+            }
+
+            cursor.Index = 0;
+
+            // 4. If the author name is empty, center the map name like interludes.
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCallvirt<AreaData>("get_Interlude_Safe"))) {
+                Logger.Log("CollabUtils2/InGameOverworldHelper", $"Modding chapter panel title position at {cursor.Index} in IL for OuiChapterPanel.Render");
+                cursor.Emit(OpCodes.Ldarg_0);
+                cursor.EmitDelegate<Func<bool, OuiChapterPanel, bool>>((orig, self) => {
+                    if (Engine.Scene == overworldWrapper?.Scene && new DynData<OuiChapterPanel>(self).Get<string>("chapter").Length == 0) {
+                        return true; // interlude!
+                    } else {
+                        return orig;
+                    }
                 });
             }
         }
