@@ -289,7 +289,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             bool hasContinueOption = CollabModule.Instance.SaveData.SessionsPerLevel.ContainsKey(self.Area.GetSID());
 
             checkpoints.Add(DynamicData.New(t_OuiChapterPanelOption)(new {
-                Label = Dialog.Clean("overworld_start", null),
+                Label = Dialog.Clean(hasContinueOption ? "collabutils2_chapterpanel_start" : "overworld_start", null),
                 BgColor = Calc.HexToColor("eabe26"),
                 Icon = GFX.Gui["areaselect/startpoint"],
                 CheckpointRotation = Calc.Random.Choose(-1, 1) * Calc.Random.Range(0.05f, 0.2f),
@@ -300,7 +300,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             if (hasContinueOption) {
                 checkpoints.Add(DynamicData.New(t_OuiChapterPanelOption)(new {
-                    Label = Dialog.Clean("file_continue", null),
+                    Label = Dialog.Clean("collabutils2_chapterpanel_continue", null),
                     Icon = GFX.Gui["areaselect/checkpoint"],
                     CheckpointRotation = Calc.Random.Choose(-1, 1) * Calc.Random.Range(0.05f, 0.2f),
                     CheckpointOffset = new Vector2(Calc.Random.Range(-16, 16), Calc.Random.Range(-16, 16)),
@@ -310,13 +310,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 }));
             }
 
-            data["option"] = 0;
+            data["option"] = hasContinueOption ? 1 : 0;
 
             for (int i = 0; i < checkpoints.Count; i++) {
                 new DynamicData(checkpoints[i]).Invoke("SlideTowards", i, checkpoints.Count, true);
             }
 
-            new DynamicData(checkpoints[0]).Set("Pop", 1f);
+            new DynamicData(checkpoints[hasContinueOption ? 1 : 0]).Set("Pop", 1f);
             for (float p = 0f; p < 1f; p += Engine.DeltaTime * 4f) {
                 yield return null;
                 data["height"] = MathHelper.Lerp(fromHeight, toHeight, Ease.CubeOut(Math.Min(1f, 0.5f + p * 0.5f)));
