@@ -48,6 +48,14 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             string heartTexture = MTN.Journal.Has("CollabUtils2Hearts/" + levelSet) ? "CollabUtils2Hearts/" + levelSet : "heartgem0";
 
+            int mapsPerPage = 12;
+            int mapAmount = SaveData.Instance.Areas_Safe.Where(item => !AreaData.Get(item.ID_Safe).Interlude_Safe).Count();
+
+            // we want the last page to contain at least 2 maps.
+            while (mapAmount % mapsPerPage < 2) {
+                mapsPerPage--;
+            }
+
             foreach (AreaStats item in SaveData.Instance.Areas_Safe) {
                 AreaData areaData = AreaData.Get(item.ID_Safe);
                 if (!areaData.Interlude_Safe) {
@@ -139,7 +147,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     }
 
                     rowCount++;
-                    if (rowCount > 11) {
+                    if (rowCount >= mapsPerPage) {
                         // split the next zones into another page.
                         rowCount = 0;
                         currentPage = new OuiJournalCollabProgressInLobby(journal, levelSet);
