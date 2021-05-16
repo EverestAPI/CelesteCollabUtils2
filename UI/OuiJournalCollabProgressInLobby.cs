@@ -51,9 +51,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
             int mapsPerPage = 12;
             int mapAmount = SaveData.Instance.Areas_Safe.Where(item => !AreaData.Get(item.ID_Safe).Interlude_Safe).Count();
 
-            // we want the last page to contain at least 2 maps.
-            while (mapAmount % mapsPerPage < 2) {
-                mapsPerPage--;
+            if (mapAmount >= mapsPerPage) {
+                // we want the last page to contain at least 2 maps.
+                while (mapAmount % mapsPerPage < 2) {
+                    mapsPerPage--;
+                }
             }
 
             foreach (AreaStats item in SaveData.Instance.Areas_Safe) {
