@@ -2,8 +2,8 @@
 
 using ..Ahorn, Maple
 
-@mapdef Entity "CollabUtils2/MiniHeart" MiniHeart(x::Integer, y::Integer, sprite::String="beginner")
-@mapdef Entity "CollabUtils2/FakeMiniHeart" FakeMiniHeart(x::Integer, y::Integer, sprite::String="beginner")
+@mapdef Entity "CollabUtils2/MiniHeart" MiniHeart(x::Integer, y::Integer, sprite::String="beginner", refillDash::Bool=true)
+@mapdef Entity "CollabUtils2/FakeMiniHeart" FakeMiniHeart(x::Integer, y::Integer, sprite::String="beginner", refillDash::Bool=true)
 
 heartUnion = Union{MiniHeart, FakeMiniHeart}
 

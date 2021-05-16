@@ -8,6 +8,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         protected Sprite sprite;
         private string spriteName;
+        private bool refillDash;
 
         protected Wiggler scaleWiggler;
 
@@ -26,6 +27,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             : base(data.Position + position) {
 
             spriteName = data.Attr("sprite");
+            refillDash = data.Bool("refillDash", defaultValue: true);
 
             Collider = new Hitbox(12f, 12f, -6f, -6f);
 
@@ -120,7 +122,12 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 heartBroken(player, null, level);
             } else {
                 // player bounces on the heart
+                int dashCount = player.Dashes;
                 player.PointBounce(Center);
+                if (!refillDash) {
+                    player.Dashes = dashCount;
+                }
+
                 moveWiggler.Start();
                 scaleWiggler.Start();
                 moveWiggleDir = (Center - player.Center).SafeNormalize(Vector2.UnitY);

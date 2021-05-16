@@ -8,9 +8,11 @@ placements.triggers.CollabUtils2/JournalTrigger.tooltips.levelset=The levelset f
 
 # Mini Heart
 placements.entities.CollabUtils2/MiniHeart.tooltips.sprite=The sprite the mini heart should use.
+placements.entities.CollabUtils2/MiniHeart.tooltips.refillDash=Whether bouncing on the heart should refill dashes.
 
 # Fake Mini Heart
 placements.entities.CollabUtils2/FakeMiniHeart.tooltips.sprite=The sprite the fake mini heart should use.
+placements.entities.CollabUtils2/FakeMiniHeart.tooltips.refillDash=Whether bouncing on the heart should refill dashes.
 
 # Rainbow Berry
 placements.entities.CollabUtils2/RainbowBerry.tooltips.levelSet=The rainbow berry will only spawn if all silver berries in this level set have been collected.
