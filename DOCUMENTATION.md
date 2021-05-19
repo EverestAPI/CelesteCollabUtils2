@@ -273,3 +273,13 @@ You can also **define a custom display name for a lobby** in the overworld journ
 ```
 
 This is useful to make the journal say "Beginner Difficulty" instead of "Beginner Lobby" for example. This is optional; if you don't define it, the map name will be displayed instead.
+
+## Map Metadata
+
+Collab Utils allow you to set randomized session flags in your map meta.yaml:
+```yaml
+CollabUtilsRandomizedFlags:
+    flag1: 0.2
+    flag2: 0.5
+```
+With that setup, when entering the map, flag1 will have a 50% chance to be set, and flag2 will have a 20% chance to be set. **Both cannot be set at the same time**: in that example, that means there is a 30% chance no flag will be set.

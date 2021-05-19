@@ -2,14 +2,18 @@
 using Celeste.Mod.CollabUtils2.Triggers;
 using Celeste.Mod.CollabUtils2.UI;
 using Monocle;
+using MonoMod.RuntimeDetour;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace Celeste.Mod.CollabUtils2 {
     public class CollabModule : EverestModule {
 
         public static CollabModule Instance;
+
+        private static Hook hookOrigSessionCtor;
 
         public override Type SettingsType => typeof(CollabSettings);
         public CollabSettings Settings => _Settings as CollabSettings;
@@ -42,6 +46,8 @@ namespace Celeste.Mod.CollabUtils2 {
             SilverBlock.Load();
 
             Everest.Content.OnUpdate += onModAssetUpdate;
+
+            hookOrigSessionCtor = new Hook(typeof(Session).GetMethod("orig_ctor"), typeof(CollabModule).GetMethod("onNewSession", BindingFlags.NonPublic | BindingFlags.Static));
         }
 
         public override void Unload() {
@@ -60,6 +66,9 @@ namespace Celeste.Mod.CollabUtils2 {
             SilverBlock.Unload();
 
             Everest.Content.OnUpdate -= onModAssetUpdate;
+
+            hookOrigSessionCtor?.Dispose();
+            hookOrigSessionCtor = null;
         }
 
         public override void Initialize() {
@@ -91,6 +100,25 @@ namespace Celeste.Mod.CollabUtils2 {
             if (forceNew) {
                 ReturnToLobbyHelper.OnSessionCreated();
                 LobbyHelper.OnSessionCreated();
+            }
+        }
+
+        private class RandomizedFlagsMapMeta {
+            public Dictionary<string, float> CollabUtilsRandomizedFlags { get; set; } = new Dictionary<string, float>();
+        }
+
+        private static void onNewSession(On.Celeste.Session.orig_ctor_AreaKey_string_AreaStats orig, Session self, AreaKey area, string checkpoint, AreaStats oldStats) {
+            orig(self, area, checkpoint, oldStats);
+
+            if (Everest.Content.Map.TryGetValue("Maps/" + area.GetSID(), out ModAsset asset) && asset.TryGetMeta(out RandomizedFlagsMapMeta meta)) {
+                double diceRoll = new Random().NextDouble();
+                foreach (KeyValuePair<string, float> flag in meta.CollabUtilsRandomizedFlags) {
+                    if (diceRoll < flag.Value) {
+                        self.SetFlag(flag.Key, true);
+                        break;
+                    }
+                    diceRoll -= flag.Value;
+                }
             }
         }
 
