@@ -21,6 +21,7 @@ If anything is wrong or unclear, yell at max480 (max480#4596 on [the Celeste Dis
 - [Triggers](#triggers)
   - [Chapter Panel Trigger](#chapter-panel-trigger)
   - [Journal Trigger](#journal-trigger)
+- [Map Metadata](#map-metadata)
 
 ## Setting up your mod as a collab
 
