@@ -262,6 +262,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 // "save and return to lobby" was used: restore the session.
                 using (MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(savedSessionXML))) {
                     session = (Session) new XmlSerializer(typeof(Session)).Deserialize(stream);
+                    SaveData.Instance.CurrentSession_Safe = session;
                     fromSaveData = true;
                 }
 
@@ -269,8 +270,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 CollabModule.Instance.SaveData.SessionsPerLevel.Remove(session.Area.GetSID());
             }
 
-            // the mod sessions are loaded in SaveData.StartSession, but load them ahead of time here too for compatibility.
-            loadModSessions(session);
+            if (loadModSessions(session)) {
+                // remove the mod sessions from the save, so that the user won't be able to use them again unless they "save and return to lobby" again.
+                CollabModule.Instance.SaveData.ModSessionsPerLevel.Remove(session.Area.GetSID());
+            }
 
             orig(session, fromSaveData);
         }
@@ -278,8 +281,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private static void onSaveDataStartSession(On.Celeste.SaveData.orig_StartSession orig, SaveData self, Session session) {
             orig(self, session);
 
+            // load any mod session here if it wasn't done before.
             if (loadModSessions(session)) {
-                // remove the mod sessions from the save, so that the user won't be able to use them again unless they "save and return to lobby" again.
                 CollabModule.Instance.SaveData.ModSessionsPerLevel.Remove(session.Area.GetSID());
             }
         }
