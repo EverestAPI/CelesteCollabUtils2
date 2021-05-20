@@ -3,7 +3,7 @@ module CollabUtils2JournalTrigger
 using ..Ahorn, Maple
 
 @mapdef Trigger "CollabUtils2/JournalTrigger" JournalTrigger(x::Integer, y::Integer, width::Integer=Maple.defaultTriggerWidth, height::Integer=Maple.defaultTriggerHeight,
-    levelset::String="Celeste")
+    levelset::String="Celeste", showOnlyDiscovered::Bool=false)
 
 const placements = Ahorn.PlacementDict(
     "Journal Trigger (Collab Utils 2 / READ DOCS)" => Ahorn.EntityPlacement(

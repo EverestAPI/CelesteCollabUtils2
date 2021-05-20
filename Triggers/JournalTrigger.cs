@@ -11,6 +11,7 @@ using System.Collections.Generic;
 namespace Celeste.Mod.CollabUtils2.Triggers {
     [CustomEntity("CollabUtils2/JournalTrigger")]
     public class JournalTrigger : Trigger {
+        private static bool showOnlyDiscovered;
 
         public static void Load() {
             Everest.Events.Journal.OnEnter += onJournalEnter;
@@ -32,7 +33,7 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
                 }
 
                 // then, fill in the journal with our custom pages.
-                journal.Pages.AddRange(OuiJournalCollabProgressInLobby.GeneratePages(journal, forceArea.GetLevelSet()));
+                journal.Pages.AddRange(OuiJournalCollabProgressInLobby.GeneratePages(journal, forceArea.GetLevelSet(), showOnlyDiscovered));
 
                 // and add the map if we have it as well.
                 if (MTN.Journal.Has("collabLobbyMaps/" + forceArea.GetLevelSet())) {
@@ -52,7 +53,10 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
             Add(talkComponent = new TalkComponent(
                 new Rectangle(0, 0, data.Width, data.Height),
                 data.Nodes.Length != 0 ? (data.Nodes[0] - data.Position) : new Vector2(data.Width / 2f, data.Height / 2f),
-                player => InGameOverworldHelper.OpenJournal(player, levelset)
+                player => {
+                    showOnlyDiscovered = data.Bool("showOnlyDiscovered", defaultValue: false);
+                    InGameOverworldHelper.OpenJournal(player, levelset);
+                }
             ) { PlayerMustBeFacing = false });
         }
 

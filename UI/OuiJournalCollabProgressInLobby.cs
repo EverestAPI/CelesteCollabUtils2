@@ -29,7 +29,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             return "CollabUtils2/speed_berry_bronze";
         }
 
-        public static List<OuiJournalCollabProgressInLobby> GeneratePages(OuiJournal journal, string levelSet) {
+        public static List<OuiJournalCollabProgressInLobby> GeneratePages(OuiJournal journal, string levelSet, bool showOnlyDiscovered) {
             List<OuiJournalCollabProgressInLobby> pages = new List<OuiJournalCollabProgressInLobby>();
             int rowCount = 0;
             OuiJournalCollabProgressInLobby currentPage = new OuiJournalCollabProgressInLobby(journal, levelSet);
@@ -49,7 +49,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
             string heartTexture = MTN.Journal.Has("CollabUtils2Hearts/" + levelSet) ? "CollabUtils2Hearts/" + levelSet : "heartgem0";
 
             int mapsPerPage = 12;
-            int mapAmount = SaveData.Instance.Areas_Safe.Where(item => !AreaData.Get(item.ID_Safe).Interlude_Safe).Count();
+            int mapAmount = SaveData.Instance.Areas_Safe.Where(item => !AreaData.Get(item.ID_Safe).Interlude_Safe
+                && (!showOnlyDiscovered || item.TotalTimePlayed > 0)).Count();
 
             if (mapAmount >= mapsPerPage) {
                 // we want the last page to contain at least 2 maps.
@@ -69,6 +70,15 @@ namespace Celeste.Mod.CollabUtils2.UI {
                             // all maps weren't complete yet, and the heart side was never accessed: hide the heart side for now.
                             continue;
                         }
+                    }
+
+                    if (showOnlyDiscovered && item.TotalTimePlayed <= 0) {
+                        // skip the map, because it was not discovered yet.
+                        // since it wasn't discovered, we can already say all maps weren't done though.
+                        allMapsDone = false;
+                        allLevelsDone = false;
+                        allSpeedBerriesDone = false;
+                        continue;
                     }
 
                     string strawberryText = null;
@@ -92,7 +102,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     } else {
                         row.Add(new IconCell("dot"));
                     }
-
 
                     AreaStats stats = SaveData.Instance.GetAreaStatsFor(areaData.ToKey());
                     if (CollabMapDataProcessor.SilverBerries.TryGetValue(areaData.GetLevelSet(), out Dictionary<string, EntityID> levelSetBerries)

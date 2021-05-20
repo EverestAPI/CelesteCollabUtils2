@@ -5,6 +5,7 @@ placements.triggers.CollabUtils2/ChapterPanelTrigger.tooltips.allowSaving=If sel
 
 # Journal Trigger
 placements.triggers.CollabUtils2/JournalTrigger.tooltips.levelset=The levelset for which the journal will be opened with the trigger.
+placements.triggers.CollabUtils2/JournalTrigger.tooltips.showOnlyDiscovered=If checked, the journal will hide maps with a play time of 0, to only show those the player has found in the lobby.
 
 # Mini Heart
 placements.entities.CollabUtils2/MiniHeart.tooltips.sprite=The sprite the mini heart should use.
