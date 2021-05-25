@@ -23,6 +23,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.LevelExit.ctor += onLevelExitConstructor;
             On.Celeste.LevelLoader.ctor += onLevelLoaderConstructor;
             On.Celeste.SaveData.StartSession += onSaveDataStartSession;
+            On.Celeste.LevelLoader.StartLevel += onLevelLoaderStartLevel;
 
             using (new DetourContext { Before = { "*" } }) {
                 On.Celeste.LevelEnter.Go += onLevelEnterGo;
@@ -36,6 +37,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.LevelLoader.ctor -= onLevelLoaderConstructor;
             On.Celeste.SaveData.StartSession -= onSaveDataStartSession;
             On.Celeste.LevelEnter.Go -= onLevelEnterGo;
+            On.Celeste.LevelLoader.StartLevel -= onLevelLoaderStartLevel;
         }
 
         private static IEnumerator modChapterPanelStartRoutine(On.Celeste.OuiChapterPanel.orig_StartRoutine orig, OuiChapterPanel self, string checkpoint) {
@@ -308,6 +310,16 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
 
             return false;
+        }
+
+        private static void onLevelLoaderStartLevel(On.Celeste.LevelLoader.orig_StartLevel orig, LevelLoader self) {
+            // loading is finished, so we don't need those anymore, in any case.
+            temporaryLobbySIDHolder = null;
+            temporaryRoomHolder = null;
+            temporarySpawnPointHolder = Vector2.Zero;
+            temporarySaveAllowedHolder = false;
+
+            orig(self);
         }
     }
 }
