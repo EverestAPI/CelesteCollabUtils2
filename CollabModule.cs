@@ -112,7 +112,7 @@ namespace Celeste.Mod.CollabUtils2 {
 
             if (Everest.Content.Map.TryGetValue("Maps/" + area.GetSID(), out ModAsset asset) && asset.TryGetMeta(out RandomizedFlagsMapMeta meta)) {
                 double diceRoll = new Random().NextDouble();
-                foreach (KeyValuePair<string, float> flag in meta.CollabUtilsRandomizedFlags) {
+                foreach (KeyValuePair<string, float> flag in meta?.CollabUtilsRandomizedFlags ?? new Dictionary<string, float>()) {
                     if (diceRoll < flag.Value) {
                         self.SetFlag(flag.Key, true);
                         break;
