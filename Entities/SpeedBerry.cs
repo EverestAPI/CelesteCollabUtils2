@@ -14,9 +14,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
     [CustomEntity("CollabUtils2/SpeedBerry")]
     [Tracked]
     public class SpeedBerry : Strawberry {
-
-        public static SpriteBank SpriteBank;
-
         public EntityData EntityData;
         public float BronzeTime;
         public float SilverTime;
@@ -64,10 +61,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             if (speedBerry != null) {
                 speedBerry.TimerDisplay?.StartTimer();
             }
-        }
-
-        public static void LoadContent() {
-            SpriteBank = new SpriteBank(GFX.Game, "Graphics/CollabUtils2/SpeedBerry.xml");
         }
 
         public SpeedBerry(EntityData data, Vector2 offset, EntityID id, bool restored) : base(data, offset, id) {
@@ -211,7 +204,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private static void playAnimationSpeedrunToolSafe(Sprite sprite, string animation) {
             if (sprite.Texture?.AtlasPath?.StartsWith("collectables/speedrun_tool_goldberry/") ?? false) {
                 // this means Speedrun Tool replaced the sprite, so replace it again or we are going to crash.
-                SpriteBank.CreateOn(sprite, "speedBerry");
+                GFX.SpriteBank.CreateOn(sprite, "CollabUtils2_speedBerry");
             }
             sprite.Play(animation);
         }
@@ -232,7 +225,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         private class SpeedBerryExplosionAnimation : Entity {
             public SpeedBerryExplosionAnimation(Vector2 position) : base(position) {
-                Add(SpriteBank.Create("speedBerryExplosion"));
+                Add(GFX.SpriteBank.Create("CollabUtils2_speedBerryExplosion"));
                 Depth = -1000000;
             }
         }

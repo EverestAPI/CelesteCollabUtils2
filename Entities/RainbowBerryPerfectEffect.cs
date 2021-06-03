@@ -9,7 +9,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
             Sprite sprite;
             Depth = -1000000;
-            Add(sprite = RainbowBerry.SpriteBank.Create("perfectAnimation"));
+            Add(sprite = GFX.SpriteBank.Create("CollabUtils2_perfectAnimation"));
             sprite.OnLastFrame = delegate {
                 RemoveSelf();
             };

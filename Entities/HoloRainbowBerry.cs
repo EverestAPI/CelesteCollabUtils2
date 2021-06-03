@@ -33,8 +33,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             }
 
             // create the sprites, overlap them, and give them transparency.
-            sprite = RainbowBerry.SpriteBank.Create("holoRainbowBerry");
-            desaturatedSprite = RainbowBerry.SpriteBank.Create("desaturatedHoloRainbowBerry");
+            sprite = GFX.SpriteBank.Create("CollabUtils2_holoRainbowBerry");
+            desaturatedSprite = GFX.SpriteBank.Create("CollabUtils2_desaturatedHoloRainbowBerry");
 
             sprite.Color *= (transparencyProgress * saturationProgress);
             desaturatedSprite.Color *= transparencyProgress * (1 - saturationProgress);

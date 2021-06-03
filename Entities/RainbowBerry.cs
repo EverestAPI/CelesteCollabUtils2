@@ -11,16 +11,10 @@ namespace Celeste.Mod.CollabUtils2.Entities {
     [CustomEntity("CollabUtils2/RainbowBerry")]
     [RegisterStrawberry(tracked: false, blocksCollection: false)]
     class RainbowBerry : Strawberry {
-        public static SpriteBank SpriteBank;
-
         private string levelSet;
 
         internal HoloRainbowBerry HologramForCutscene;
         internal int CutsceneTotalBerries;
-
-        public static void LoadContent() {
-            SpriteBank = new SpriteBank(GFX.Game, "Graphics/CollabUtils2/RainbowBerry.xml");
-        }
 
         public RainbowBerry(EntityData data, Vector2 offset, EntityID gid) : base(data, offset, gid) {
             levelSet = data.Attr("levelSet");

@@ -107,21 +107,21 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     // this method determines the strawberry sprite. "orig" is the original sprite, "self" is the strawberry.
                     if (self is SilverBerry) {
                         if (SaveData.Instance.CheckStrawberry(self.ID)) {
-                            return SilverBerry.SpriteBank.Create("ghostSilverBerry");
+                            return GFX.SpriteBank.Create("CollabUtils2_ghostSilverBerry");
                         }
-                        return SilverBerry.SpriteBank.Create("silverBerry");
+                        return GFX.SpriteBank.Create("CollabUtils2_silverBerry");
                     }
                     if (self is RainbowBerry) {
                         if (SaveData.Instance.CheckStrawberry(self.ID)) {
-                            return RainbowBerry.SpriteBank.Create("ghostRainbowBerry");
+                            return GFX.SpriteBank.Create("CollabUtils2_ghostRainbowBerry");
                         }
-                        return RainbowBerry.SpriteBank.Create("rainbowBerry");
+                        return GFX.SpriteBank.Create("CollabUtils2_rainbowBerry");
                     }
                     if (self is SpeedBerry) {
                         if (SaveData.Instance.CheckStrawberry(self.ID)) {
-                            return SpeedBerry.SpriteBank.Create("ghostSpeedBerry");
+                            return GFX.SpriteBank.Create("CollabUtils2_ghostSpeedBerry");
                         }
-                        return SpeedBerry.SpriteBank.Create("speedBerry");
+                        return GFX.SpriteBank.Create("CollabUtils2_speedBerry");
                     }
                     return orig;
                 });

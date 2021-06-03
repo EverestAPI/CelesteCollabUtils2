@@ -87,10 +87,6 @@ namespace Celeste.Mod.CollabUtils2 {
         }
 
         public override void LoadContent(bool firstLoad) {
-            SilverBerry.LoadContent();
-            RainbowBerry.LoadContent();
-            SpeedBerry.LoadContent();
-
             reloadCrystalHeartSwapSpriteBanks();
         }
 

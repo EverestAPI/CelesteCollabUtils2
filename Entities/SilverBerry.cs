@@ -10,16 +10,10 @@ namespace Celeste.Mod.CollabUtils2.Entities {
     [CustomEntity("CollabUtils2/SilverBerry")]
     [RegisterStrawberry(tracked: false, blocksCollection: true)]
     class SilverBerry : Strawberry {
-        public static SpriteBank SpriteBank;
-
         private static ParticleType P_SilverGlow;
         private static ParticleType P_OrigGoldGlow;
         private static ParticleType P_SilverGhostGlow;
         private static ParticleType P_OrigGhostGlow;
-
-        public static void LoadContent() {
-            SpriteBank = new SpriteBank(GFX.Game, "Graphics/CollabUtils2/SilverBerry.xml");
-        }
 
         private bool spawnedThroughGiveSilver = false;
 
