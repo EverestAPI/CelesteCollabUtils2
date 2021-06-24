@@ -90,10 +90,10 @@ namespace Celeste.Mod.CollabUtils2 {
             reloadCrystalHeartSwapSpriteBanks();
         }
 
-        public override void LoadSession(int index, bool forceNew) {
-            base.LoadSession(index, forceNew);
+        public override void DeserializeSession(int index, byte[] data) {
+            base.DeserializeSession(index, data);
 
-            if (forceNew) {
+            if (data == null) {
                 ReturnToLobbyHelper.OnSessionCreated();
                 LobbyHelper.OnSessionCreated();
             }
