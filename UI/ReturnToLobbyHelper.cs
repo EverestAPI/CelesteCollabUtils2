@@ -185,8 +185,16 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
                         // save all mod sessions of mods that have mod sessions.
                         Dictionary<string, string> modSessions = new Dictionary<string, string>();
+                        Dictionary<string, string> modSessionsBinary = new Dictionary<string, string>();
                         foreach (EverestModule mod in Everest.Modules) {
-                            if (mod._Session != null && !(mod._Session is EverestModuleBinarySession)) {
+                            if (mod.SaveDataAsync) {
+                                // new save data API: session is serialized into a byte array.
+                                byte[] sessionBinary = mod.SerializeSession(SaveData.Instance.FileSlot);
+                                if (sessionBinary != null) {
+                                    modSessionsBinary[mod.Metadata.Name] = Convert.ToBase64String(sessionBinary);
+                                }
+                            } else if (mod._Session != null && !(mod._Session is EverestModuleBinarySession)) {
+                                // old behavior: serialize save data ourselves, as a string.
                                 try {
                                     modSessions[mod.Metadata.Name] = YamlHelper.Serializer.Serialize(mod._Session);
                                 } catch (Exception e) {
@@ -197,6 +205,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                             }
                         }
                         CollabModule.Instance.SaveData.ModSessionsPerLevel.Add(level.Session.Area.GetSID(), modSessions);
+                        CollabModule.Instance.SaveData.ModSessionsPerLevelBinary.Add(level.Session.Area.GetSID(), modSessionsBinary);
 
                         Engine.Scene = new LevelExitToLobby(LevelExit.Mode.SaveAndQuit, level.Session);
                     });
@@ -275,6 +284,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (loadModSessions(session)) {
                 // remove the mod sessions from the save, so that the user won't be able to use them again unless they "save and return to lobby" again.
                 CollabModule.Instance.SaveData.ModSessionsPerLevel.Remove(session.Area.GetSID());
+                CollabModule.Instance.SaveData.ModSessionsPerLevelBinary.Remove(session.Area.GetSID());
             }
 
             orig(session, fromSaveData);
@@ -286,14 +296,22 @@ namespace Celeste.Mod.CollabUtils2.UI {
             // load any mod session here if it wasn't done before.
             if (loadModSessions(session)) {
                 CollabModule.Instance.SaveData.ModSessionsPerLevel.Remove(session.Area.GetSID());
+                CollabModule.Instance.SaveData.ModSessionsPerLevelBinary.Remove(session.Area.GetSID());
             }
         }
 
         private static bool loadModSessions(Session session) {
             if (CollabModule.Instance.SaveData.ModSessionsPerLevel.TryGetValue(session.Area.GetSID(), out Dictionary<string, string> sessions)) {
+                CollabModule.Instance.SaveData.ModSessionsPerLevelBinary.TryGetValue(session.Area.GetSID(), out Dictionary<string, string> sessionsBinary);
+
                 // restore all mod sessions we can restore.
                 foreach (EverestModule mod in Everest.Modules) {
+                    if (mod.SaveDataAsync && sessionsBinary != null && sessionsBinary.TryGetValue(mod.Metadata.Name, out string savedSessionBinary)) {
+                        // new save data API: session is deserialized by passing the byte array as is.
+                        mod.DeserializeSession(SaveData.Instance.FileSlot, Convert.FromBase64String(savedSessionBinary));
+                    }
                     if (mod._Session != null && sessions.TryGetValue(mod.Metadata.Name, out string savedSession)) {
+                        // old behavior: deserialize the session ourselves from a string.
                         try {
                             // note: we are deserializing the session rather than just storing the object, because loading the session usually does that,
                             // and a mod could react to a setter on its session being called.
