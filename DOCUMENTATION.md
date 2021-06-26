@@ -161,6 +161,8 @@ If you use one of the vanilla crystal heart sprites (`collectables/heartgem/1/`,
 
 If you want a custom text color on the poem screen, include `poemtextcolor_[hexcode]` somewhere in the texture path: for example `path="MyMod/customcrystalheart_poemtextcolor_ff0000/"`.
 
+For B-side and C-side hearts, add `_B` or `_C` at the end of the sprite name. For example, for the B-side of 2021SeasonCollab_0_Lobbies_2_Summer: `crystalHeart_2021SeasonCollab_0_Lobbies_2_Summer_B`
+
 ### Fake Mini Hearts
 
 Those look exactly like Mini Hearts, but disappear for 3 seconds when dashed into, like vanilla fake hearts.

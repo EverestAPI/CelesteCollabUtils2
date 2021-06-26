@@ -77,6 +77,7 @@ namespace Celeste.Mod.CollabUtils2 {
             base.Initialize();
 
             LobbyHelper.OnInitialize();
+            InGameOverworldHelper.Initialize();
         }
 
         private void onModAssetUpdate(ModAsset oldAsset, ModAsset newAsset) {

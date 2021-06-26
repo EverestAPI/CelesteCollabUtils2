@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Mono.Cecil.Cil;
 using Monocle;
 using MonoMod.Cil;
+using MonoMod.RuntimeDetour;
 using MonoMod.Utils;
 using System;
 using System.Collections;
@@ -26,6 +27,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private static MethodInfo m_PlayExpandSfx = typeof(OuiChapterPanel)
             .GetMethod("PlayExpandSfx", BindingFlags.NonPublic | BindingFlags.Instance);
 
+        private static List<Hook> altSidesHelperHooks = new List<Hook>();
+
         public static void Load() {
             Everest.Events.Level.OnPause += OnPause;
             On.Celeste.Audio.SetMusic += OnSetMusic;
@@ -46,6 +49,20 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.Mod.AssetReloadHelper.ReloadLevel += OnReloadLevel;
         }
 
+        public static void Initialize() {
+            if (Everest.Loader.DependencyLoaded(new EverestModuleMetadata() { Name = "AltSidesHelper", Version = new Version(1, 2, 0) })) {
+                Type altSidesHelperModule = Everest.Modules.Where(m => m.GetType().FullName == "AltSidesHelper.AltSidesHelperModule").First().GetType();
+
+                altSidesHelperHooks.Add(new Hook(
+                    altSidesHelperModule.GetMethod("ResetCrystalHeart", BindingFlags.NonPublic | BindingFlags.Static),
+                    typeof(InGameOverworldHelper).GetMethod("resetCrystalHeartAfterAltSidesHelper", BindingFlags.NonPublic | BindingFlags.Static)));
+
+                altSidesHelperHooks.Add(new Hook(
+                    altSidesHelperModule.GetMethod("CustomizeCrystalHeart", BindingFlags.NonPublic | BindingFlags.Static),
+                    typeof(InGameOverworldHelper).GetMethod("customizeCrystalHeartAfterAltSidesHelper", BindingFlags.NonPublic | BindingFlags.Static)));
+            }
+        }
+
         public static void Unload() {
             Everest.Events.Level.OnPause -= OnPause;
             On.Celeste.Audio.SetMusic -= OnSetMusic;
@@ -64,6 +81,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.OuiChapterPanel.Start -= OnOuiChapterPanelStart;
             On.Celeste.Player.Die -= OnPlayerDie;
             On.Celeste.Mod.AssetReloadHelper.ReloadLevel -= OnReloadLevel;
+
+            foreach (Hook hook in altSidesHelperHooks) {
+                hook.Dispose();
+            }
+            altSidesHelperHooks.Clear();
         }
 
         private static void OnOuiChapterPanelStart(On.Celeste.OuiChapterPanel.orig_Start orig, OuiChapterPanel self, string checkpoint) {
@@ -198,20 +220,40 @@ namespace Celeste.Mod.CollabUtils2.UI {
             string mapName = sid.DialogKeyify();
             string mapLevelSet = AreaData.Get(sid)?.GetLevelSet().DialogKeyify();
 
-            if (HeartSpriteBank.Has("crystalHeart_" + mapName)) {
-                // this map has a custom heart registered: use it.
-                animId = "crystalHeart_" + mapName;
-            } else if (HeartSpriteBank.Has("crystalHeart_" + mapLevelSet)) {
-                // this level set has a custom heart registered: use it.
-                animId = "crystalHeart_" + mapLevelSet;
-            }
+            for (int side = 0; side < 3; side++) {
+                string sideName = mapName;
+                if (side == 1) {
+                    sideName += "_B";
+                } else if (side == 2) {
+                    sideName += "_C";
+                }
 
-            if (animId != null) {
-                Sprite heartSprite = HeartSpriteBank.Create(animId);
-                new DynData<OuiChapterPanel>(panel).Get<HeartGemDisplay>("heart").Sprites[0] = heartSprite;
-                heartSprite.Play("spin");
-                new DynData<OuiChapterPanel>(panel)["heartDirty"] = true;
+                if (HeartSpriteBank.Has("crystalHeart_" + sideName)) {
+                    // this map has a custom heart registered: use it.
+                    animId = "crystalHeart_" + sideName;
+                } else if (HeartSpriteBank.Has("crystalHeart_" + mapLevelSet)) {
+                    // this level set has a custom heart registered: use it.
+                    animId = "crystalHeart_" + mapLevelSet;
+                }
+
+                if (animId != null) {
+                    Sprite heartSprite = HeartSpriteBank.Create(animId);
+                    new DynData<OuiChapterPanel>(panel).Get<HeartGemDisplay>("heart").Sprites[side] = heartSprite;
+                    heartSprite.Play("spin");
+                    new DynData<OuiChapterPanel>(panel)["heartDirty"] = true;
+                }
             }
+        }
+
+        // AltSidesHelper does very similar stuff to us, and we want to override what it does if the XMLs are asking for it.
+        private static void resetCrystalHeartAfterAltSidesHelper(Action<OuiChapterPanel> orig, OuiChapterPanel panel) {
+            orig(panel);
+            resetCrystalHeart(panel);
+        }
+
+        private static void customizeCrystalHeartAfterAltSidesHelper(Action<OuiChapterPanel> orig, OuiChapterPanel panel) {
+            orig(panel);
+            customizeCrystalHeart(panel);
         }
 
         private static bool OnSaveDataFoundAnyCheckpoints(On.Celeste.SaveData.orig_FoundAnyCheckpoints orig, SaveData self, AreaKey area) {
