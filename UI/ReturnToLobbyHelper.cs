@@ -252,6 +252,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 level.Pause(returnIndex, minimal: false);
             };
 
+            if (CollabModule.Instance.Session.SaveAndReturnToLobbyAllowed && !CollabModule.Instance.Settings.SaveByDefaultWhenReturningToLobby) {
+                // select "do not save" by default
+                menu.Selection = menu.FirstPossibleSelection + 1;
+            }
+
             level.Add(menu);
         }
 

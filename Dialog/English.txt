@@ -34,6 +34,8 @@ modoptions_collab_besttimetodisplayinjournal= Best Time To Display In Journal
 modoptions_collab_besttimetodisplayinjournal_speedberry= Speed Berry
 modoptions_collab_besttimetodisplayinjournal_chaptertimer= Chapter Time
 
+modoptions_collab_savebydefaultwhenreturningtolobby= Save and Return to Lobby By Default
+
 collabutils2_assist_skip= Open Heart Gate
 collabutils2_assist_skip_confirm= This will open the Heart Gate permanently.{n}Are you sure?
 collabutils2_assist_skip_confirm_yes= Yes

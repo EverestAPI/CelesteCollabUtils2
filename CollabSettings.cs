@@ -12,5 +12,7 @@ namespace Celeste.Mod.CollabUtils2 {
         public bool DisplayEndScreenForAllMaps { get; set; } = false;
 
         public BestTimeInJournal BestTimeToDisplayInJournal { get; set; } = BestTimeInJournal.SpeedBerry;
+
+        public bool SaveByDefaultWhenReturningToLobby { get; set; } = true;
     }
 }
