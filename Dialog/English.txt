@@ -34,6 +34,11 @@ modoptions_collab_besttimetodisplayinjournal= Best Time To Display In Journal
 modoptions_collab_besttimetodisplayinjournal_speedberry= Speed Berry
 modoptions_collab_besttimetodisplayinjournal_chaptertimer= Chapter Time
 
+collabutils2_assist_skip= Open Heart Gate
+collabutils2_assist_skip_confirm= This will open the Heart Gate permanently.{n}Are you sure?
+collabutils2_assist_skip_confirm_yes= Yes
+collabutils2_assist_skip_confirm_no= No
+
 # SHIP COLLAB-SPECIFIC DIALOG WITH THE COLLAB MOD, NOT THE COLLAB UTILS.
 
 area_1_collabcredits= 

@@ -44,6 +44,7 @@ namespace Celeste.Mod.CollabUtils2 {
             SpeedBerry.Load();
             AreaCompleteInfoInLevel.Load();
             SilverBlock.Load();
+            MiniHeartDoorUnlockCutsceneTrigger.Load();
 
             Everest.Content.OnUpdate += onModAssetUpdate;
 
@@ -64,6 +65,7 @@ namespace Celeste.Mod.CollabUtils2 {
             SpeedBerry.Unload();
             AreaCompleteInfoInLevel.Unload();
             SilverBlock.Unload();
+            MiniHeartDoorUnlockCutsceneTrigger.Unload();
 
             Everest.Content.OnUpdate -= onModAssetUpdate;
 
@@ -93,7 +95,8 @@ namespace Celeste.Mod.CollabUtils2 {
         public override void DeserializeSession(int index, byte[] data) {
             base.DeserializeSession(index, data);
 
-            if (data == null) {
+            if (data == null && global::Celeste.SaveData.Instance?.CurrentSession_Safe != null) {
+                // the session is new, but this isn't a newly created save file.
                 ReturnToLobbyHelper.OnSessionCreated();
                 LobbyHelper.OnSessionCreated();
             }

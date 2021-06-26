@@ -40,9 +40,16 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private delegate int orig_get_HeartGems(HeartGemDoor self);
 
         private static int getCollectedHeartGems(orig_get_HeartGems orig, HeartGemDoor self) {
-            if (self is MiniHeartDoor) {
-                return SaveData.Instance.GetLevelSetStatsFor((self as MiniHeartDoor).levelSet).TotalHeartGems;
+            if (self is MiniHeartDoor selfMiniHeartDoor) {
+                if (selfMiniHeartDoor.ForceAllHearts) {
+                    // door was told to pretend all hearts were collected, so just do that
+                    return self.Requires;
+                }
+
+                // otherwise, check how many hearts we have for the door's assigned level set
+                return SaveData.Instance.GetLevelSetStatsFor(selfMiniHeartDoor.levelSet).TotalHeartGems;
             }
+
             return orig(self);
         }
 
@@ -144,7 +151,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         private string levelSet;
         private string color;
-        public bool ForceTrigger = false;
+        public bool ForceTrigger = false; // pretend the player is close to the door
+        public bool ForceAllHearts = false; // pretend the player has all required hearts
 
         private float height;
 
