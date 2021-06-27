@@ -50,7 +50,12 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             string spritePath = "CollabUtils2/miniheart/" + spriteName + "/";
             bool alreadyCollectedInSave = SaveData.Instance.Areas_Safe[area.ID].Modes[(int) area.Mode].HeartGem;
             if (alreadyCollectedInSave) {
-                spritePath = "CollabUtils2/miniheart/ghost/ghost";
+                // use the ghost sprite specific to the heart: instead of reading 00.png, read ghost00.png
+                spritePath += "ghost";
+                if (!GFX.Game.Has(spritePath + "00")) {
+                    // if those sprites are missing, use the default ghost heart instead
+                    spritePath = "CollabUtils2/miniheart/ghost/ghost";
+                }
             }
 
             Add(sprite = new Sprite(GFX.Game, spritePath));
