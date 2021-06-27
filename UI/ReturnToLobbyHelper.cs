@@ -204,8 +204,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                                 }
                             }
                         }
-                        CollabModule.Instance.SaveData.ModSessionsPerLevel.Add(level.Session.Area.GetSID(), modSessions);
-                        CollabModule.Instance.SaveData.ModSessionsPerLevelBinary.Add(level.Session.Area.GetSID(), modSessionsBinary);
+                        CollabModule.Instance.SaveData.ModSessionsPerLevel[level.Session.Area.GetSID()] = modSessions;
+                        CollabModule.Instance.SaveData.ModSessionsPerLevelBinary[level.Session.Area.GetSID()] = modSessionsBinary;
 
                         Engine.Scene = new LevelExitToLobby(LevelExit.Mode.SaveAndQuit, level.Session);
                     });
