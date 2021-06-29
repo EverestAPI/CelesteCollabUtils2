@@ -11,6 +11,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Microsoft.Xna.Framework.Input;
 
 namespace Celeste.Mod.CollabUtils2.UI {
     public static class InGameOverworldHelper {
@@ -29,8 +30,12 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private static List<Hook> altSidesHelperHooks = new List<Hook>();
 
+        private static HubMapHelper mapData;
+
         public static void Load() {
             Everest.Events.Level.OnPause += OnPause;
+            Everest.Events.Level.OnLoadLevel += OnLoadLevel;
+            Everest.Events.Level.OnEnter += LevelBegin;
             On.Celeste.Audio.SetMusic += OnSetMusic;
             On.Celeste.Audio.SetAmbience += OnSetAmbience;
             On.Celeste.OuiChapterPanel.Reset += OnChapterPanelReset;
@@ -39,6 +44,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.OuiChapterPanel.Swap += OnChapterPanelSwap;
             On.Celeste.OuiChapterPanel.DrawCheckpoint += OnChapterPanelDrawCheckpoint;
             On.Celeste.OuiJournal.Enter += OnJournalEnter;
+            On.Celeste.Level.Render += OnLevelRender;
+            On.Celeste.Level.Update += OnLevelUpdate;
             On.Celeste.OuiChapterPanel.UpdateStats += OnChapterPanelUpdateStats;
             IL.Celeste.OuiChapterPanel.Render += ModOuiChapterPanelRender;
             IL.Celeste.DeathsCounter.Render += ModDeathsCounterRender;
@@ -47,6 +54,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.OuiChapterPanel.Start += OnOuiChapterPanelStart;
             On.Celeste.Player.Die += OnPlayerDie;
             On.Celeste.Mod.AssetReloadHelper.ReloadLevel += OnReloadLevel;
+
+            
         }
 
         public static void Initialize() {
@@ -65,6 +74,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         public static void Unload() {
             Everest.Events.Level.OnPause -= OnPause;
+            Everest.Events.Level.OnLoadLevel -= OnLoadLevel;
+            Everest.Events.Level.OnEnter -= LevelBegin;
             On.Celeste.Audio.SetMusic -= OnSetMusic;
             On.Celeste.Audio.SetAmbience -= OnSetAmbience;
             On.Celeste.OuiChapterPanel.Reset -= OnChapterPanelReset;
@@ -73,6 +84,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.OuiChapterPanel.Swap -= OnChapterPanelSwap;
             On.Celeste.OuiChapterPanel.DrawCheckpoint -= OnChapterPanelDrawCheckpoint;
             On.Celeste.OuiJournal.Enter -= OnJournalEnter;
+            On.Celeste.Level.Render -= OnLevelRender;
+            On.Celeste.Level.Update -= OnLevelUpdate;
             On.Celeste.OuiChapterPanel.UpdateStats -= OnChapterPanelUpdateStats;
             IL.Celeste.OuiChapterPanel.Render -= ModOuiChapterPanelRender;
             IL.Celeste.DeathsCounter.Render -= ModDeathsCounterRender;
@@ -86,6 +99,87 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 hook.Dispose();
             }
             altSidesHelperHooks.Clear();
+        }
+
+        private static void LevelBegin(Session session, bool fromSaveData) {
+            HubMapHelper.SetColors();
+        }
+
+        private static void OnLevelUpdate(On.Celeste.Level.orig_Update orig, Level self) {
+            orig(self);
+        }
+
+        private static void OnLevelRender(On.Celeste.Level.orig_Render orig, Level self) {
+
+            orig(self);
+
+            if (mapData == null || self.FrozenOrPaused)
+                return;
+
+            int viewWidth = Engine.ViewWidth;
+            float pixelScale = viewWidth / 320f;
+            float alpha = 8 / 10f;
+
+            if (CollabModule.Instance.Settings.MapBinding.Check) {
+
+                const int padding = 12;
+
+
+                Vector2 size = new Vector2(320, 180) * pixelScale;
+
+                Rectangle bgRect = new Rectangle(0, 0, (int) size.X, (int) size.Y);
+
+                bgRect.Inflate((int)(-padding * pixelScale), (int) (-padding * pixelScale));
+
+                Draw.SpriteBatch.Begin();
+
+                Draw.Rect(bgRect, Color.Black * alpha);
+
+                mapData.Render(bgRect, (int)Math.Round(pixelScale), CollabModule.Instance.Settings.ShowOffscreenLevelsOnMap != CollabSettings.MapOptions.Never);
+
+                Draw.SpriteBatch.End();
+
+            } else if (CollabModule.Instance.Settings.MinimapEnabled) {
+
+                const int padding = 3;
+
+                int width = CollabModule.Instance.Settings.MinimapSize;
+                int leftSide = 320 - (width + padding);
+
+                Rectangle bgRect = new Rectangle((int)(leftSide * pixelScale), (int) (padding * pixelScale), (int) (width* pixelScale), (int) (width * 9f * pixelScale / 16f));
+
+                Draw.SpriteBatch.Begin();
+
+                Draw.Rect(bgRect, Color.Black * alpha);
+
+                mapData.Render(bgRect, (int) Math.Round(pixelScale), CollabModule.Instance.Settings.ShowOffscreenLevelsOnMap == CollabSettings.MapOptions.Always);
+
+                Draw.SpriteBatch.End();
+            }
+        }
+
+        private static void OnLoadLevel(Level level, Player.IntroTypes playerIntro, bool isFromLoader) {
+            mapData = null;
+
+            var area = level.Session.Area;
+            area.ID = Calc.Clamp(area.ID, 0, AreaData.Areas.Count - 1);
+
+            LevelData levelData = null;
+
+            foreach (var ld in AreaData.Areas[area.ID].Mode[(int) area.Mode].MapData.Levels) {
+                if (ld.Name == level.Session.LevelData.Name) {
+                    levelData = ld;
+                    break;
+                }
+            }
+
+
+            if (levelData != null) {
+                mapData = new HubMapHelper(levelData);
+
+                if (mapData.LevelPoints.Count == 0)
+                    mapData = null;
+            }
         }
 
         private static void OnOuiChapterPanelStart(On.Celeste.OuiChapterPanel.orig_Start orig, OuiChapterPanel self, string checkpoint) {

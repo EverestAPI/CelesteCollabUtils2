@@ -27,6 +27,8 @@ modoptions_collab_speedberrytimerposition_topleft= Top-Left
 modoptions_collab_speedberrytimerposition_topcenter= Top-Center
 modoptions_collab_hidespeedberrytimerduringgameplay= Hide Berry Timer During Gameplay
 
+modoptions_collab_mapbind= Show Large Map
+
 modoptions_collab_displayendscreenforallmaps= Display End Screen For All Maps
 modoptions_collab_displayendscreenforallmaps_description= Required for verification of speedrun.com IL submissions
 
