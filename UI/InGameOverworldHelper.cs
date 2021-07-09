@@ -221,6 +221,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             string mapName = sid.DialogKeyify();
             string mapLevelSet = AreaData.Get(sid)?.GetLevelSet().DialogKeyify();
 
+            Sprite[] heartSprites = new DynData<OuiChapterPanel>(panel).Get<HeartGemDisplay>("heart").Sprites;
             for (int side = 0; side < 3; side++) {
                 string sideName = mapName;
                 if (side == 1) {
@@ -239,7 +240,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
                 if (animId != null) {
                     Sprite heartSprite = HeartSpriteBank.Create(animId);
-                    new DynData<OuiChapterPanel>(panel).Get<HeartGemDisplay>("heart").Sprites[side] = heartSprite;
+                    heartSprite.Visible = heartSprites[side].Visible;
+
+                    heartSprites[side] = heartSprite;
                     heartSprite.Play("spin");
                     new DynData<OuiChapterPanel>(panel)["heartDirty"] = true;
                 }
