@@ -3,7 +3,7 @@ using Monocle;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
     // This is all code in common between mini hearts and fake mini hearts.
-    abstract class AbstractMiniHeart : Entity {
+    public abstract class AbstractMiniHeart : Entity {
         protected static readonly int[] animationFrames = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 };
 
         protected Sprite sprite;

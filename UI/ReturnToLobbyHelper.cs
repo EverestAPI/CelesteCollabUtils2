@@ -17,7 +17,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private static Vector2 temporarySpawnPointHolder;
         private static bool temporarySaveAllowedHolder;
 
-        public static void Load() {
+        internal static void Load() {
             On.Celeste.OuiChapterPanel.StartRoutine += modChapterPanelStartRoutine;
             Everest.Events.Level.OnCreatePauseMenuButtons += onCreatePauseMenuButtons;
             On.Celeste.LevelExit.ctor += onLevelExitConstructor;
@@ -30,7 +30,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
         }
 
-        public static void Unload() {
+        internal static void Unload() {
             On.Celeste.OuiChapterPanel.StartRoutine -= modChapterPanelStartRoutine;
             Everest.Events.Level.OnCreatePauseMenuButtons -= onCreatePauseMenuButtons;
             On.Celeste.LevelExit.ctor -= onLevelExitConstructor;

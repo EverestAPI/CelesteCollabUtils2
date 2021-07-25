@@ -14,7 +14,7 @@ using System.Linq;
 using System.Reflection;
 
 namespace Celeste.Mod.CollabUtils2 {
-    static class LobbyHelper {
+    public static class LobbyHelper {
 
         private static bool unpauseTimerOnNextAction = false;
 
@@ -36,7 +36,7 @@ namespace Celeste.Mod.CollabUtils2 {
             }
         }
 
-        internal static void LoadCollabIDFile(ModAsset asset) {
+        public static void LoadCollabIDFile(ModAsset asset) {
             string fileContents;
             using (StreamReader reader = new StreamReader(asset.Stream)) {
                 fileContents = reader.ReadToEnd();
@@ -116,7 +116,7 @@ namespace Celeste.Mod.CollabUtils2 {
             return collabNames.Any(collabName => sid.StartsWith($"{collabName}/")) && sid.EndsWith("/ZZ-HeartSide");
         }
 
-        public static void Load() {
+        internal static void Load() {
             // timer pausing when returning to lobby
             On.Celeste.Level.LoadLevel += onLoadLevel;
             On.Celeste.Player.Update += onPlayerUpdate;
@@ -142,7 +142,7 @@ namespace Celeste.Mod.CollabUtils2 {
             hookOnOuiFileSelectSlotGolden = new ILHook(typeof(OuiFileSelectSlot).GetMethod("get_Golden", BindingFlags.NonPublic | BindingFlags.Instance), modSelectSlotCollectedStrawberries);
         }
 
-        public static void Unload() {
+        internal static void Unload() {
             On.Celeste.Level.LoadLevel -= onLoadLevel;
             On.Celeste.Player.Update -= onPlayerUpdate;
 

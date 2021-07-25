@@ -10,7 +10,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
     /// </summary>
     [CustomEntity("CollabUtils2/RainbowBerry")]
     [RegisterStrawberry(tracked: false, blocksCollection: false)]
-    class RainbowBerry : Strawberry {
+    public class RainbowBerry : Strawberry {
         private string levelSet;
 
         internal HoloRainbowBerry HologramForCutscene;

@@ -2,7 +2,7 @@
 using Monocle;
 
 namespace Celeste.Mod.CollabUtils2.UI {
-    class OuiJournalLobbyMap : OuiJournalPage {
+    public class OuiJournalLobbyMap : OuiJournalPage {
         private MTexture mapImage;
 
         public OuiJournalLobbyMap(OuiJournal journal, MTexture mapImage) : base(journal) {

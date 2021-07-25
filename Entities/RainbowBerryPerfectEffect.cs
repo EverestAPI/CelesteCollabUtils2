@@ -2,7 +2,7 @@
 using Monocle;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
-    class RainbowBerryPerfectEffect : Entity {
+    public class RainbowBerryPerfectEffect : Entity {
 
         public RainbowBerryPerfectEffect(Vector2 position)
             : base(position) {

@@ -37,12 +37,12 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         private static bool transitionJustTriggered = false;
 
-        public static void Load() {
+        internal static void Load() {
             On.Celeste.Level.NextLevel += onTransitionTriggered;
             On.Celeste.Player.OnTransition += onTransitionEnd;
         }
 
-        public static void Unload() {
+        internal static void Unload() {
             On.Celeste.Level.NextLevel -= onTransitionTriggered;
             On.Celeste.Player.OnTransition -= onTransitionEnd;
         }

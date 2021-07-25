@@ -13,11 +13,11 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
     public class JournalTrigger : Trigger {
         private static bool showOnlyDiscovered;
 
-        public static void Load() {
+        internal static void Load() {
             Everest.Events.Journal.OnEnter += onJournalEnter;
         }
 
-        public static void Unload() {
+        internal static void Unload() {
             Everest.Events.Journal.OnEnter -= onJournalEnter;
         }
 

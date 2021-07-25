@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
 
-    class HoloRainbowBerry : Entity {
+    public class HoloRainbowBerry : Entity {
         private float wobble = 0f;
         private Sprite sprite;
         private Sprite desaturatedSprite;

@@ -9,7 +9,7 @@ using System.Collections.ObjectModel;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
     [CustomEntity("CollabUtils2/MiniHeart")]
-    class MiniHeart : AbstractMiniHeart {
+    public class MiniHeart : AbstractMiniHeart {
         private Sprite white;
         private bool inCollectAnimation = false;
 

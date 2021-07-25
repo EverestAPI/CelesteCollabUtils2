@@ -5,11 +5,11 @@ using System.Linq;
 namespace Celeste.Mod.CollabUtils2.Entities {
     // no [CustomEntity]: this is added in the map as an entity, but isn't loaded in as one in LoadLevel.
     class GoldenBerryPlayerRespawnPoint {
-        public static void Load() {
+        internal static void Load() {
             On.Celeste.Session.Restart += onSessionRestart;
         }
 
-        public static void Unload() {
+        internal static void Unload() {
             On.Celeste.Session.Restart -= onSessionRestart;
         }
 

@@ -12,7 +12,7 @@ using System.Reflection;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
     [CustomEntity("CollabUtils2/MiniHeartDoor")]
-    class MiniHeartDoor : HeartGemDoor {
+    public class MiniHeartDoor : HeartGemDoor {
         private static Hook hookOnHeartCount;
         private static ILHook hookOnDoorRoutine;
 
@@ -24,14 +24,14 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             { "grandmaster", "650091" }
         };
 
-        public static void Load() {
+        internal static void Load() {
             hookOnHeartCount = new Hook(typeof(HeartGemDoor).GetMethod("get_HeartGems"),
                 typeof(MiniHeartDoor).GetMethod("getCollectedHeartGems", BindingFlags.NonPublic | BindingFlags.Static));
             hookOnDoorRoutine = HookHelper.HookCoroutine("Celeste.HeartGemDoor", "Routine", modDoorRoutine);
             IL.Celeste.HeartGemDoor.DrawInterior += modDoorColor;
         }
 
-        public static void Unload() {
+        internal static void Unload() {
             hookOnHeartCount?.Dispose();
             hookOnDoorRoutine?.Dispose();
             IL.Celeste.HeartGemDoor.DrawInterior -= modDoorColor;
