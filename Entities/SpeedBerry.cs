@@ -226,7 +226,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private class SpeedBerryExplosionAnimation : Entity {
             public SpeedBerryExplosionAnimation(Vector2 position) : base(position) {
                 Add(GFX.SpriteBank.Create("CollabUtils2_speedBerryExplosion"));
-                Depth = -1000000;
+                Depth = Depths.Top;
             }
         }
     }

@@ -176,7 +176,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 }
             }
 
-            Depth = startChapterTimer == -1 ? 100 : -100;
+            Depth = startChapterTimer == -1 ? Depths.TheoCrystal : Depths.Pickups;
 
             base.Update();
         }

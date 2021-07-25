@@ -172,7 +172,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     Engine.TimeRate = 1f;
                     menu.Focused = false;
                     Audio.SetMusic(null);
-                    Audio.BusStopAll("bus:/gameplay_sfx", immediate: true);
+                    Audio.BusStopAll(Buses.GAMEPLAY, immediate: true);
 
                     // add a death, like vanilla Save & Quit
                     level.Session.InArea = true;
@@ -221,7 +221,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 Engine.TimeRate = 1f;
                 menu.Focused = false;
                 Audio.SetMusic(null);
-                Audio.BusStopAll("bus:/gameplay_sfx", immediate: true);
+                Audio.BusStopAll(Buses.GAMEPLAY, immediate: true);
 
                 level.DoScreenWipe(wipeIn: false, () => {
                     Engine.Scene = new LevelExitToLobby(LevelExit.Mode.GiveUp, level.Session);

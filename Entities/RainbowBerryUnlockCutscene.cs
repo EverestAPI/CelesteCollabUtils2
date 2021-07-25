@@ -32,7 +32,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 while (!player.InControl) {
                     yield return null;
                 }
-                player.StateMachine.State = 11;
+                player.StateMachine.State = Player.StDummy;
             }
 
             // start animation, mute sound
@@ -52,10 +52,10 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             }
 
             // freeze the level after a bit
-            Depth = -2000003;
-            strawberry.Depth = -2000002;
-            holoBerry.Depth = -2000002;
-            holoBerry.Particles.Depth = -2000002;
+            Depth = Depths.FormationSequences - 3;
+            strawberry.Depth = Depths.FormationSequences - 2;
+            holoBerry.Depth = -Depths.FormationSequences - 2;
+            holoBerry.Particles.Depth = Depths.FormationSequences - 2;
             strawberry.AddTag(Tags.FrozenUpdate);
             yield return 0.35f;
             Tag = Tags.FrozenUpdate;
@@ -66,13 +66,13 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             level.FormationBackdrop.Alpha = 0.5f;
             level.Displacement.Clear();
             level.Displacement.Enabled = false;
-            Audio.BusPaused("bus:/gameplay_sfx/ambience", true);
-            Audio.BusPaused("bus:/gameplay_sfx/char", true);
-            Audio.BusPaused("bus:/gameplay_sfx/game/general/yes_pause", true);
-            Audio.BusPaused("bus:/gameplay_sfx/game/chapters", true);
+            Audio.BusPaused(Buses.AMBIENCE, true);
+            Audio.BusPaused(Buses.CHAR, true);
+            Audio.BusPaused(Buses.YES_PAUSE, true);
+            Audio.BusPaused(Buses.CHAPTERS, true);
             yield return 0.1f;
 
-            system = new ParticleSystem(-2000002, 50);
+            system = new ParticleSystem(Depths.FormationSequences - 2, 50);
             system.Tag = Tags.FrozenUpdate;
             level.Add(system);
 
@@ -122,7 +122,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             }
             Player player = Scene.Tracker.GetEntity<Player>();
             if (player != null) {
-                player.StateMachine.State = 0;
+                player.StateMachine.State = Player.StNormal;
             }
             level.OnEndOfFrame += delegate {
                 if (WasSkipped) {
@@ -135,7 +135,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     strawberry.CollectedSeeds();
                     level.Camera.Position = player.CameraTarget;
                 }
-                strawberry.Depth = -100;
+                strawberry.Depth = Depths.Pickups;
                 strawberry.RemoveTag(Tags.FrozenUpdate);
                 level.Frozen = false;
                 level.FormationBackdrop.Display = false;
@@ -145,10 +145,10 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         }
 
         private void endSfx() {
-            Audio.BusPaused("bus:/gameplay_sfx/ambience", false);
-            Audio.BusPaused("bus:/gameplay_sfx/char", false);
-            Audio.BusPaused("bus:/gameplay_sfx/game/general/yes_pause", false);
-            Audio.BusPaused("bus:/gameplay_sfx/game/chapters", false);
+            Audio.BusPaused(Buses.AMBIENCE, false);
+            Audio.BusPaused(Buses.CHAR, false);
+            Audio.BusPaused(Buses.YES_PAUSE, false);
+            Audio.BusPaused(Buses.CHAPTERS, false);
             Audio.ReleaseSnapshot(snapshot);
         }
 

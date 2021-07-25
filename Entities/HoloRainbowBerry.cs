@@ -69,7 +69,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 scene.Add(counterText);
             }
 
-            scene.Add(Particles = new ParticleSystem(-50000, 800));
+            scene.Add(Particles = new ParticleSystem(Depths.FGParticles, 800));
             Particles.Tag = Tag;
         }
 

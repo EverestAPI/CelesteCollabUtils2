@@ -166,7 +166,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             SpeedBerry speedBerry = null;
 
             // check if the player is actually going to die first.
-            if (!self.Dead && (evenIfInvincible || !SaveData.Instance.Assists.Invincible) && self.StateMachine.State != 18) {
+            if (!self.Dead && (evenIfInvincible || !SaveData.Instance.Assists.Invincible) && self.StateMachine.State != Player.StReflectionFall) {
                 hasSilver = self.Leader.Followers.Any(follower => follower.Entity is SilverBerry);
                 Follower speedBerryFollower = self.Leader.Followers.Find(follower => follower.Entity is SpeedBerry);
                 if (speedBerryFollower != null) {

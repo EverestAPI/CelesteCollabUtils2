@@ -48,7 +48,7 @@ namespace Celeste.Mod.CollabUtils2 {
 
             Everest.Content.OnUpdate += onModAssetUpdate;
 
-            hookOrigSessionCtor = new Hook(typeof(Session).GetMethod("orig_ctor"), typeof(CollabModule).GetMethod("onNewSession", BindingFlags.NonPublic | BindingFlags.Static));
+            hookOrigSessionCtor = new Hook(typeof(Session).GetMethod("orig_ctor"), typeof(CollabModule).GetMethod(nameof(onNewSession), BindingFlags.NonPublic | BindingFlags.Static));
         }
 
         public override void Unload() {

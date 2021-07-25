@@ -26,7 +26,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         internal static void Load() {
             hookOnHeartCount = new Hook(typeof(HeartGemDoor).GetMethod("get_HeartGems"),
-                typeof(MiniHeartDoor).GetMethod("getCollectedHeartGems", BindingFlags.NonPublic | BindingFlags.Static));
+                typeof(MiniHeartDoor).GetMethod(nameof(getCollectedHeartGems), BindingFlags.NonPublic | BindingFlags.Static));
             hookOnDoorRoutine = HookHelper.HookCoroutine("Celeste.HeartGemDoor", "Routine", modDoorRoutine);
             IL.Celeste.HeartGemDoor.DrawInterior += modDoorColor;
         }

@@ -55,11 +55,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
                 altSidesHelperHooks.Add(new Hook(
                     altSidesHelperModule.GetMethod("ResetCrystalHeart", BindingFlags.NonPublic | BindingFlags.Static),
-                    typeof(InGameOverworldHelper).GetMethod("resetCrystalHeartAfterAltSidesHelper", BindingFlags.NonPublic | BindingFlags.Static)));
+                    typeof(InGameOverworldHelper).GetMethod(nameof(resetCrystalHeartAfterAltSidesHelper), BindingFlags.NonPublic | BindingFlags.Static)));
 
                 altSidesHelperHooks.Add(new Hook(
                     altSidesHelperModule.GetMethod("CustomizeCrystalHeart", BindingFlags.NonPublic | BindingFlags.Static),
-                    typeof(InGameOverworldHelper).GetMethod("customizeCrystalHeartAfterAltSidesHelper", BindingFlags.NonPublic | BindingFlags.Static)));
+                    typeof(InGameOverworldHelper).GetMethod(nameof(customizeCrystalHeartAfterAltSidesHelper), BindingFlags.NonPublic | BindingFlags.Static)));
             }
         }
 

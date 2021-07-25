@@ -52,12 +52,12 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             white.CenterOrigin();
 
             // slow down time, visual effects
-            Depth = -2000000;
+            Depth = Depths.FormationSequences;
             yield return null;
             Celeste.Freeze(0.2f);
             yield return null;
             Engine.TimeRate = 0.5f;
-            player.Depth = -2000000;
+            player.Depth = Depths.FormationSequences;
             for (int i = 0; i < 10; i++) {
                 Scene.Add(new AbsorbOrb(Position));
             }

@@ -8,7 +8,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             : base(position) {
 
             Sprite sprite;
-            Depth = -1000000;
+            Depth = Depths.Top;
             Add(sprite = GFX.SpriteBank.Create("CollabUtils2_perfectAnimation"));
             sprite.OnLastFrame = delegate {
                 RemoveSelf();
