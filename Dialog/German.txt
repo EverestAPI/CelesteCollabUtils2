@@ -30,7 +30,7 @@ modoptions_collab_hidespeedberrytimerduringgameplay= Timer während des Spiels v
 modoptions_collab_displayendscreenforallmaps= End-Bildschirm für alle Maps anzeigen
 modoptions_collab_displayendscreenforallmaps_description= Für die Verifikation von IL-Speedruns auf speedrun.com benötigt
 
-modoptions_collab_besttimetodisplayinjournal= Bestzeit im Journal
+modoptions_collab_besttimetodisplayinjournal= Bestzeit im Tagebuch
 modoptions_collab_besttimetodisplayinjournal_speedberry= Speedberry
 modoptions_collab_besttimetodisplayinjournal_chaptertimer= Kapitelzeit
 
