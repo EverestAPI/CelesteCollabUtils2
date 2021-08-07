@@ -9,7 +9,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
     /// </summary>
     [CustomEntity("CollabUtils2/SilverBerry")]
     [RegisterStrawberry(tracked: false, blocksCollection: true)]
-    class SilverBerry : Strawberry {
+    public class SilverBerry : Strawberry {
         private static ParticleType P_SilverGlow;
         private static ParticleType P_OrigGoldGlow;
         private static ParticleType P_SilverGhostGlow;

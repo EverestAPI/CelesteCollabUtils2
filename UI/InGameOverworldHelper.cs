@@ -29,7 +29,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private static List<Hook> altSidesHelperHooks = new List<Hook>();
 
-        public static void Load() {
+        internal static void Load() {
             Everest.Events.Level.OnPause += OnPause;
             On.Celeste.Audio.SetMusic += OnSetMusic;
             On.Celeste.Audio.SetAmbience += OnSetAmbience;
@@ -55,15 +55,15 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
                 altSidesHelperHooks.Add(new Hook(
                     altSidesHelperModule.GetMethod("ResetCrystalHeart", BindingFlags.NonPublic | BindingFlags.Static),
-                    typeof(InGameOverworldHelper).GetMethod("resetCrystalHeartAfterAltSidesHelper", BindingFlags.NonPublic | BindingFlags.Static)));
+                    typeof(InGameOverworldHelper).GetMethod(nameof(resetCrystalHeartAfterAltSidesHelper), BindingFlags.NonPublic | BindingFlags.Static)));
 
                 altSidesHelperHooks.Add(new Hook(
                     altSidesHelperModule.GetMethod("CustomizeCrystalHeart", BindingFlags.NonPublic | BindingFlags.Static),
-                    typeof(InGameOverworldHelper).GetMethod("customizeCrystalHeartAfterAltSidesHelper", BindingFlags.NonPublic | BindingFlags.Static)));
+                    typeof(InGameOverworldHelper).GetMethod(nameof(customizeCrystalHeartAfterAltSidesHelper), BindingFlags.NonPublic | BindingFlags.Static)));
             }
         }
 
-        public static void Unload() {
+        internal static void Unload() {
             Everest.Events.Level.OnPause -= OnPause;
             On.Celeste.Audio.SetMusic -= OnSetMusic;
             On.Celeste.Audio.SetAmbience -= OnSetAmbience;

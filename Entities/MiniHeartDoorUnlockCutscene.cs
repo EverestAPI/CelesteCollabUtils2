@@ -21,11 +21,11 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         private IEnumerator Cutscene(Level level) {
             // wait for the respawn animation to be over.
-            while (player.StateMachine.State != 0) {
+            while (player.StateMachine.State != Player.StNormal) {
                 yield return null;
             }
 
-            player.StateMachine.State = 11;
+            player.StateMachine.State = Player.StDummy;
 
             yield return 0.5f;
 
@@ -50,7 +50,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         }
 
         public override void OnEnd(Level level) {
-            player.StateMachine.State = 0;
+            player.StateMachine.State = Player.StNormal;
             player.ForceCameraUpdate = false;
 
             if (WasSkipped) {

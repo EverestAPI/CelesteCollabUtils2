@@ -37,12 +37,12 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         private static bool transitionJustTriggered = false;
 
-        public static void Load() {
+        internal static void Load() {
             On.Celeste.Level.NextLevel += onTransitionTriggered;
             On.Celeste.Player.OnTransition += onTransitionEnd;
         }
 
-        public static void Unload() {
+        internal static void Unload() {
             On.Celeste.Level.NextLevel -= onTransitionTriggered;
             On.Celeste.Player.OnTransition -= onTransitionEnd;
         }
@@ -226,7 +226,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private class SpeedBerryExplosionAnimation : Entity {
             public SpeedBerryExplosionAnimation(Vector2 position) : base(position) {
                 Add(GFX.SpriteBank.Create("CollabUtils2_speedBerryExplosion"));
-                Depth = -1000000;
+                Depth = Depths.Top;
             }
         }
     }

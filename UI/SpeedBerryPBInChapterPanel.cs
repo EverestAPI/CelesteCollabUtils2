@@ -10,14 +10,14 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private static SpeedBerryPBDisplay speedBerryPBDisplay;
         private static Vector2 speedBerryPBOffset;
 
-        public static void Load() {
+        internal static void Load() {
             On.Celeste.OuiChapterPanel.ctor += modOuiChapterPanelConstructor;
             IL.Celeste.OuiChapterPanel.Render += modOuiChapterPanelRender;
             On.Celeste.OuiChapterPanel.UpdateStats += modOuiChapterPanelUpdateStats;
             IL.Celeste.OuiChapterPanel.SetStatsPosition += modOuiChapterPanelSetStatsPosition;
         }
 
-        public static void Unload() {
+        internal static void Unload() {
             On.Celeste.OuiChapterPanel.ctor -= modOuiChapterPanelConstructor;
             IL.Celeste.OuiChapterPanel.Render -= modOuiChapterPanelRender;
             On.Celeste.OuiChapterPanel.UpdateStats -= modOuiChapterPanelUpdateStats;

@@ -11,7 +11,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
     /// <summary>
     /// A standalone entity displaying the area complete stats directly in a level.
     /// </summary>
-    class AreaCompleteInfoInLevel : Entity {
+    public class AreaCompleteInfoInLevel : Entity {
         private static FieldInfo areaCompleteVersionFull = typeof(AreaComplete).GetField("versionFull", BindingFlags.NonPublic | BindingFlags.Static);
 
         private static ILHook versionNumberAndVariantsHook;
@@ -25,13 +25,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private string chapterSpeedrunText = Dialog.Get("OPTIONS_SPEEDRUN_CHAPTER") + ":";
         private string version = Celeste.Instance.Version.ToString();
 
-        public static void Load() {
+        internal static void Load() {
             On.Celeste.AreaComplete.InitAreaCompleteInfoForEverest += onAreaCompleteInit;
             On.Celeste.AreaComplete.DisposeAreaCompleteInfoForEverest += onAreaCompleteDispose;
             versionNumberAndVariantsHook = new ILHook(typeof(AreaComplete).GetMethod("orig_VersionNumberAndVariants"), shiftVersionNumberAndVariantsUp);
         }
 
-        public static void Unload() {
+        internal static void Unload() {
             On.Celeste.AreaComplete.InitAreaCompleteInfoForEverest -= onAreaCompleteInit;
             On.Celeste.AreaComplete.DisposeAreaCompleteInfoForEverest -= onAreaCompleteDispose;
             versionNumberAndVariantsHook?.Dispose();

@@ -7,7 +7,7 @@ using MonoMod.Utils;
 using Mono.Cecil.Cil;
 
 namespace Celeste.Mod.CollabUtils2 {
-    static class HookHelper {
+    public static class HookHelper {
         /// <summary>
         /// Utility method to patch "coroutine" kinds of methods with IL.
         /// Those methods' code reside in a compiler-generated method, and IL.Celeste.* do not allow manipulating them directly.

@@ -22,7 +22,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private static ILHook collectRoutineHook;
         private static ILHook playerDeathRoutineHook;
 
-        public static void Load() {
+        internal static void Load() {
             IL.Celeste.Strawberry.Added += modStrawberrySprite;
             collectRoutineHook = HookHelper.HookCoroutine("Celeste.Strawberry", "CollectRoutine", modStrawberrySound);
             On.Celeste.Player.Die += onPlayerDie;
@@ -34,7 +34,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             On.Celeste.Level.End += onLevelEnd;
         }
 
-        public static void Unload() {
+        internal static void Unload() {
             IL.Celeste.Strawberry.Added -= modStrawberrySprite;
             collectRoutineHook?.Dispose();
             On.Celeste.Player.Die -= onPlayerDie;
@@ -166,7 +166,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             SpeedBerry speedBerry = null;
 
             // check if the player is actually going to die first.
-            if (!self.Dead && (evenIfInvincible || !SaveData.Instance.Assists.Invincible) && self.StateMachine.State != 18) {
+            if (!self.Dead && (evenIfInvincible || !SaveData.Instance.Assists.Invincible) && self.StateMachine.State != Player.StReflectionFall) {
                 hasSilver = self.Leader.Followers.Any(follower => follower.Entity is SilverBerry);
                 Follower speedBerryFollower = self.Leader.Followers.Find(follower => follower.Entity is SpeedBerry);
                 if (speedBerryFollower != null) {

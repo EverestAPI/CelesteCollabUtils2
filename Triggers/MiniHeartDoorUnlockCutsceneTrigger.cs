@@ -13,11 +13,11 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
     [Tracked]
     class MiniHeartDoorUnlockCutsceneTrigger : Trigger {
 
-        public static void Load() {
+        internal static void Load() {
             On.Celeste.Level.AssistMode += modAssistModeOptions;
         }
 
-        public static void Unload() {
+        internal static void Unload() {
             On.Celeste.Level.AssistMode -= modAssistModeOptions;
         }
 

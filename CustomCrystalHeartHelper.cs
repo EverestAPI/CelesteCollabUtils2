@@ -7,12 +7,12 @@ using System.Text.RegularExpressions;
 namespace Celeste.Mod.CollabUtils2 {
     class CustomCrystalHeartHelper {
 
-        public static void Load() {
+        internal static void Load() {
             On.Celeste.HeartGem.Awake += customizeParticles;
             On.Celeste.Poem.ctor += customizePoemDisplay;
         }
 
-        public static void Unload() {
+        internal static void Unload() {
             On.Celeste.HeartGem.Awake -= customizeParticles;
             On.Celeste.Poem.ctor -= customizePoemDisplay;
         }

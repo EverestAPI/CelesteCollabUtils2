@@ -7,11 +7,11 @@ using System;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
     [CustomEntity("CollabUtils2/SilverBlock")]
-    class SilverBlock : GoldenBlock {
-        public static void Load() {
+    public class SilverBlock : GoldenBlock {
+        internal static void Load() {
             IL.Celeste.GoldenBlock.ctor_Vector2_float_float += modGoldenBlockConstructor;
         }
-        public static void Unload() {
+        internal static void Unload() {
             IL.Celeste.GoldenBlock.ctor_Vector2_float_float -= modGoldenBlockConstructor;
         }
 

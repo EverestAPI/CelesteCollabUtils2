@@ -2,13 +2,13 @@
 using Monocle;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
-    class RainbowBerryPerfectEffect : Entity {
+    public class RainbowBerryPerfectEffect : Entity {
 
         public RainbowBerryPerfectEffect(Vector2 position)
             : base(position) {
 
             Sprite sprite;
-            Depth = -1000000;
+            Depth = Depths.Top;
             Add(sprite = GFX.SpriteBank.Create("CollabUtils2_perfectAnimation"));
             sprite.OnLastFrame = delegate {
                 RemoveSelf();

@@ -8,11 +8,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
     [Tracked]
     public class SpeedBerryTimerDisplay : Entity {
 
-        public static void Load() {
+        internal static void Load() {
             On.Celeste.TotalStrawberriesDisplay.Update += onTotalStrawberriesDisplayUpdate;
         }
 
-        public static void Unload() {
+        internal static void Unload() {
             On.Celeste.TotalStrawberriesDisplay.Update -= onTotalStrawberriesDisplayUpdate;
         }
 
@@ -176,7 +176,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 }
             }
 
-            Depth = startChapterTimer == -1 ? 100 : -100;
+            Depth = startChapterTimer == -1 ? Depths.TheoCrystal : Depths.Pickups;
 
             base.Update();
         }

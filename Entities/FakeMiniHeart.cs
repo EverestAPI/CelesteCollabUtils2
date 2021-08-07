@@ -4,7 +4,7 @@ using Monocle;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
     [CustomEntity("CollabUtils2/FakeMiniHeart")]
-    class FakeMiniHeart : AbstractMiniHeart {
+    public class FakeMiniHeart : AbstractMiniHeart {
         private float respawnTimer;
 
         public FakeMiniHeart(EntityData data, Vector2 position, EntityID gid)
