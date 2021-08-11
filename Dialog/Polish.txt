@@ -1,0 +1,54 @@
+modname_collabutils2= Collab Utils 2
+modoptions_collab_title= Collab Utils 2
+
+collabutils2_returntolobby= Powrót do Lobby
+collabutils2_restartspeedberry= Restart Pośpiesznej Truskawki
+
+collabutils2_returntolobby_confirm_title= WRÓCIĆ DO LOBBY?
+collabutils2_returntolobby_confirm_note1= Jeśli wybierzesz "Zapisz", możesz potem rozpocząć w tym samym miejscu
+collabutils2_returntolobby_confirm_note2= przez powrót do mapy w lobby i wybranie "Kontynuuj".
+collabutils2_returntolobby_confirm_save= Zapisz
+collabutils2_returntolobby_confirm_donotsave= Nie zapisuj
+collabutils2_returntolobby_confirm_cancel= Anuluj
+
+collabutils2_speedberry_gold= Złoto:
+collabutils2_speedberry_silver= Srebro:
+collabutils2_speedberry_bronze= Brąz:
+collabutils2_speedberry_timeranout= Koniec czasu!
+
+collabutils2_chapterpanel_continue= Kontynuuj
+collabutils2_chapterpanel_start= Zacznij od nowa
+
+collabutils2_speedberry_optionmessage=
+	Możesz zmienić pozycję zegara pośpiesznej truskawki w {# 9B3FB5}Opcjach Modów{#}.
+
+modoptions_collab_speedberrytimerposition= Pozycja Zegara Pośpiesznej Truskawki
+modoptions_collab_speedberrytimerposition_topleft= Lewy Górny Róg
+modoptions_collab_speedberrytimerposition_topcenter= Szczyt Ekranu
+modoptions_collab_hidespeedberrytimerduringgameplay= Ukryj Zegar Pospiesznej Truskawki Podczas Gry
+
+modoptions_collab_displayendscreenforallmaps= Pokaż Ekran Końcowy Na Wszystkich Mapach
+modoptions_collab_displayendscreenforallmaps_description= Wymagane do weryfikacji dla zgłoszonych speedrunów indywidualnych poziomów na speedrun.com 
+
+modoptions_collab_besttimetodisplayinjournal= Najlepszy Czas Pokazywany w Dzienniku
+modoptions_collab_besttimetodisplayinjournal_speedberry= Pośpieszna Truskawka
+modoptions_collab_besttimetodisplayinjournal_chaptertimer= Czas Poziomu
+
+modoptions_collab_savebydefaultwhenreturningtolobby= Domyślnie Zapisz i Powróć do Lobby
+
+collabutils2_assist_skip= Otwórz Kryształową Bramę
+collabutils2_assist_skip_confirm= To otworzy Kryształową Bramę na stałe.{n}Na pewno?
+collabutils2_assist_skip_confirm_yes= Tak
+collabutils2_assist_skip_confirm_no= Nie
+
+# SHIP COLLAB-SPECIFIC DIALOG WITH THE COLLAB MOD, NOT THE COLLAB UTILS.
+
+area_1_collabcredits= 
+Map by Maddy Thorson
+Code by Noel Berry
+Art by Pedro Medeiros
+Music by Lena Raine
+Something Something
+Totally a collab map
+
+area_1_author= by EXOK Games
