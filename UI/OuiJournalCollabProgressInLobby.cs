@@ -9,6 +9,26 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private Table table;
 
+        // same as OuiJournalPage.IconCell but the icon comes from the Gui atlas instead of Journal
+        private class IconCellFromGui : Cell {
+            private string icon;
+
+            private float width;
+
+            public IconCellFromGui(string icon, float width = 0f) {
+                this.icon = icon;
+                this.width = width;
+            }
+
+            public override float Width() {
+                return Math.Max(GFX.Gui[icon].Width, width);
+            }
+
+            public override void Render(Vector2 center, float columnWidth) {
+                GFX.Gui[icon].DrawCentered(center, Color.White, scale: columnWidth / GFX.Gui[icon].Width);
+            }
+        }
+
         private static Color getRankColor(CollabMapDataProcessor.SpeedBerryInfo speedBerryInfo, long pb) {
             float pbSeconds = (float) TimeSpan.FromTicks(pb).TotalSeconds;
             if (pbSeconds < speedBerryInfo.Gold) {
@@ -32,8 +52,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
         public static List<OuiJournalCollabProgressInLobby> GeneratePages(OuiJournal journal, string levelSet, bool showOnlyDiscovered) {
             List<OuiJournalCollabProgressInLobby> pages = new List<OuiJournalCollabProgressInLobby>();
             int rowCount = 0;
-            OuiJournalCollabProgressInLobby currentPage = new OuiJournalCollabProgressInLobby(journal, levelSet);
-            pages.Add(currentPage);
 
             int totalStrawberries = 0;
             int totalDeaths = 0;
@@ -51,6 +69,16 @@ namespace Celeste.Mod.CollabUtils2.UI {
             int mapsPerPage = 12;
             int mapAmount = SaveData.Instance.Areas_Safe.Where(item => !AreaData.Get(item.ID_Safe).Interlude_Safe
                 && (!showOnlyDiscovered || item.TotalTimePlayed > 0)).Count();
+
+            // we want to display the map icons if they're not actually all the same. ^^'
+            bool displayIcons = AreaData.Areas
+                .Where(area => !area.Interlude_Safe)
+                .Select(area => area.Icon)
+                .Distinct()
+                .Count() > 1;
+
+            OuiJournalCollabProgressInLobby currentPage = new OuiJournalCollabProgressInLobby(journal, levelSet, displayIcons);
+            pages.Add(currentPage);
 
             if (mapAmount >= mapsPerPage) {
                 // we want the last page to contain at least 2 maps.
@@ -92,8 +120,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     }
 
                     Row row = currentPage.table.AddRow()
-                        .Add(new TextCell(Dialog.Clean(areaData.Name), new Vector2(1f, 0.5f), 0.6f, currentPage.TextColor))
-                        .Add(null)
+                        .Add(new TextCell(Dialog.Clean(areaData.Name), new Vector2(1f, 0.5f), 0.6f, currentPage.TextColor));
+
+                    if (displayIcons) {
+                        row.Add(null).Add(new IconCellFromGui(GFX.Gui.Has(areaData.Icon) ? areaData.Icon : "areas/null", 50f));
+                    }
+
+                    row.Add(null)
                         .Add(new IconCell(item.Modes[0].HeartGem ? heartTexture : "dot"))
                         .Add(new TextCell(strawberryText, currentPage.TextJustify, 0.5f, currentPage.TextColor));
 
@@ -161,7 +194,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     if (rowCount >= mapsPerPage) {
                         // split the next zones into another page.
                         rowCount = 0;
-                        currentPage = new OuiJournalCollabProgressInLobby(journal, levelSet);
+                        currentPage = new OuiJournalCollabProgressInLobby(journal, levelSet, displayIcons);
                         pages.Add(currentPage);
                     }
                 }
@@ -170,8 +203,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (currentPage.table.Rows > 1) {
                 currentPage.table.AddRow();
                 Row totalsRow = currentPage.table.AddRow()
-                    .Add(new TextCell(Dialog.Clean("journal_totals"), new Vector2(1f, 0.5f), 0.7f, currentPage.TextColor)).Add(null)
-                    .Add(null)
+                    .Add(new TextCell(Dialog.Clean("journal_totals"), new Vector2(1f, 0.5f), 0.7f, currentPage.TextColor)).Add(null);
+
+                if (displayIcons) {
+                    totalsRow.Add(null).Add(null);
+                }
+
+                totalsRow.Add(null)
                     .Add(new TextCell(totalStrawberries.ToString(), currentPage.TextJustify, 0.6f, currentPage.TextColor))
                     .Add(new TextCell(Dialog.Deaths(totalDeaths), currentPage.TextJustify, 0.6f, currentPage.TextColor))
                     .Add(new TextCell(allLevelsDone ? Dialog.Deaths(sumOfBestDeaths) : "-", currentPage.TextJustify, 0.6f, currentPage.TextColor))
@@ -188,7 +226,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             return pages;
         }
 
-        public OuiJournalCollabProgressInLobby(OuiJournal journal, string levelSet)
+        public OuiJournalCollabProgressInLobby(OuiJournal journal, string levelSet, bool displayIcons)
             : base(journal) {
 
             string skullTexture = MTN.Journal.Has("CollabUtils2Skulls/" + levelSet) ? "CollabUtils2Skulls/" + levelSet : "skullblue";
@@ -196,8 +234,15 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             PageTexture = "page";
             table = new Table()
-                .AddColumn(new TextCell(Dialog.Clean("journal_progress"), new Vector2(0f, 0.5f), 1f, Color.Black * 0.7f, 420f))
-                .AddColumn(new EmptyCell(20f))
+                .AddColumn(new TextCell(Dialog.Clean("journal_progress"), new Vector2(0f, 0.5f), 1f, Color.Black * 0.7f, displayIcons ? 360f : 420f));
+
+            if (displayIcons) {
+                table
+                    .AddColumn(new EmptyCell(0f))
+                    .AddColumn(new EmptyCell(64f));
+            }
+
+            table.AddColumn(new EmptyCell(0f))
                 .AddColumn(new EmptyCell(64f))
                 .AddColumn(new IconCell("strawberry", 150f))
                 .AddColumn(new IconCell(skullTexture, 100f))
