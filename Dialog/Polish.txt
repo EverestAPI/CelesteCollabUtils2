@@ -22,15 +22,15 @@ collabutils2_chapterpanel_start= Zacznij od nowa
 collabutils2_speedberry_optionmessage=
 	Możesz zmienić pozycję zegara pośpiesznej truskawki w {# 9B3FB5}Opcjach Modów{#}.
 
-modoptions_collab_speedberrytimerposition= Pozycja Zegara Pośpiesznej Truskawki
+modoptions_collab_speedberrytimerposition=Zegar Pośpiesznej Truskawki
 modoptions_collab_speedberrytimerposition_topleft= Lewy Górny Róg
 modoptions_collab_speedberrytimerposition_topcenter= Szczyt Ekranu
-modoptions_collab_hidespeedberrytimerduringgameplay= Ukryj Zegar Pospiesznej Truskawki Podczas Gry
+modoptions_collab_hidespeedberrytimerduringgameplay= Ukryj Czas Pospiesznej Truskawki Podczas Gry
 
-modoptions_collab_displayendscreenforallmaps= Pokaż Ekran Końcowy Na Wszystkich Mapach
-modoptions_collab_displayendscreenforallmaps_description= Wymagane do weryfikacji dla zgłoszonych speedrunów indywidualnych poziomów na speedrun.com 
+modoptions_collab_displayendscreenforallmaps= Zawsze wyświetlaj Ekran Końcowy
+modoptions_collab_displayendscreenforallmaps_description= Wymagane przy zgłaszaniu speedrunów IL na speedrun.com 
 
-modoptions_collab_besttimetodisplayinjournal= Najlepszy Czas Pokazywany w Dzienniku
+modoptions_collab_besttimetodisplayinjournal= Najlepszy Czas w Dzienniku
 modoptions_collab_besttimetodisplayinjournal_speedberry= Pośpieszna Truskawka
 modoptions_collab_besttimetodisplayinjournal_chaptertimer= Czas Poziomu
 
@@ -52,3 +52,4 @@ Something Something
 Totally a collab map
 
 area_1_author= by EXOK Games
+
