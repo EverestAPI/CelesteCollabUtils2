@@ -4,8 +4,6 @@ using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
 using MonoMod.Utils;
-using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace Celeste.Mod.CollabUtils2.Triggers {
@@ -15,15 +13,25 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
 
         internal static void Load() {
             On.Celeste.Level.AssistMode += modAssistModeOptions;
+            On.Celeste.Level.VariantMode += modVariantModeOptions;
         }
 
         internal static void Unload() {
             On.Celeste.Level.AssistMode -= modAssistModeOptions;
+            On.Celeste.Level.VariantMode -= modVariantModeOptions;
         }
 
         private static void modAssistModeOptions(On.Celeste.Level.orig_AssistMode orig, Level self, int returnIndex, bool minimal) {
             orig(self, returnIndex, minimal);
+            addOpenHeartGateToMenu(self);
+        }
 
+        private static void modVariantModeOptions(On.Celeste.Level.orig_VariantMode orig, Level self, int returnIndex, bool minimal) {
+            orig(self, returnIndex, minimal);
+            addOpenHeartGateToMenu(self);
+        }
+
+        private static void addOpenHeartGateToMenu(Level self) {
             // check if the player is inside an unlock cutscene trigger.
             Player player = self.Tracker.GetEntity<Player>();
             MiniHeartDoorUnlockCutsceneTrigger trigger = player?.CollideFirst<MiniHeartDoorUnlockCutsceneTrigger>();
@@ -58,7 +66,6 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
                 }
             }
         }
-
 
         private string doorID;
 
