@@ -9,6 +9,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         protected Sprite sprite;
         private string spriteName;
         private bool refillDash;
+        private bool requireDashToBreak;
 
         protected Wiggler scaleWiggler;
 
@@ -28,6 +29,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
             spriteName = data.Attr("sprite");
             refillDash = data.Bool("refillDash", defaultValue: true);
+            requireDashToBreak = data.Bool("requireDashToBreak", defaultValue: true);
 
             Collider = new Hitbox(12f, 12f, -6f, -6f);
 
@@ -122,7 +124,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         private void onPlayer(Player player) {
             Level level = Scene as Level;
-            if (player.DashAttacking) {
+            if (player.DashAttacking || !requireDashToBreak) {
                 // player broke the heart
                 heartBroken(player, null, level);
             } else {
