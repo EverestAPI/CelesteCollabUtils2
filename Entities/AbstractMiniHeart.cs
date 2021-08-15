@@ -10,6 +10,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private string spriteName;
         private bool refillDash;
         private bool requireDashToBreak;
+        private bool noGhostSprite;
 
         protected Wiggler scaleWiggler;
 
@@ -30,6 +31,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             spriteName = data.Attr("sprite");
             refillDash = data.Bool("refillDash", defaultValue: true);
             requireDashToBreak = data.Bool("requireDashToBreak", defaultValue: true);
+            noGhostSprite = data.Bool("noGhostSprite", defaultValue: false);
 
             Collider = new Hitbox(12f, 12f, -6f, -6f);
 
@@ -51,7 +53,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
             string spritePath = "CollabUtils2/miniheart/" + spriteName + "/";
             bool alreadyCollectedInSave = SaveData.Instance.Areas_Safe[area.ID].Modes[(int) area.Mode].HeartGem;
-            if (alreadyCollectedInSave) {
+            if (alreadyCollectedInSave && !noGhostSprite) {
                 // use the ghost sprite specific to the heart: instead of reading 00.png, read ghost00.png
                 spritePath += "ghost";
                 if (!GFX.Game.Has(spritePath + "00")) {
@@ -101,7 +103,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     };
                     break;
             }
-            if (alreadyCollectedInSave) {
+            if (alreadyCollectedInSave && !noGhostSprite) {
                 heartColor = Color.White * 0.8f;
                 shineParticle = new ParticleType(HeartGem.P_BlueShine) {
                     Color = Calc.HexToColor("7589FF")

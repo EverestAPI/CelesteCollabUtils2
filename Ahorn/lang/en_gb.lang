@@ -11,11 +11,13 @@ placements.triggers.CollabUtils2/JournalTrigger.tooltips.showOnlyDiscovered=If c
 placements.entities.CollabUtils2/MiniHeart.tooltips.sprite=The sprite the mini heart should use.
 placements.entities.CollabUtils2/MiniHeart.tooltips.refillDash=Whether bouncing on the heart should refill dashes.
 placements.entities.CollabUtils2/MiniHeart.tooltips.requireDashToBreak=Whether the player needs to dash on the heart to collect it.\nIf this is unchecked, the player will be able to collect the heart by just touching it.
+placements.entities.CollabUtils2/MiniHeart.tooltips.noGhostSprite=If checked, the heart will never use the "ghost" sprite even when already collected.
 
 # Fake Mini Heart
 placements.entities.CollabUtils2/FakeMiniHeart.tooltips.sprite=The sprite the fake mini heart should use.
 placements.entities.CollabUtils2/FakeMiniHeart.tooltips.refillDash=Whether bouncing on the heart should refill dashes.
 placements.entities.CollabUtils2/FakeMiniHeart.tooltips.requireDashToBreak=Whether the player needs to dash on the heart to make it disappear.\nIf this is unchecked, the heart will disappear when the player touches it.
+placements.entities.CollabUtils2/FakeMiniHeart.tooltips.noGhostSprite=If checked, the heart will never use the "ghost" sprite even when already collected.
 
 # Rainbow Berry
 placements.entities.CollabUtils2/RainbowBerry.tooltips.levelSet=The rainbow berry will only spawn if all silver berries in this level set have been collected.
