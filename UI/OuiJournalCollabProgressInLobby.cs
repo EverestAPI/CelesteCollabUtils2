@@ -94,6 +94,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 .Where(map => !AreaData.Get(map).Interlude_Safe)
                 .ToList();
 
+            // sort maps by icon name if all of their icons start with [number]-...
+            // because then we know the ordering is intentional (and not accidental like easy > hard > medium)
             Regex startsWithNumber = new Regex(".*/[0-9]+-.*");
             if (sortedMaps.Select(map => AreaData.Get(map).Icon ?? "").All(icon => startsWithNumber.IsMatch(icon))) {
                 sortedMaps.Sort((a, b) => {
@@ -103,11 +105,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     bool aHeartSide = LobbyHelper.IsHeartSide(a.GetSID());
                     bool bHeartSide = LobbyHelper.IsHeartSide(b.GetSID());
 
+                    // heart sides should appear last.
                     if (aHeartSide && !bHeartSide)
                         return 1;
                     if (!aHeartSide && bHeartSide)
                         return -1;
 
+                    // sort by icon name, then by map bin name.
                     return adata.Icon == bdata.Icon ? adata.Name.CompareTo(bdata.Name) : adata.Icon.CompareTo(bdata.Icon);
                 });
             }

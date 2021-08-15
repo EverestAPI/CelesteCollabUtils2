@@ -23,6 +23,7 @@ namespace Celeste.Mod.CollabUtils2 {
         private static ILHook hookOnOuiFileSelectSlotGolden;
         private static ILHook hookOnOuiJournalPoemLines;
         private static ILHook hookOnLevelSetSwitch;
+        private static ILHook hookOnOuiFileSelectSlotRender;
 
         private static HashSet<string> collabNames = new HashSet<string>();
 
@@ -140,6 +141,7 @@ namespace Celeste.Mod.CollabUtils2 {
             hookOnOuiFileSelectRenderStrawberryStamp = new ILHook(typeof(OuiFileSelectSlot).GetMethod("orig_Render"), modSelectSlotCollectedStrawberries);
             hookOnOuiJournalPoemLines = new ILHook(typeof(OuiJournalPoem).GetNestedType("PoemLine", BindingFlags.NonPublic).GetMethod("Render"), modJournalPoemHeartColors);
             hookOnOuiFileSelectSlotGolden = new ILHook(typeof(OuiFileSelectSlot).GetMethod("get_Golden", BindingFlags.NonPublic | BindingFlags.Instance), modSelectSlotCollectedStrawberries);
+            hookOnOuiFileSelectSlotRender = new ILHook(typeof(OuiFileSelectSlot).GetMethod("orig_Render"), modOuiFileSelectSlotRender);
         }
 
         internal static void Unload() {
@@ -164,6 +166,7 @@ namespace Celeste.Mod.CollabUtils2 {
             hookOnOuiFileSelectRenderStrawberryStamp?.Dispose();
             hookOnOuiJournalPoemLines?.Dispose();
             hookOnOuiFileSelectSlotGolden?.Dispose();
+            hookOnOuiFileSelectSlotRender?.Dispose();
         }
 
         public static void OnSessionCreated() {
@@ -483,6 +486,28 @@ namespace Celeste.Mod.CollabUtils2 {
                 self.Strawberries.OutOf = maxStrawberryCount;
             }
 
+            // figure out if some hearts are customized, and store it in DynData so that a IL hook can access it later.
+            SaveData oldInstance = SaveData.Instance;
+            SaveData.Instance = self.SaveData;
+            List<string> customJournalHearts = new List<string>();
+            if (self.SaveData != null) {
+                foreach (AreaStats item in self.SaveData.Areas_Safe) {
+                    if (item.ID_Safe > self.SaveData.UnlockedAreas_Safe) {
+                        break;
+                    }
+                    if (!AreaData.Areas[item.ID_Safe].Interlude_Safe && AreaData.Areas[item.ID_Safe].CanFullClear) {
+                        string lobbyLevelSetName = GetLobbyLevelSet(item.GetSID());
+                        if (lobbyLevelSetName != null && MTN.Journal.Has("CollabUtils2Hearts/" + lobbyLevelSetName)) {
+                            customJournalHearts.Add("CollabUtils2Hearts/" + lobbyLevelSetName);
+                        } else {
+                            customJournalHearts.Add(null);
+                        }
+                    }
+                }
+            }
+            new DynData<OuiFileSelectSlot>(self)["collabutils2_customhearts"] = customJournalHearts;
+            SaveData.Instance = oldInstance;
+
             // Restore the last area if it was replaced at the beginning of this method.
             if (savedLastArea != null) {
                 self.SaveData.LastArea_Safe = savedLastArea.Value;
@@ -543,6 +568,41 @@ namespace Celeste.Mod.CollabUtils2 {
                     }
                     return orig;
                 });
+            }
+        }
+
+        private static void modOuiFileSelectSlotRender(ILContext il) {
+            ILCursor cursor = new ILCursor(il);
+
+            if (cursor.TryGotoNext(MoveType.After,
+                instr => instr.MatchCall<string>("Concat"),
+                instr => instr.MatchCallvirt<Atlas>("get_Item"))) {
+
+                // we are after the heart was loaded for file select, and before it is rendered.
+                // so we can intercept it and give the game another heart instead...
+                // but we first need to know which heart it is by getting the loop index.
+                // this loop index is used to read from the OuiFileSelectSlot.Cassettes array, so we can anchor on that
+                ILCursor cursorLoopIndex = new ILCursor(il);
+
+                if (cursorLoopIndex.TryGotoNext(MoveType.After,
+                    instr => instr.MatchLdfld<OuiFileSelectSlot>("Cassettes"),
+                    instr => true,
+                    instr => instr.OpCode == OpCodes.Callvirt && (instr.Operand as MethodReference).Name == "get_Item")) {
+
+                    Instruction loopIndex = cursorLoopIndex.Prev.Previous;
+                    Logger.Log("CollabUtils2/LobbyHelper", $"Modding heart colors on file select at {cursor.Index} in IL for {il.Method.Name}, using loop index {loopIndex}");
+
+                    cursor.Emit(OpCodes.Ldarg_0);
+                    cursor.Emit(loopIndex.OpCode, loopIndex.Operand);
+
+                    cursor.EmitDelegate<Func<MTexture, OuiFileSelectSlot, int, MTexture>>((orig, self, index) => {
+                        List<string> customJournalHearts = new DynData<OuiFileSelectSlot>(self).Get<List<string>>("collabutils2_customhearts");
+                        if (customJournalHearts != null && customJournalHearts[index] != null) {
+                            return MTN.Journal[customJournalHearts[index]]; // "Journal" and not "FileSelect" because it re-uses the setup people made for their custom journals.
+                        }
+                        return orig;
+                    });
+                }
             }
         }
 
