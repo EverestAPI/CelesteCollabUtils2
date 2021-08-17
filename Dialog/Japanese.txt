@@ -1,0 +1,54 @@
+﻿modname_collabutils2= Collab Utils 2
+modoptions_collab_title= Collab Utils 2
+
+collabutils2_returntolobby= ロビーにもどる
+collabutils2_restartspeedberry= スピードベリーをリトライ
+
+collabutils2_returntolobby_confirm_title= ロビーにもどる？
+collabutils2_returntolobby_confirm_note1= 「保存する」を選ぶと、ロビーのマップに戻ってきたときに「続ける」を選ぶことで、
+collabutils2_returntolobby_confirm_note2= やめた場所から再開することができます。 
+collabutils2_returntolobby_confirm_save= 保存する
+collabutils2_returntolobby_confirm_donotsave= 保存しない
+collabutils2_returntolobby_confirm_cancel= キャンセル
+
+collabutils2_speedberry_gold= ゴールド:
+collabutils2_speedberry_silver= シルバー:
+collabutils2_speedberry_bronze= ブロンズ:
+collabutils2_speedberry_timeranout= 時間切れ！
+
+collabutils2_chapterpanel_continue= 続ける
+collabutils2_chapterpanel_start= 最初からはじめる
+
+collabutils2_speedberry_optionmessage=
+	{# 9B3FB5}Mod Options{#}でスピードベリータイマーの位置を変更することができます。
+
+modoptions_collab_speedberrytimerposition= スピードベリータイマーの表示位置
+modoptions_collab_speedberrytimerposition_topleft= 左上
+modoptions_collab_speedberrytimerposition_topcenter= 中央上部
+modoptions_collab_hidespeedberrytimerduringgameplay= プレイ中にスピードベリータイマーを隠す
+
+modoptions_collab_displayendscreenforallmaps= すべてのマップで終了画面を表示する
+modoptions_collab_displayendscreenforallmaps_description= speedrun.comのILに提出した記録が承認されるのに必要です
+
+modoptions_collab_besttimetodisplayinjournal= ジャーナルで表示するベストタイム
+modoptions_collab_besttimetodisplayinjournal_speedberry= スピードベリー
+modoptions_collab_besttimetodisplayinjournal_chaptertimer= チャプタータイム
+
+modoptions_collab_savebydefaultwhenreturningtolobby= 保存してロビーに戻るをデフォルトにする
+
+collabutils2_assist_skip= ハートゲートを開ける
+collabutils2_assist_skip_confirm= ハートゲートをずっと開けておくようにします。{n}よろしいですか？
+collabutils2_assist_skip_confirm_yes= はい
+collabutils2_assist_skip_confirm_no= いいえ
+
+# SHIP COLLAB-SPECIFIC DIALOG WITH THE COLLAB MOD, NOT THE COLLAB UTILS.
+
+area_1_collabcredits= 
+Map by Maddy Thorson
+Code by Noel Berry
+Art by Pedro Medeiros
+Music by Lena Raine
+Something Something
+Totally a collab map
+
+area_1_author= by EXOK Games
