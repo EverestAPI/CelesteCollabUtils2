@@ -20,7 +20,7 @@ collabutils2_chapterpanel_continue= 続ける
 collabutils2_chapterpanel_start= 最初からはじめる
 
 collabutils2_speedberry_optionmessage=
-	{# 9B3FB5}Mod Options{#}でスピードベリータイマーの位置を変更することができます。
+	{# 9B3FB5}Mod設定{#}でスピードベリータイマーの位置を変更することができます。
 
 modoptions_collab_speedberrytimerposition= スピードベリータイマーの表示位置
 modoptions_collab_speedberrytimerposition_topleft= 左上
