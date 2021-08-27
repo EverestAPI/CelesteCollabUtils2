@@ -5,10 +5,10 @@ collabutils2_returntolobby= ロビーにもどる
 collabutils2_restartspeedberry= スピードベリーをリトライ
 
 collabutils2_returntolobby_confirm_title= ロビーにもどる？
-collabutils2_returntolobby_confirm_note1= 「保存する」を選ぶと、ロビーのマップに戻ってきたときに「続ける」を選ぶことで、
+collabutils2_returntolobby_confirm_note1= 「セーブする」を選ぶと、ロビーのマップに戻ってきたときに「続ける」を選ぶことで、
 collabutils2_returntolobby_confirm_note2= やめた場所から再開することができます。 
-collabutils2_returntolobby_confirm_save= 保存する
-collabutils2_returntolobby_confirm_donotsave= 保存しない
+collabutils2_returntolobby_confirm_save= セーブする
+collabutils2_returntolobby_confirm_donotsave= セーブしない
 collabutils2_returntolobby_confirm_cancel= キャンセル
 
 collabutils2_speedberry_gold= ゴールド:
@@ -34,7 +34,7 @@ modoptions_collab_besttimetodisplayinjournal= ジャーナルで表示するベ�
 modoptions_collab_besttimetodisplayinjournal_speedberry= スピードベリー
 modoptions_collab_besttimetodisplayinjournal_chaptertimer= チャプタータイム
 
-modoptions_collab_savebydefaultwhenreturningtolobby= 保存してロビーに戻るをデフォルトにする
+modoptions_collab_savebydefaultwhenreturningtolobby= セーブしてロビーに戻るをデフォルトにする
 
 collabutils2_assist_skip= ハートゲートを開ける
 collabutils2_assist_skip_confirm= ハートゲートをずっと開けておくようにします。{n}よろしいですか？
