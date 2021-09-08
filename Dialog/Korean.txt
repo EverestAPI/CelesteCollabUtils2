@@ -1,0 +1,57 @@
+﻿# English original: https://github.com/EverestAPI/CelesteCollabUtils2/blob/master/Dialog/English.txt
+
+modname_collabutils2= Collab Utils 2
+modoptions_collab_title= Collab Utils 2
+
+collabutils2_returntolobby= 로비로 돌아가기
+collabutils2_restartspeedberry= 스피드런 딸기 다시 시작
+
+collabutils2_returntolobby_confirm_title= 로비로 돌아갈까요?
+collabutils2_returntolobby_confirm_note1= "저장"을 선택하면 이 맵으로 다시 돌아왔을 때
+collabutils2_returntolobby_confirm_note2= "계속"을 선택함으로써 나갔던 곳부터 계속할 수 있습니다.
+
+collabutils2_returntolobby_confirm_save= 저장
+collabutils2_returntolobby_confirm_donotsave= 저장 안 함
+collabutils2_returntolobby_confirm_cancel= 취소
+
+collabutils2_speedberry_gold= 금:
+collabutils2_speedberry_silver= 은:
+collabutils2_speedberry_bronze= 동:
+collabutils2_speedberry_timeranout= 시간 초과!
+
+collabutils2_chapterpanel_continue= 계속
+collabutils2_chapterpanel_start= 다시 시작
+
+collabutils2_speedberry_optionmessage=
+	스피드런 딸기 타이머 위치를 {# 9B3FB5}{+MENU_MODOPTIONS}{#}에서 바꿀 수 있습니다.
+
+modoptions_collab_speedberrytimerposition= 스피드런 딸기 타이머 위치
+modoptions_collab_speedberrytimerposition_topleft= 왼쪽 위
+modoptions_collab_speedberrytimerposition_topcenter= 위
+modoptions_collab_hidespeedberrytimerduringgameplay= 플레이 도중 시계 숨기기
+
+modoptions_collab_displayendscreenforallmaps= 모든 맵의 끝 스크린을 보이기
+modoptions_collab_displayendscreenforallmaps_description= speedrun.com에 제출할 각 레벨별 기록 검증에 필요합니다.
+
+modoptions_collab_besttimetodisplayinjournal= 저널에 표시할 최단 기록
+modoptions_collab_besttimetodisplayinjournal_speedberry= 스피드런 딸기 기록
+modoptions_collab_besttimetodisplayinjournal_chaptertimer= 챕터 기록
+
+modoptions_collab_savebydefaultwhenreturningtolobby= 로비로 돌아갈 때 저장을 기본값으로
+
+collabutils2_assist_skip= 하트 장벽 열기
+collabutils2_assist_skip_confirm= 하트 장벽이 영구적으로 열립니다.{n}정말 계속하시겠습니까?
+collabutils2_assist_skip_confirm_yes= 예
+collabutils2_assist_skip_confirm_no= 아니요
+
+# SHIP COLLAB-SPECIFIC DIALOG WITH THE COLLAB MOD, NOT THE COLLAB UTILS.
+
+area_1_collabcredits= 
+Map by Maddy Thorson
+Code by Noel Berry
+Art by Pedro Medeiros
+Music by Lena Raine
+Something Something
+Totally a collab map
+
+area_1_author= by EXOK Games
