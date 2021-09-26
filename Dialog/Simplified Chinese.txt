@@ -1,0 +1,53 @@
+﻿modname_collabutils2= Collab Utils 2
+modoptions_collab_title= Collab Utils 2
+
+collabutils2_returntolobby= 返回大厅
+collabutils2_restartspeedberry= 重新开始速通草莓
+
+collabutils2_returntolobby_confirm_title= 确认返回大厅?
+collabutils2_returntolobby_confirm_note1= 如果你选择“保存进度”，下次进入时若在地图选项中选择“继续”
+collabutils2_returntolobby_confirm_note2= 你将可以从现在离开的地方继续开始。
+collabutils2_returntolobby_confirm_save= 保存进度
+collabutils2_returntolobby_confirm_donotsave= 不保存进度
+collabutils2_returntolobby_confirm_cancel= 取消
+
+collabutils2_speedberry_gold= 金:
+collabutils2_speedberry_silver= 银:
+collabutils2_speedberry_bronze= 铜:
+collabutils2_speedberry_timeranout= 时间到!
+
+collabutils2_chapterpanel_continue= 继续
+collabutils2_chapterpanel_start= 从头开始
+
+collabutils2_speedberry_optionmessage=
+	你可以在{# 9B3FB5}Mod 选项{#}中改变速通草莓计时器的显示位置。
+
+modoptions_collab_speedberrytimerposition= 速通草莓计时器显示位置
+modoptions_collab_speedberrytimerposition_topleft= 左上方
+modoptions_collab_speedberrytimerposition_topcenter= 正上方
+modoptions_collab_hidespeedberrytimerduringgameplay= 游戏过程中隐藏计时器
+
+modoptions_collab_displayendscreenforallmaps= 为所有地图显示结算界面
+modoptions_collab_displayendscreenforallmaps_description= 需被用于认证在speedrun.com上的IL申请
+modoptions_collab_besttimetodisplayinjournal= 大厅日志上显示的最佳时间
+modoptions_collab_besttimetodisplayinjournal_speedberry= 速通草莓时间
+modoptions_collab_besttimetodisplayinjournal_chaptertimer= 章节通关时间
+
+modoptions_collab_savebydefaultwhenreturningtolobby= 默认保存进度并返回大厅
+
+collabutils2_assist_skip= 打开心门
+collabutils2_assist_skip_confirm= 这将永久打开心门。{n}你确定吗?
+collabutils2_assist_skip_confirm_yes= 是
+collabutils2_assist_skip_confirm_no= 否
+
+# SHIP COLLAB-SPECIFIC DIALOG WITH THE COLLAB MOD, NOT THE COLLAB UTILS.
+
+area_1_collabcredits= 
+地图设计 Maddy Thorson
+代码编程 Noel Berry
+艺术风格 Pedro Medeiros
+音乐创作 Lena Raine
+一切的一切
+尽在这个地图集
+
+area_1_author= EXOK Games
