@@ -23,14 +23,14 @@ collabutils2_speedberry_optionmessage=
 	Você pode mudar a posição do cronômetro do morango-relógio em {# 9B3FB5}Opções de mod{#}.
 
 modoptions_collab_speedberrytimerposition= Posição do cronômetro do morango-relógio
-modoptions_collab_speedberrytimerposition_topleft= Canto superior esquerdo
+modoptions_collab_speedberrytimerposition_topleft= Superior esquerdo
 modoptions_collab_speedberrytimerposition_topcenter= Centro superior
-modoptions_collab_hidespeedberrytimerduringgameplay= Esconder cronômetro do morango-relógio enquanto joga
+modoptions_collab_hidespeedberrytimerduringgameplay= Esconder tempo do morango-relógio ao jogar
 
 modoptions_collab_displayendscreenforallmaps= Mostrar tela final para todos os mapas
 modoptions_collab_displayendscreenforallmaps_description= Necessário para verificar IL's no speedrun.com
 
-modoptions_collab_besttimetodisplayinjournal = Melhor tempo a ser mostrado no diário
+modoptions_collab_besttimetodisplayinjournal= Melhor tempo a ser mostrado no diário
 modoptions_collab_besttimetodisplayinjournal_speedberry= Morango-relógio
 modoptions_collab_besttimetodisplayinjournal_chaptertimer= Capítulo
 
