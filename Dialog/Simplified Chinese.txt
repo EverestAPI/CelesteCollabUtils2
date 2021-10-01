@@ -5,7 +5,7 @@ collabutils2_returntolobby= 返回大厅
 collabutils2_restartspeedberry= 重新开始速通草莓
 
 collabutils2_returntolobby_confirm_title= 确认返回大厅?
-collabutils2_returntolobby_confirm_note1= 如果你选择“保存进度”，下次进入时若在地图选项中选择“继续”
+collabutils2_returntolobby_confirm_note1= 如果你选择“保存进度”，下次进入时若在地图选项中选择“继续”，
 collabutils2_returntolobby_confirm_note2= 你将可以从现在离开的地方继续开始。
 collabutils2_returntolobby_confirm_save= 保存进度
 collabutils2_returntolobby_confirm_donotsave= 不保存进度
@@ -20,7 +20,7 @@ collabutils2_chapterpanel_continue= 继续
 collabutils2_chapterpanel_start= 从头开始
 
 collabutils2_speedberry_optionmessage=
-	你可以在{# 9B3FB5}Mod 选项{#}中改变速通草莓计时器的显示位置。
+	你可以在 {# 9B3FB5}Mod 选项{#}中改变速通草莓计时器的显示位置。
 
 modoptions_collab_speedberrytimerposition= 速通草莓计时器显示位置
 modoptions_collab_speedberrytimerposition_topleft= 左上方
@@ -28,7 +28,7 @@ modoptions_collab_speedberrytimerposition_topcenter= 正上方
 modoptions_collab_hidespeedberrytimerduringgameplay= 游戏过程中隐藏计时器
 
 modoptions_collab_displayendscreenforallmaps= 为所有地图显示结算界面
-modoptions_collab_displayendscreenforallmaps_description= 需被用于认证在speedrun.com上的IL申请
+modoptions_collab_displayendscreenforallmaps_description= 需被用于审核在 speedrun.com 上的单关记录提交
 modoptions_collab_besttimetodisplayinjournal= 大厅日志上显示的最佳时间
 modoptions_collab_besttimetodisplayinjournal_speedberry= 速通草莓时间
 modoptions_collab_besttimetodisplayinjournal_chaptertimer= 章节通关时间
