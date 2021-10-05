@@ -1,0 +1,54 @@
+modname_collabutils2= Collab Utils 2
+modoptions_collab_title= Collab Utils 2
+
+collabutils2_returntolobby= Voltar ao lobby
+collabutils2_restartspeedberry= Reiniciar morango-relógio
+
+collabutils2_returntolobby_confirm_title= VOLTAR AO LOBBY?
+collabutils2_returntolobby_confirm_note1= Se você escolher "Salvar", você poderá retornar ao lugar de onde você saiu
+collabutils2_returntolobby_confirm_note2= voltando ao mapa no lobby e escolhendo "Continuar".
+collabutils2_returntolobby_confirm_save= Salvar
+collabutils2_returntolobby_confirm_donotsave= Não salvar
+collabutils2_returntolobby_confirm_cancel= Cancelar
+
+collabutils2_speedberry_gold= Ouro:
+collabutils2_speedberry_silver= Prata:
+collabutils2_speedberry_bronze= Bronze:
+collabutils2_speedberry_timeranout= Acabou o tempo!
+
+collabutils2_chapterpanel_continue= Continuar
+collabutils2_chapterpanel_start= Recomeçar
+
+collabutils2_speedberry_optionmessage=
+	Você pode mudar a posição do cronômetro do morango-relógio em {# 9B3FB5}Opções de mod{#}.
+
+modoptions_collab_speedberrytimerposition= Posição do cronômetro do morango-relógio
+modoptions_collab_speedberrytimerposition_topleft= Superior esquerdo
+modoptions_collab_speedberrytimerposition_topcenter= Centro superior
+modoptions_collab_hidespeedberrytimerduringgameplay= Esconder tempo do morango-relógio ao jogar
+
+modoptions_collab_displayendscreenforallmaps= Mostrar tela final para todos os mapas
+modoptions_collab_displayendscreenforallmaps_description= Necessário para verificar IL's no speedrun.com
+
+modoptions_collab_besttimetodisplayinjournal= Melhor tempo a ser mostrado no diário
+modoptions_collab_besttimetodisplayinjournal_speedberry= Morango-relógio
+modoptions_collab_besttimetodisplayinjournal_chaptertimer= Capítulo
+
+modoptions_collab_savebydefaultwhenreturningtolobby= Salvar e voltar ao lobby por padrão
+
+collabutils2_assist_skip= Abrir portão do coração
+collabutils2_assist_skip_confirm= Isso abrirá o portão do coração permanentemente.{n}Você tem certeza?
+collabutils2_assist_skip_confirm_yes= Sim
+collabutils2_assist_skip_confirm_no= Não
+
+# SHIP COLLAB-SPECIFIC DIALOG WITH THE COLLAB MOD, NOT THE COLLAB UTILS.
+
+area_1_collabcredits= 
+Map by Maddy Thorson
+Code by Noel Berry
+Art by Pedro Medeiros
+Music by Lena Raine
+Something Something
+Totally a collab map
+
+area_1_author= by EXOK Games
