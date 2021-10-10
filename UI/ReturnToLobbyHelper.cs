@@ -147,8 +147,12 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 temporarySaveAllowedHolder = CollabModule.Instance.Session.SaveAndReturnToLobbyAllowed;
             }
             if ((mode == LevelExit.Mode.GiveUp || mode == LevelExit.Mode.Completed) && CollabModule.Instance.Session.LobbySID != null) {
-                // be sure that Return to Map and such from a collab entry returns to the lobby, not to the collab entry. 
-                SaveData.Instance.LastArea_Safe = AreaData.Get(CollabModule.Instance.Session.LobbySID).ToKey();
+                // be sure that Return to Map and such from a collab entry returns to the lobby, not to the collab entry...
+                // if the lobby exists, of course.
+                AreaData lobby = AreaData.Get(CollabModule.Instance.Session.LobbySID);
+                if (lobby != null) {
+                    SaveData.Instance.LastArea_Safe = lobby.ToKey();
+                }
             }
         }
 
