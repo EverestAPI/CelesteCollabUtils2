@@ -12,6 +12,7 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
     [CustomEntity("CollabUtils2/JournalTrigger")]
     public class JournalTrigger : Trigger {
         private static bool showOnlyDiscovered;
+        private static bool vanillaJournal;
 
         internal static void Load() {
             Everest.Events.Journal.OnEnter += onJournalEnter;
@@ -22,6 +23,10 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
         }
 
         private static void onJournalEnter(OuiJournal journal, Oui from) {
+            // if using the vanilla journal, we just don't have anything to do, since vanilla already did everything for us!
+            if (vanillaJournal)
+                return;
+
             AreaData forceArea = journal.Overworld == null ? null : new DynData<Overworld>(journal.Overworld).Get<AreaData>("collabInGameForcedArea");
             if (forceArea != null) {
                 // custom journal: throw away all pages, except the cover.
@@ -55,6 +60,7 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
                 data.Nodes.Length != 0 ? (data.Nodes[0] - data.Position) : new Vector2(data.Width / 2f, data.Height / 2f),
                 player => {
                     showOnlyDiscovered = data.Bool("showOnlyDiscovered", defaultValue: false);
+                    vanillaJournal = data.Bool("vanillaJournal", defaultValue: false);
                     InGameOverworldHelper.OpenJournal(player, levelset);
                 }
             ) { PlayerMustBeFacing = false });
