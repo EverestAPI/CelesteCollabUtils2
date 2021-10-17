@@ -513,11 +513,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         return orig;
                     }
 
-                    OuiChapterPanel panel = overworldWrapper?.WrappedScene?.GetUI<OuiChapterPanel>();
-                    if (panel == null) {
-                        panel = (Engine.Scene as Overworld)?.GetUI<OuiChapterPanel>();
-                    }
-                    string sid = panel.Area.GetSID();
+                    string sid = getCurrentPanelMapSID();
 
                     if (CollabMapDataProcessor.MapsWithRainbowBerries.Contains(sid)) {
                         return orig == "areaselect/cardtop_golden" ? "CollabUtils2/chapterCard/cardtop_rainbow" : "CollabUtils2/chapterCard/card_rainbow";
@@ -615,10 +611,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("collectables/goldberry"))) {
                 Logger.Log("CollabUtils2/InGameOverworldHelper", $"Changing strawberry icon w/ silver one at {cursor.Index} in IL for StrawberriesCounter.Render");
                 cursor.EmitDelegate<Func<string, string>>(orig => {
-                    if (isPanelShowingLobby()) {
+                    string sid = getCurrentPanelMapSID();
+                    if (CollabMapDataProcessor.MapsWithRainbowBerries.Contains(sid)) {
                         return "CollabUtils2/rainbowberry";
                     }
-                    if (Engine.Scene == overworldWrapper?.Scene && !LobbyHelper.IsHeartSide(overworldWrapper.WrappedScene?.GetUI<OuiChapterPanel>().Area.GetSID())) {
+                    if (CollabMapDataProcessor.MapsWithSilverBerries.Contains(sid)) {
                         return "CollabUtils2/silverberry";
                     }
                     return orig;
@@ -760,6 +757,15 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (wrapper.Scene != null) {
                 wrapper.RemoveSelf();
             }
+        }
+
+        private static string getCurrentPanelMapSID() {
+            OuiChapterPanel panel = overworldWrapper?.WrappedScene?.GetUI<OuiChapterPanel>();
+            if (panel == null) {
+                panel = (Engine.Scene as Overworld)?.GetUI<OuiChapterPanel>();
+            }
+            string sid = panel.Area.GetSID();
+            return sid;
         }
 
         private static bool isPanelShowingLobby(OuiChapterPanel panel = null) {
