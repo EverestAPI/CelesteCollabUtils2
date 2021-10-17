@@ -649,7 +649,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         public static void OpenChapterPanel(Player player, string sid, ChapterPanelTrigger.ReturnToLobbyMode returnToLobbyMode, bool savingAllowed) {
             AreaData areaData = (AreaData.Get(sid) ?? AreaData.Get(0));
-            if (!Dialog.Has(areaData.Name + "_collabcredits") && areaData.Mode[0].Checkpoints.Length > 0) {
+            if (!Dialog.Has(areaData.Name + "_collabcredits") && areaData.Mode[0].Checkpoints?.Length > 0) {
                 // saving isn't compatible with checkpoints, because both would appear on the same page.
                 savingAllowed = false;
             }
