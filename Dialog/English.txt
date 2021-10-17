@@ -40,15 +40,3 @@ collabutils2_assist_skip= Open Heart Gate
 collabutils2_assist_skip_confirm= This will open the Heart Gate permanently.{n}Are you sure?
 collabutils2_assist_skip_confirm_yes= Yes
 collabutils2_assist_skip_confirm_no= No
-
-# SHIP COLLAB-SPECIFIC DIALOG WITH THE COLLAB MOD, NOT THE COLLAB UTILS.
-
-area_1_collabcredits= 
-Map by Maddy Thorson
-Code by Noel Berry
-Art by Pedro Medeiros
-Music by Lena Raine
-Something Something
-Totally a collab map
-
-area_1_author= by EXOK Games

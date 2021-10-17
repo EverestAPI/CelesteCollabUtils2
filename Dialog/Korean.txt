@@ -43,15 +43,3 @@ collabutils2_assist_skip= 하트 장벽 열기
 collabutils2_assist_skip_confirm= 하트 장벽이 영구적으로 열립니다.{n}정말 계속하시겠습니까?
 collabutils2_assist_skip_confirm_yes= 예
 collabutils2_assist_skip_confirm_no= 아니요
-
-# SHIP COLLAB-SPECIFIC DIALOG WITH THE COLLAB MOD, NOT THE COLLAB UTILS.
-
-area_1_collabcredits= 
-Map by Maddy Thorson
-Code by Noel Berry
-Art by Pedro Medeiros
-Music by Lena Raine
-Something Something
-Totally a collab map
-
-area_1_author= by EXOK Games

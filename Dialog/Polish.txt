@@ -40,16 +40,3 @@ collabutils2_assist_skip= Otwórz Kryształową Bramę
 collabutils2_assist_skip_confirm= To otworzy Kryształową Bramę na stałe.{n}Na pewno?
 collabutils2_assist_skip_confirm_yes= Tak
 collabutils2_assist_skip_confirm_no= Nie
-
-# SHIP COLLAB-SPECIFIC DIALOG WITH THE COLLAB MOD, NOT THE COLLAB UTILS.
-
-area_1_collabcredits= 
-Map by Maddy Thorson
-Code by Noel Berry
-Art by Pedro Medeiros
-Music by Lena Raine
-Something Something
-Totally a collab map
-
-area_1_author= by EXOK Games
-

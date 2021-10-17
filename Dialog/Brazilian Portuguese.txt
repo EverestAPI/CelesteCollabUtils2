@@ -40,15 +40,3 @@ collabutils2_assist_skip= Abrir portão do coração
 collabutils2_assist_skip_confirm= Isso abrirá o portão do coração permanentemente.{n}Você tem certeza?
 collabutils2_assist_skip_confirm_yes= Sim
 collabutils2_assist_skip_confirm_no= Não
-
-# SHIP COLLAB-SPECIFIC DIALOG WITH THE COLLAB MOD, NOT THE COLLAB UTILS.
-
-area_1_collabcredits= 
-Map by Maddy Thorson
-Code by Noel Berry
-Art by Pedro Medeiros
-Music by Lena Raine
-Something Something
-Totally a collab map
-
-area_1_author= by EXOK Games

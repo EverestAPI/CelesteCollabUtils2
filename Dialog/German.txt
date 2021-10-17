@@ -40,15 +40,3 @@ collabutils2_assist_skip= Herztor öffnen
 collabutils2_assist_skip_confirm= Bist du sicher, dass du das Herztor{n}permanent öffnen möchtest?
 collabutils2_assist_skip_confirm_yes= Ja
 collabutils2_assist_skip_confirm_no= Nein
-
-# SHIP COLLAB-SPECIFIC DIALOG WITH THE COLLAB MOD, NOT THE COLLAB UTILS.
-
-area_1_collabcredits= 
-Map by Maddy Thorson
-Code by Noel Berry
-Art by Pedro Medeiros
-Music by Lena Raine
-Something Something
-Totally a collab map
-
-area_1_author= by EXOK Games
