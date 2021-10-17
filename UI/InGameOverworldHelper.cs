@@ -513,10 +513,16 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         return orig;
                     }
 
-                    if (isPanelShowingLobby()) {
+                    OuiChapterPanel panel = overworldWrapper?.WrappedScene?.GetUI<OuiChapterPanel>();
+                    if (panel == null) {
+                        panel = (Engine.Scene as Overworld)?.GetUI<OuiChapterPanel>();
+                    }
+                    string sid = panel.Area.GetSID();
+
+                    if (CollabMapDataProcessor.MapsWithRainbowBerries.Contains(sid)) {
                         return orig == "areaselect/cardtop_golden" ? "CollabUtils2/chapterCard/cardtop_rainbow" : "CollabUtils2/chapterCard/card_rainbow";
                     }
-                    if (Engine.Scene == overworldWrapper?.Scene && !LobbyHelper.IsHeartSide(overworldWrapper.WrappedScene?.GetUI<OuiChapterPanel>().Area.GetSID())) {
+                    if (CollabMapDataProcessor.MapsWithSilverBerries.Contains(sid)) {
                         return orig == "areaselect/cardtop_golden" ? "CollabUtils2/chapterCard/cardtop_silver" : "CollabUtils2/chapterCard/card_silver";
                     }
                     return orig;

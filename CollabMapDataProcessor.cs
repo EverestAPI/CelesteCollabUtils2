@@ -19,6 +19,9 @@ namespace Celeste.Mod.CollabUtils2 {
         public static Dictionary<string, SpeedBerryInfo> SpeedBerries = new Dictionary<string, SpeedBerryInfo>();
         private string levelName;
 
+        public static HashSet<string> MapsWithSilverBerries = new HashSet<string>();
+        public static HashSet<string> MapsWithRainbowBerries = new HashSet<string>();
+
         public override Dictionary<string, Action<BinaryPacker.Element>> Init() {
             return new Dictionary<string, Action<BinaryPacker.Element>> {
                 {
@@ -37,7 +40,12 @@ namespace Celeste.Mod.CollabUtils2 {
                             SilverBerries.Add(AreaKey.GetLevelSet(), allSilversInLevelSet);
                         }
                         allSilversInLevelSet[AreaKey.GetSID()] = new EntityID(levelName, silverBerry.AttrInt("id"));
+
+                        MapsWithSilverBerries.Add(AreaKey.GetSID());
                     }
+                },
+                {
+                    "entity:CollabUtils2/RainbowBerry", berry => MapsWithRainbowBerries.Add(AreaKey.GetSID())
                 },
                 {
                     "entity:CollabUtils2/SpeedBerry", speedBerry => {
@@ -57,6 +65,8 @@ namespace Celeste.Mod.CollabUtils2 {
                 SilverBerries[AreaKey.GetLevelSet()].Remove(AreaKey.GetSID());
             }
             SpeedBerries.Remove(AreaKey.GetSID());
+            MapsWithSilverBerries.Remove(AreaKey.GetSID());
+            MapsWithRainbowBerries.Remove(AreaKey.GetSID());
         }
 
         public override void End() {
