@@ -11,6 +11,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private bool refillDash;
         private bool requireDashToBreak;
         private bool noGhostSprite;
+        private string particleColor;
 
         protected Wiggler scaleWiggler;
 
@@ -32,6 +33,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             refillDash = data.Bool("refillDash", defaultValue: true);
             requireDashToBreak = data.Bool("requireDashToBreak", defaultValue: true);
             noGhostSprite = data.Bool("noGhostSprite", defaultValue: false);
+            particleColor = data.Attr("particleColor");
 
             Collider = new Hitbox(12f, 12f, -6f, -6f);
 
@@ -103,6 +105,12 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     };
                     break;
             }
+            if (!string.IsNullOrEmpty(particleColor)) {
+                shineParticle = new ParticleType(HeartGem.P_BlueShine) {
+                    Color = Calc.HexToColor(particleColor)
+                };
+            }
+
             if (alreadyCollectedInSave && !noGhostSprite) {
                 heartColor = Color.White * 0.8f;
                 shineParticle = new ParticleType(HeartGem.P_BlueShine) {
