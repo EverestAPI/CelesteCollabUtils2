@@ -49,7 +49,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 newSession.StartedFromBeginning = false;
                 newSession.Level = targetRoom ?? newSession.MapData.StartLevel().Name;
                 newSession.RespawnPoint = targetRoom == null ? (Vector2?) null : targetSpawnPoint;
-                SaveData.Instance.CurrentSession_Safe = newSession;
+                SaveData.Instance.StartSession(newSession);
             }
 
             UserIO.SaveHandler(file: true, settings: true);
