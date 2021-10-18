@@ -580,8 +580,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
 
             if (isPanelShowingLobby(self) || Engine.Scene == overworldWrapper?.Scene) {
-                // turn strawberry counter into golden if there is no berry in the map
-                if (AreaData.Get(self.Area).Mode[0].TotalStrawberries == 0) {
+                // turn strawberry counter into golden if there only are golden berries in the map
+                MapData mapData = AreaData.Get(self.Area).Mode[0].MapData;
+                if (mapData.GetDetectedStrawberriesIncludingUntracked() == mapData.Goldenberries.Count) {
                     StrawberriesCounter strawberriesCounter = new DynData<OuiChapterPanel>(self).Get<StrawberriesCounter>("strawberries");
                     strawberriesCounter.Golden = true;
                     strawberriesCounter.ShowOutOf = false;
