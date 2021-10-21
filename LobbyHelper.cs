@@ -199,7 +199,7 @@ namespace Celeste.Mod.CollabUtils2 {
             orig(self);
 
             if (unpauseTimerOnNextAction && self.InControl
-                && (Input.MoveX != 0 || Input.MoveY != 0 || Input.Grab.Check || Input.Jump.Check || Input.Dash.Check)) {
+                && (Input.MoveX != 0 || Input.MoveY != 0 || Input.Grab.Check || Input.Jump.Check || Input.Dash.Check || Input.CrouchDash.Check)) {
 
                 self.SceneAs<Level>().TimerStopped = false;
                 unpauseTimerOnNextAction = false;
