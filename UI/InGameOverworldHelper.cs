@@ -28,6 +28,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             .GetMethod("PlayExpandSfx", BindingFlags.NonPublic | BindingFlags.Instance);
 
         private static List<Hook> altSidesHelperHooks = new List<Hook>();
+        private static Hook hookOnMapDataLoad;
 
         internal static void Load() {
             Everest.Events.Level.OnPause += OnPause;
@@ -43,10 +44,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
             IL.Celeste.OuiChapterPanel.Render += ModOuiChapterPanelRender;
             IL.Celeste.DeathsCounter.Render += ModDeathsCounterRender;
             IL.Celeste.StrawberriesCounter.Render += ModStrawberriesCounterRender;
-            On.Celeste.MapData.Load += ModMapDataLoad;
             On.Celeste.OuiChapterPanel.Start += OnOuiChapterPanelStart;
             On.Celeste.Player.Die += OnPlayerDie;
             On.Celeste.Mod.AssetReloadHelper.ReloadLevel += OnReloadLevel;
+
+            hookOnMapDataLoad = new Hook(
+                typeof(MapData).GetMethod("orig_Load", BindingFlags.NonPublic | BindingFlags.Instance),
+                typeof(InGameOverworldHelper).GetMethod("ModMapDataLoad", BindingFlags.NonPublic | BindingFlags.Static));
         }
 
         public static void Initialize() {
@@ -77,7 +81,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
             IL.Celeste.OuiChapterPanel.Render -= ModOuiChapterPanelRender;
             IL.Celeste.DeathsCounter.Render -= ModDeathsCounterRender;
             IL.Celeste.StrawberriesCounter.Render -= ModStrawberriesCounterRender;
-            On.Celeste.MapData.Load -= ModMapDataLoad;
             On.Celeste.OuiChapterPanel.Start -= OnOuiChapterPanelStart;
             On.Celeste.Player.Die -= OnPlayerDie;
             On.Celeste.Mod.AssetReloadHelper.ReloadLevel -= OnReloadLevel;
@@ -86,6 +89,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 hook.Dispose();
             }
             altSidesHelperHooks.Clear();
+
+            hookOnMapDataLoad?.Dispose();
+            hookOnMapDataLoad = null;
         }
 
         private static void OnOuiChapterPanelStart(On.Celeste.OuiChapterPanel.orig_Start orig, OuiChapterPanel self, string checkpoint) {
@@ -624,7 +630,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
         }
 
-        private static void ModMapDataLoad(On.Celeste.MapData.orig_Load orig, MapData self) {
+        private static void ModMapDataLoad(Action<MapData> orig, MapData self) {
             orig(self);
 
             // add the silver/rainbow berries as golden berries in map data. This is what will make the chapter card golden.
