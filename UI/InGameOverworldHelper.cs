@@ -28,7 +28,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             .GetMethod("PlayExpandSfx", BindingFlags.NonPublic | BindingFlags.Instance);
 
         private static List<Hook> altSidesHelperHooks = new List<Hook>();
-        private static Hook hookOnMapDataLoad;
+        private static Hook hookOnMapDataOrigLoad;
 
         internal static void Load() {
             Everest.Events.Level.OnPause += OnPause;
@@ -48,7 +48,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.Player.Die += OnPlayerDie;
             On.Celeste.Mod.AssetReloadHelper.ReloadLevel += OnReloadLevel;
 
-            hookOnMapDataLoad = new Hook(
+            hookOnMapDataOrigLoad = new Hook(
                 typeof(MapData).GetMethod("orig_Load", BindingFlags.NonPublic | BindingFlags.Instance),
                 typeof(InGameOverworldHelper).GetMethod("ModMapDataLoad", BindingFlags.NonPublic | BindingFlags.Static));
         }
@@ -90,8 +90,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
             altSidesHelperHooks.Clear();
 
-            hookOnMapDataLoad?.Dispose();
-            hookOnMapDataLoad = null;
+            hookOnMapDataOrigLoad?.Dispose();
+            hookOnMapDataOrigLoad = null;
         }
 
         private static void OnOuiChapterPanelStart(On.Celeste.OuiChapterPanel.orig_Start orig, OuiChapterPanel self, string checkpoint) {

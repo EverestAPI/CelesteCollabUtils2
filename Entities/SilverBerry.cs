@@ -38,10 +38,10 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             base.Added(scene);
 
             Session session = (scene as Level).Session;
-            if (!spawnedThroughGiveSilver && (session.FurthestSeenLevel != session.Level ||
+            if (!spawnedThroughGiveSilver && ((session.FurthestSeenLevel != session.Level && session.Deaths != 0) ||
                 (!SaveData.Instance.CheatMode && !SaveData.Instance.Areas_Safe[session.Area.ID].Modes[(int) session.Area.Mode].Completed))) {
 
-                // we went in a further screen or didn't complete the level once yet: don't have the berry spawn.
+                // we went in a further screen and die, or didn't complete the level once yet: don't have the berry spawn.
                 RemoveSelf();
             }
         }
