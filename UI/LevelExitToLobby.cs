@@ -53,7 +53,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     lobbySID = LobbyHelper.GetLobbyForGym(SaveData.Instance.CurrentSession_Safe.Area.GetSID());
                 }
                 if (lobbySID != null) {
-                    Logger.Log(LogLevel.Warn, "CollabUtils2/ReturnToLobbyHelper", $"We will be returning to the detected lobby for the current map instead: {lobbySID}.");
+                    Logger.Log(LogLevel.Warn, "CollabUtils2/LevelExitToLobby", $"We will be returning to the detected lobby for the current map instead: {lobbySID}.");
                     targetSID = lobbySID;
                 }
             }

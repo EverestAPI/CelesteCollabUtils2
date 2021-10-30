@@ -765,6 +765,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (panel == null) {
                 panel = (Engine.Scene as Overworld)?.GetUI<OuiChapterPanel>();
             }
+            if (panel == null) {
+                panel = (AssetReloadHelper.ReturnToScene as Overworld).GetUI<OuiChapterPanel>();
+            }
             string sid = panel.Area.GetSID();
             return sid;
         }
@@ -775,6 +778,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
             if (panel == null) {
                 panel = (Engine.Scene as Overworld)?.GetUI<OuiChapterPanel>();
+            }
+            if (panel == null) {
+                panel = (AssetReloadHelper.ReturnToScene as Overworld).GetUI<OuiChapterPanel>();
             }
             return LobbyHelper.GetLobbyLevelSet(panel?.Area.GetSID() ?? "") != null;
         }
