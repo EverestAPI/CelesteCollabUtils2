@@ -380,7 +380,7 @@ namespace Celeste.Mod.CollabUtils2 {
                 }
             }
 
-            if (self.CurrentSession_Safe != null && !self.CurrentSession_Safe.InArea) {
+            if (self.CurrentSession_Safe == null || !self.CurrentSession_Safe.InArea) {
                 // we aren't in a level; check if we have a hidden level set selected (this should only happen with Alt-F4).
                 string lobby = GetLobbyForLevelSet(self.LastArea_Safe.GetLevelSet());
                 if (lobby != null) {
