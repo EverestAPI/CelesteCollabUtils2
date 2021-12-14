@@ -6,6 +6,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
     [CustomEntity("CollabUtils2/MiniHeart")]
@@ -29,6 +30,11 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             // mute sound
             Audio.SetMusic(null);
             Audio.SetAmbience(null);
+
+            // kill all sound sources
+            foreach (SoundSource s in Scene.Tracker.GetComponents<SoundSource>().ToList()) {
+                s.RemoveSelf();
+            }
 
             // collect all berries
             List<IStrawberry> list = new List<IStrawberry>();
