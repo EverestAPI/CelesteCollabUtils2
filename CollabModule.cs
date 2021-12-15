@@ -45,6 +45,7 @@ namespace Celeste.Mod.CollabUtils2 {
             AreaCompleteInfoInLevel.Load();
             SilverBlock.Load();
             MiniHeartDoorUnlockCutsceneTrigger.Load();
+            LazyLoadingHandler.Load();
 
             Everest.Content.OnUpdate += onModAssetUpdate;
 
@@ -66,6 +67,7 @@ namespace Celeste.Mod.CollabUtils2 {
             AreaCompleteInfoInLevel.Unload();
             SilverBlock.Unload();
             MiniHeartDoorUnlockCutsceneTrigger.Unload();
+            LazyLoadingHandler.Unload();
 
             Everest.Content.OnUpdate -= onModAssetUpdate;
 

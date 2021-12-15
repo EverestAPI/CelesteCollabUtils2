@@ -22,6 +22,7 @@ If anything is wrong or unclear, yell at max480 (max480#4596 on [the Celeste Dis
   - [Chapter Panel Trigger](#chapter-panel-trigger)
   - [Journal Trigger](#journal-trigger)
 - [Map Metadata](#map-metadata)
+- [Lazy Loading](#lazy-loading)
 
 ## Setting up your mod as a collab
 
@@ -288,3 +289,17 @@ CollabUtilsRandomizedFlags:
     flag2: 0.5
 ```
 With that setup, when entering the map, flag1 will have a 50% chance to be set, and flag2 will have a 20% chance to be set. **Both cannot be set at the same time**: in that example, that means there is a 30% chance no flag will be set.
+
+## Lazy Loading
+
+Lazy Loading is useful for large collabs, to prevent the game from loading all of your mod's graphics, and instead only load what is required for the map you are playing.
+
+You can enable Lazy Loading for your mod by creating an empty `CollabUtils2LazyLoading.txt` file at the root of your mod, next to `everest.yaml`.
+
+By doing that and restarting the game, **gameplay sprites that are included in your mod will not be loaded on startup anymore**, speeding up the startup by a fair bit. Instead, textures will be loaded **when you run into them in-game**. This has a drawback though: loading the texture takes a bit of time, which can cause stutters during gameplay.
+
+To help mitigate this, Collab Utils collects the list of textures it lazily loaded and saves them, so that next time you enter the map, **they are loaded when you enter the map instead**. No more stutter during gameplay! That list of textures is saved when you **leave** the map, in a file ending with `.texturecache.txt` in `Mods/Cache/CollabUtils2`.
+
+But you probably don't want gameplay to be stuttery the first time players play each map! To prevent that, **you should ship the .texturecache.txt files with your maps**. You just need to move the files out of your Cache folder and to put them next to your map bins. You should play through the map in order to see every texture (including secrets) before doing that.
+
+Note that if some textures are missing from the `.texturecache.txt` file you shipped with the map, Collab Utils will create the `.texturecache.txt` file in `Mods/Cache/CollabUtils2` again, and you will find a warning in log.txt saying: `Found X lazily loaded texture(s)! Saving them at [path].` This file only contains missing textures, so in order to add them to the `.texturecache.txt` file that ships with your mod, you should merge the files, rather than replacing the one shipping with your mod.
