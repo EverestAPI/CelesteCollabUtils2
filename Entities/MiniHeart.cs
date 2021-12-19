@@ -1,5 +1,6 @@
 ﻿using Celeste.Mod.CollabUtils2.UI;
 using Celeste.Mod.Entities;
+using FMOD.Studio;
 using Microsoft.Xna.Framework;
 using Monocle;
 using System;
@@ -13,6 +14,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
     public class MiniHeart : AbstractMiniHeart {
         private Sprite white;
         private bool inCollectAnimation = false;
+        private EventInstance pauseMusicSnapshot;
+        private SoundEmitter collectSound;
 
         public MiniHeart(EntityData data, Vector2 position, EntityID gid)
             : base(data, position, gid) { }
@@ -27,14 +30,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
             Collidable = false;
 
-            // mute sound
-            Audio.SetMusic(null);
-            Audio.SetAmbience(null);
-
-            // kill all sound sources
-            foreach (SoundSource s in Scene.Tracker.GetComponents<SoundSource>().ToList()) {
-                s.RemoveSelf();
-            }
+            stopMusic();
 
             // collect all berries
             List<IStrawberry> list = new List<IStrawberry>();
@@ -49,7 +45,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             }
 
             // play the collect jingle
-            SoundEmitter.Play("event:/SC2020_heartShard_get", this);
+            collectSound = SoundEmitter.Play("event:/SC2020_heartShard_get", this);
 
             // overlap a white sprite
             Add(white = new Sprite(GFX.Game, "CollabUtils2/miniheart/white/white"));
@@ -95,6 +91,10 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             level.PauseLock = true;
             level.RegisterAreaComplete();
 
+            // music is definitively muted at this point. It shouldn't come back when the muted snapshot is released.
+            Audio.SetMusic(null);
+            Audio.SetAmbience(null);
+
             // display an endscreen if enabled in mod options AND speedrun timer is enabled (or else the endscreen won't show anything anyway).
             if (CollabModule.Instance.Settings.DisplayEndScreenForAllMaps && Settings.Instance.SpeedrunClock != SpeedrunType.Off) {
                 Scene.Add(new AreaCompleteInfoInLevel());
@@ -139,7 +139,33 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             level.CanRetry = true;
             level.FormationBackdrop.Display = false;
             Engine.TimeRate = 1f;
+
+            if (collectSound != null) {
+                collectSound.RemoveSelf();
+                collectSound = null;
+            }
+
+            resumeMusic();
             RemoveSelf();
+        }
+
+        public override void SceneEnd(Scene scene) {
+            base.SceneEnd(scene);
+
+            // we don't want the music to be muted forever!
+            resumeMusic();
+        }
+
+        private void stopMusic() {
+            pauseMusicSnapshot = Audio.CreateSnapshot("snapshot:/music_mains_mute");
+            Audio.BusStopAll("bus:/gameplay_sfx", immediate: true);
+        }
+
+        private void resumeMusic() {
+            if (pauseMusicSnapshot != null) {
+                Audio.ReleaseSnapshot(pauseMusicSnapshot);
+                pauseMusicSnapshot = null;
+            }
         }
     }
 }
