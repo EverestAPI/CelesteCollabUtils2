@@ -14,6 +14,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
     public class MiniHeart : AbstractMiniHeart {
         private Sprite white;
         private bool inCollectAnimation = false;
+
+        private Coroutine smashRoutine;
         private EventInstance pauseMusicSnapshot;
         private SoundEmitter collectSound;
 
@@ -21,7 +23,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             : base(data, position, gid) { }
 
         protected override void heartBroken(Player player, Holdable holdable, Level level) {
-            Add(new Coroutine(SmashRoutine(player, level)));
+            Add(smashRoutine = new Coroutine(SmashRoutine(player, level)));
         }
 
         private IEnumerator SmashRoutine(Player player, Level level) {
@@ -145,8 +147,17 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 collectSound = null;
             }
 
+            if (smashRoutine != null) {
+                smashRoutine.RemoveSelf();
+                smashRoutine = null;
+            }
+        }
+
+        public override void Removed(Scene scene) {
+            base.Removed(scene);
+
+            // resume music when the player respawns.
             resumeMusic();
-            RemoveSelf();
         }
 
         public override void SceneEnd(Scene scene) {
