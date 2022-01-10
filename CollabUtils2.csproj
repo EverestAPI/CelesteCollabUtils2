@@ -15,6 +15,17 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="CelesteNet.Client">
+      <HintPath>lib-stripped\CelesteNet.Client.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="CelesteNet.Shared">
+      <HintPath>lib-stripped\CelesteNet.Shared.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
   <Choose>
     <When Condition="Exists('..\..\Celeste.exe')">
       <ItemGroup>

@@ -1,3 +1,4 @@
+using Celeste.Mod.CelesteNet.Client.Components;
 using Celeste.Mod.CollabUtils2.UI;
 using Celeste.Mod.UI;
 using Mono.Cecil;
@@ -34,6 +35,10 @@ namespace Celeste.Mod.CollabUtils2 {
                 .Where(asset => asset != null)
             ) {
                 LoadCollabIDFile(asset);
+            }
+
+            if (Everest.Loader.DependencyLoaded(new EverestModuleMetadata() { Name = "CelesteNet.Client", Version = new Version(2, 0, 0) })) {
+                adjustCollabIcon();
             }
         }
 
@@ -167,6 +172,19 @@ namespace Celeste.Mod.CollabUtils2 {
             hookOnOuiJournalPoemLines?.Dispose();
             hookOnOuiFileSelectSlotGolden?.Dispose();
             hookOnOuiFileSelectSlotRender?.Dispose();
+        }
+
+        private static void adjustCollabIcon() {
+            CelesteNetPlayerListComponent.OnGetState += (blob, state) => {
+                // if we are in a collab map, change the icon displayed in the CelesteNet player list to the lobby icon.
+                AreaData data = AreaData.Get(state.SID);
+                if (data != null) {
+                    string lobbySID = GetLobbyForLevelSet(data.LevelSet);
+                    if (lobbySID != null) {
+                        blob.Location.Icon = AreaData.Get(lobbySID)?.Icon ?? blob.Location.Icon;
+                    }
+                }
+            };
         }
 
         public static void OnSessionCreated() {
