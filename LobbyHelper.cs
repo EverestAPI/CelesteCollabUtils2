@@ -1,4 +1,5 @@
 using Celeste.Mod.CelesteNet.Client.Components;
+using Celeste.Mod.CelesteNet.DataTypes;
 using Celeste.Mod.CollabUtils2.UI;
 using Celeste.Mod.UI;
 using Mono.Cecil;
@@ -38,7 +39,7 @@ namespace Celeste.Mod.CollabUtils2 {
             }
 
             if (Everest.Loader.DependencyLoaded(new EverestModuleMetadata() { Name = "CelesteNet.Client", Version = new Version(2, 0, 0) })) {
-                adjustCollabIcon();
+                setupAdjustCollabIcon();
             }
         }
 
@@ -147,6 +148,8 @@ namespace Celeste.Mod.CollabUtils2 {
             hookOnOuiJournalPoemLines = new ILHook(typeof(OuiJournalPoem).GetNestedType("PoemLine", BindingFlags.NonPublic).GetMethod("Render"), modJournalPoemHeartColors);
             hookOnOuiFileSelectSlotGolden = new ILHook(typeof(OuiFileSelectSlot).GetMethod("get_Golden", BindingFlags.NonPublic | BindingFlags.Instance), modSelectSlotCollectedStrawberries);
             hookOnOuiFileSelectSlotRender = new ILHook(typeof(OuiFileSelectSlot).GetMethod("orig_Render"), modOuiFileSelectSlotRender);
+
+            On.Monocle.Commands.ProcessMethod += onCommandLookupInMethod;
         }
 
         internal static void Unload() {
@@ -172,10 +175,36 @@ namespace Celeste.Mod.CollabUtils2 {
             hookOnOuiJournalPoemLines?.Dispose();
             hookOnOuiFileSelectSlotGolden?.Dispose();
             hookOnOuiFileSelectSlotRender?.Dispose();
+
+            On.Monocle.Commands.ProcessMethod -= onCommandLookupInMethod;
+
+            if (Everest.Loader.DependencyLoaded(new EverestModuleMetadata() { Name = "CelesteNet.Client", Version = new Version(2, 0, 0) })) {
+                teardownAdjustCollabIcon();
+            }
         }
 
-        private static void adjustCollabIcon() {
-            CelesteNetPlayerListComponent.OnGetState += (blob, state) => {
+        // TODO: this hook should be moved to Everest, I'm probably not the only one wanting to do optional dependencies like that
+
+        private static void onCommandLookupInMethod(On.Monocle.Commands.orig_ProcessMethod orig, Monocle.Commands self, MethodInfo method) {
+            try {
+                orig(self, method);
+            } catch (Exception e) {
+                // we probably met a method with some missing optional dependency, so just skip it.
+                Logger.Log(LogLevel.Warn, "commands", "Could not look for custom commands in method " + method.Name);
+                e.LogDetailed();
+            }
+        }
+
+        private static void setupAdjustCollabIcon() {
+            CelesteNetPlayerListComponent.OnGetState += CelesteNet.adjustCollabIcon;
+        }
+
+        private static void teardownAdjustCollabIcon() {
+            CelesteNetPlayerListComponent.OnGetState -= CelesteNet.adjustCollabIcon;
+        }
+
+        private class CelesteNet {
+            internal static void adjustCollabIcon(CelesteNetPlayerListComponent.BlobPlayer blob, DataPlayerState state) {
                 // if we are in a collab map, change the icon displayed in the CelesteNet player list to the lobby icon.
                 AreaData data = AreaData.Get(state.SID);
                 if (data != null) {
@@ -184,7 +213,7 @@ namespace Celeste.Mod.CollabUtils2 {
                         blob.Location.Icon = AreaData.Get(lobbySID)?.Icon ?? blob.Location.Icon;
                     }
                 }
-            };
+            }
         }
 
         public static void OnSessionCreated() {
