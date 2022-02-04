@@ -131,7 +131,7 @@ namespace Celeste.Mod.CollabUtils2 {
                 if (orig || self.Name == null)
                     return orig;
 
-                string name = self.Name.Replace("\\", "/");
+                string name = self.Name;
                 if (lazilyLoadedTextures.Contains(name)) {
                     Logger.Log(LogLevel.Debug, "CollabUtils2/LazyLoadingHandler", name + " was skipped and will be lazily loaded later");
 
@@ -204,14 +204,14 @@ namespace Celeste.Mod.CollabUtils2 {
 
                 // texture is lazily loaded if it is in our list.
                 // this will make Everest actually check if the texture is loaded, and call Reload() if it is not.
-                string name = self.Name.Replace("\\", "/");
+                string name = self.Name;
                 return lazilyLoadedTextures.Contains(name);
             });
         }
 
         private static void onTextureLazyLoad(On.Monocle.VirtualTexture.orig_Reload orig, VirtualTexture self) {
             // this is actually called on every texture load, so we need to check if this is a lazy load or not
-            string name = self.Name.Replace("\\", "/");
+            string name = self.Name;
             if (!preloadingTextures && lazilyLoadedTextures.Contains(name)) {
                 string currentMap = (Engine.Scene as Level)?.Session?.Area.GetSID();
 
