@@ -712,6 +712,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         public static void Close(Level level, bool removeScene, bool resetPlayer) {
             if (removeScene) {
+                overworldWrapper?.WrappedScene?.GetUI<OuiChapterPanel>().RemoveSelf();
+                overworldWrapper?.WrappedScene?.Entities.UpdateLists();
                 overworldWrapper?.RemoveSelf();
 
                 if (lastArea != null && SaveData.Instance != null) {
