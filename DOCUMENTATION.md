@@ -269,7 +269,7 @@ If you followed the setup at the beginning of this document, the level set shoul
 
 #### More customization for the journal
 
-**If you want the hearts to have a custom color or graphic** in the journal for a lobby, you can put the image for it in `Graphics/Atlases/Journal/CollabUtils2Hearts/CollabName/LobbyName.png`.
+**If you want the hearts to have a custom color or graphic** in the journal for a lobby, you can put the image for it in `Graphics/Atlases/Journal/CollabUtils2Hearts/CollabName/LobbyName.png`. If the line you want to customize does not match a lobby (for example for a Prologue), put it in `Graphics/Atlases/Journal/CollabUtils2Hearts/CollabName/0-Lobbies/BinName.png` instead.
 
 If you don't define this, the blue heart will be used by default.
 

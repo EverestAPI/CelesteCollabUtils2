@@ -132,7 +132,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         strawberryText = "-";
                     }
 
-                    string heartTexture = MTN.Journal.Has("CollabUtils2Hearts/" + lobbyMapLevelSetName) ? "CollabUtils2Hearts/" + lobbyMapLevelSetName : "heartgem0";
+                    string heartTexturePath = lobbyMapLevelSetName ?? areaData.GetSID();
+                    string heartTexture = MTN.Journal.Has("CollabUtils2Hearts/" + heartTexturePath) ? "CollabUtils2Hearts/" + heartTexturePath : "heartgem0";
 
                     string areaName = Dialog.Clean(areaData.Name);
                     if (Dialog.Has(areaData.Name + "_journal")) {
