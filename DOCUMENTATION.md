@@ -255,6 +255,8 @@ If you don't define those images, they will use A-side skulls instead.
 
 You can take the skulls that ship with the collab utils as a reference.
 
+You can change the chapter panel skull icon for **any** campaign using this feature: if the maps are in `Maps/foldername`, put the skull icon at `Graphics/Atlases/Gui/CollabUtils2/skulls/foldername`.
+
 ### Journal Trigger
 
 This trigger allows you to bring up a journal similar to the overworld, but showing your progress on a particular level set. This journal will also include speed berry PBs.

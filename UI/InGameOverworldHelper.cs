@@ -572,17 +572,23 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             orig(self, wiggle, overrideStrawberryWiggle, overrideDeathWiggle, overrideHeartWiggle);
 
-            if (Engine.Scene == overworldWrapper?.Scene) {
-                AreaModeStats areaModeStats = self.DisplayedStats.Modes[(int) self.Area.Mode];
-                DeathsCounter deathsCounter = new DynData<OuiChapterPanel>(self).Get<DeathsCounter>("deaths");
-                deathsCounter.Visible = areaModeStats.Deaths > 0 && !AreaData.Get(self.Area).Interlude_Safe;
+            DeathsCounter deathsCounter = new DynData<OuiChapterPanel>(self).Get<DeathsCounter>("deaths");
 
-                // mod the death icon
-                string pathToSkull = "CollabUtils2/skulls/" + self.Area.GetLevelSet();
-                if (GFX.Gui.Has(pathToSkull)) {
-                    new DynData<DeathsCounter>(deathsCounter)["icon"] = GFX.Gui[pathToSkull];
-                }
+            if (Engine.Scene == overworldWrapper?.Scene) {
+                // within lobbies, death counts always show up, even if you didn't beat the map yet.
+                AreaModeStats areaModeStats = self.DisplayedStats.Modes[(int) self.Area.Mode];
+                deathsCounter.Visible = areaModeStats.Deaths > 0 && !AreaData.Get(self.Area).Interlude_Safe;
             }
+
+            // mod the death icon: for the path, use the current level set, or for lobbies, the lobby's matching level set.
+            string pathToSkull = "CollabUtils2/skulls/" + self.Area.GetLevelSet();
+            if (LobbyHelper.GetLobbyLevelSet(self.Area.GetSID()) != null) {
+                pathToSkull = "CollabUtils2/skulls/" + LobbyHelper.GetLobbyLevelSet(self.Area.GetSID());
+            }
+            if (GFX.Gui.Has(pathToSkull)) {
+                new DynData<DeathsCounter>(deathsCounter)["icon"] = GFX.Gui[pathToSkull];
+            }
+            new DynData<DeathsCounter>(deathsCounter)["modifiedByCollabUtils"] = GFX.Gui.Has(pathToSkull);
 
 
             if (isPanelShowingLobby(self) || Engine.Scene == overworldWrapper?.Scene) {
@@ -602,9 +608,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(62f))) {
                 Logger.Log("CollabUtils2/InGameOverworldHelper", $"Unhardcoding death icon width at {cursor.Index} in IL for DeathsCounter.Render");
                 cursor.Emit(OpCodes.Ldarg_0);
+                cursor.Emit(OpCodes.Ldarg_0);
                 cursor.Emit(OpCodes.Ldfld, typeof(DeathsCounter).GetField("icon", BindingFlags.NonPublic | BindingFlags.Instance));
-                cursor.EmitDelegate<Func<float, MTexture, float>>((orig, icon) => {
-                    if (Engine.Scene == overworldWrapper?.Scene) {
+                cursor.EmitDelegate<Func<float, DeathsCounter, MTexture, float>>((orig, self, icon) => {
+                    DynData<DeathsCounter> data = new DynData<DeathsCounter>(self);
+                    if (data.Data.ContainsKey("modifiedByCollabUtils") && data.Get<bool>("modifiedByCollabUtils")) {
                         return icon.Width - 4; // vanilla icons are 66px wide.
                     }
                     return orig;
