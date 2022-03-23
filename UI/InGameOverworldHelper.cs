@@ -489,23 +489,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             cursor.Index = 0;
 
-            // 2. Resize the title if it does not fit.
-            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(-60))) {
-                Logger.Log("CollabUtils2/InGameOverworldHelper", $"Modding chapter panel title bookmark position at {cursor.Index} in IL for OuiChapterPanel.Render");
-                cursor.Emit(OpCodes.Ldarg_0);
-                cursor.EmitDelegate<Func<float, OuiChapterPanel, float>>((orig, self) => {
-                    if (Engine.Scene == overworldWrapper?.Scene) {
-                        float mapNameSize = ActiveFont.Measure(Dialog.Clean(AreaData.Get(self.Area).Name)).X;
-                        return orig - Math.Max(0f, mapNameSize - 550f);
-                    } else {
-                        return orig;
-                    }
-                });
-            }
-
-            cursor.Index = 0;
-
-            // 3. Turn the chapter card silver or rainbow instead of gold when relevant.
+            // 2. Turn the chapter card silver or rainbow instead of gold when relevant.
             while (cursor.TryGotoNext(MoveType.After,
                 instr => instr.MatchLdarg(0),
                 instr => instr.MatchLdstr("areaselect/cardtop_golden") || instr.MatchLdstr("areaselect/card_golden"),
@@ -533,7 +517,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             cursor.Index = 0;
 
-            // 4. If the author name is empty, center the map name like interludes.
+            // 3. If the author name is empty, center the map name like interludes.
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCallvirt<AreaData>("get_Interlude_Safe"))) {
                 Logger.Log("CollabUtils2/InGameOverworldHelper", $"Modding chapter panel title position at {cursor.Index} in IL for OuiChapterPanel.Render");
                 cursor.Emit(OpCodes.Ldarg_0);
