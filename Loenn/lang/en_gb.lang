@@ -1,0 +1,66 @@
+mods.CollabUtils2.name=Collab Utils 2
+
+# Golden Berry Spawn Point
+entities.CollabUtils2/GoldenBerryPlayerRespawnPoint.placements.name.default=Golden Berry Player Respawn Point
+
+# Mini Heart
+entities.CollabUtils2/MiniHeart.placements.name.default=Mini Heart
+entities.CollabUtils2/MiniHeart.attributes.description.sprite=The sprite the mini heart should use.
+entities.CollabUtils2/MiniHeart.attributes.description.refillDash=Whether bouncing on the heart should refill dashes.
+entities.CollabUtils2/MiniHeart.attributes.description.requireDashToBreak=Whether the player needs to dash on the heart to collect it.\nIf this is unchecked, the player will be able to collect the heart by just touching it.
+entities.CollabUtils2/MiniHeart.attributes.description.noGhostSprite=If checked, the heart will never use the "ghost" sprite even when already collected.
+entities.CollabUtils2/MiniHeart.attributes.description.particleColor=The color of the particles emitted by the mini heart. Leave empty to use default colors.
+
+# Fake Mini Heart
+entities.CollabUtils2/FakeMiniHeart.placements.name.default=Fake Mini Heart
+entities.CollabUtils2/FakeMiniHeart.attributes.description.sprite=The sprite the fake mini heart should use.
+entities.CollabUtils2/FakeMiniHeart.attributes.description.refillDash=Whether bouncing on the heart should refill dashes.
+entities.CollabUtils2/FakeMiniHeart.attributes.description.requireDashToBreak=Whether the player needs to dash on the heart to make it disappear.\nIf this is unchecked, the heart will disappear when the player touches it.
+entities.CollabUtils2/FakeMiniHeart.attributes.description.noGhostSprite=If checked, the heart will never use the "ghost" sprite even when already collected.
+entities.CollabUtils2/FakeMiniHeart.attributes.description.particleColor=The color of the particles emitted by the fake mini heart. Leave empty to use default colors.
+
+# Mini Heart Door
+entities.CollabUtils2/MiniHeartDoor.placements.name.door=Mini Heart Door
+entities.CollabUtils2/MiniHeartDoor.attributes.description.requires=Determines the number of Crystal Hearts required to open the heart door. Counts hearts within the level set specified in the "Level Set" attribute.
+entities.CollabUtils2/MiniHeartDoor.attributes.description.startHidden=Whether the door should start hidden and come crashing down when the player approaches.\nWill destroy dash blocks as it crashes down.
+entities.CollabUtils2/MiniHeartDoor.attributes.description.levelSet=The heart door will be unlocked by collecting mini hearts in this level set.
+entities.CollabUtils2/MiniHeartDoor.attributes.description.color=The color of the door. Also supports hex color codes.
+entities.CollabUtils2/MiniHeartDoor.attributes.description.doorID=An identifier for this door (should be unique in the lobby). Only useful if you have multiple heart doors in the same lobby, otherwise you can leave that empty.
+
+# Rainbow Berry
+entities.CollabUtils2/RainbowBerry.placements.name.default=Rainbow Berry
+entities.CollabUtils2/RainbowBerry.attributes.description.levelSet=The rainbow berry will only spawn if all silver berries in this level set have been collected.
+
+# Silver Berry
+entities.CollabUtils2/SilverBerry.placements.name.default=Silver Berry
+
+# Silver Block
+entities.CollabUtils2/SilverBlock.placements.name.default=Silver Block
+
+# Speed Berry
+entities.CollabUtils2/SpeedBerry.placements.name.default=Speed Berry
+entities.CollabUtils2/SpeedBerry.attributes.description.goldTime=The time (in seconds) required to get the Gold speed berry rank.
+entities.CollabUtils2/SpeedBerry.attributes.description.silverTime=The time (in seconds) required to get the Silver speed berry rank.
+entities.CollabUtils2/SpeedBerry.attributes.description.bronzeTime=The time (in seconds) required to get the Bronze speed berry rank.
+
+# Chapter Panel Trigger
+triggers.CollabUtils2/ChapterPanelTrigger.placements.name.default=Chapter Panel
+triggers.CollabUtils2/ChapterPanelTrigger.attributes.description.map=The SID (string ID) of the map that will be entered with the trigger.
+triggers.CollabUtils2/ChapterPanelTrigger.attributes.description.returnToLobbyMode=Determines how "Return to Lobby" will behave after entering this map.\n- SetReturnToHere: the Return to Lobby button will return the player to the nearest spawn point in the current map.\n- RemoveReturn: the Return to Lobby button will disappear from the pause menu.\n- DoNotChangeReturn: the current Return to Lobby button will not be changed.
+triggers.CollabUtils2/ChapterPanelTrigger.attributes.description.allowSaving=If selected, the player will be allowed to save and return to the lobby in the map this trigger teleports to, by selecting "Save" when returning to lobby. Not compatible with maps that have checkpoints.
+
+# Journal Trigger
+triggers.CollabUtils2/JournalTrigger.placements.name.default=Journal
+triggers.CollabUtils2/JournalTrigger.attributes.description.levelset=The levelset for which the journal will be opened with the trigger.
+triggers.CollabUtils2/JournalTrigger.attributes.description.showOnlyDiscovered=If checked, the journal will hide maps with a play time of 0, to only show those the player has found in the lobby.
+triggers.CollabUtils2/JournalTrigger.attributes.description.vanillaJournal=If checked, the journal will use the same format as vanilla, instead of the custom one used for collabs.
+
+# Mini Heart Door Unlock Cutscene Trigger
+triggers.CollabUtils2/MiniHeartDoorUnlockCutsceneTrigger.placements.name.default=Mini Heart Door Unlock Cutscene
+triggers.CollabUtils2/MiniHeartDoorUnlockCutsceneTrigger.attributes.description.doorID=The ID of the door this cutscene should unlock.\nOnly useful if you have multiple heart doors in the same lobby, otherwise you can leave that empty.
+
+# Rainbow Berry Unlock Cutscene Trigger
+triggers.CollabUtils2/RainbowBerryUnlockCutsceneTrigger.placements.name.default=Rainbow Berry Unlock Cutscene
+
+# Speed Berry Collect Trigger
+triggers.CollabUtils2/SpeedBerryCollectTrigger.placements.name.default=Speed Berry Collect
