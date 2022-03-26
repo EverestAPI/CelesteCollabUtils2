@@ -62,5 +62,8 @@ triggers.CollabUtils2/MiniHeartDoorUnlockCutsceneTrigger.attributes.description.
 # Rainbow Berry Unlock Cutscene Trigger
 triggers.CollabUtils2/RainbowBerryUnlockCutsceneTrigger.placements.name.default=Rainbow Berry Unlock Cutscene
 
+# Silver Berry Collect Trigger
+triggers.CollabUtils2/SilverBerryCollectTrigger.placements.name.default=Silver Berry Collect
+
 # Speed Berry Collect Trigger
 triggers.CollabUtils2/SpeedBerryCollectTrigger.placements.name.default=Speed Berry Collect
