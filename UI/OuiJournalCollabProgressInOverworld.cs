@@ -47,7 +47,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 .AddColumn(new EmptyCell(64f))
                 .AddColumn(new IconCell("strawberry", 150f))
                 .AddColumn(new IconCell("skullblue", 100f))
-                .AddColumn(new IconCell("CollabUtils2MinDeaths/SpringCollab2020/1-Beginner", 100f))
+                .AddColumn(new IconCell("CollabUtils2MinDeaths/SpringCollab2020/1-Beginner", 100f));
+
+            if (OuiJournalCollabProgressDashCountMod.IsDashCountEnabled()) {
+                table.AddColumn(new IconCell("max480/DashCountMod/dashes", 80f));
+            }
+
+            table
                 .AddColumn(new IconCell("time", 220f))
                 .AddColumn(new IconCell("CollabUtils2/speed_berry_pbs_heading", 220f))
                 .AddColumn(new EmptyCell(30f));
@@ -55,6 +61,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             int totalStrawberries = 0;
             int totalDeaths = 0;
             int sumOfBestDeaths = 0;
+            int sumOfBestDashes = 0;
             long totalTime = 0;
             long sumOfBestTimes = 0;
 
@@ -75,6 +82,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     int lobbyTotalStrawberries = areaData.Mode[0].TotalStrawberries;
                     int lobbyDeaths = item.Modes[0].Deaths;
                     int lobbySumOfBestDeaths = 0;
+                    int lobbySumOfBestDashes = 0;
                     long lobbyTotalTime = item.TotalTimePlayed;
                     long lobbySumOfBestTimes = 0;
                     bool lobbyLevelsDone = true;
@@ -116,6 +124,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                             lobbySilverBerriesObtained = false;
                             lobbySumOfBestDeaths += lobbyMap.Modes[0].BestDeaths;
                         }
+
+                        lobbySumOfBestDashes += lobbyMap.Modes[0].BestDashes;
 
                         if (!lobbyMap.Modes[0].HeartGem) {
                             lobbyLevelsDone = false;
@@ -164,9 +174,24 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         } else {
                             row.Add(new IconCell("dot"));
                         }
+
+                        if (OuiJournalCollabProgressDashCountMod.IsDashCountEnabled()) {
+                            if (lobbyMapLevelSet == null) {
+                                row.Add(new TextCell(Dialog.Deaths(item.Modes[0].BestDashes), TextJustify, 0.5f, TextColor));
+                                sumOfBestDashes += item.Modes[0].BestDashes;
+                            } else if (lobbyAllMapsCompletedInSingleRun) {
+                                row.Add(new TextCell(Dialog.Deaths(lobbySumOfBestDashes), TextJustify, 0.5f, TextColor));
+                            } else {
+                                row.Add(new IconCell("dot"));
+                            }
+                        }
                     } else {
                         row.Add(new IconCell("dot"));
                         allLevelsDone = false;
+
+                        if (OuiJournalCollabProgressDashCountMod.IsDashCountEnabled()) {
+                            row.Add(new IconCell("dot"));
+                        }
                     }
 
                     if (lobbyTotalTime > 0) {
@@ -194,6 +219,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     totalStrawberries += lobbyStrawberries;
                     totalDeaths += lobbyDeaths;
                     sumOfBestDeaths += lobbySumOfBestDeaths;
+                    sumOfBestDashes += lobbySumOfBestDashes;
                     totalTime += lobbyTotalTime;
                     allMapsCompletedInSingleRun &= lobbyAllMapsCompletedInSingleRun;
 
@@ -209,7 +235,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 .Add(null)
                 .Add(new TextCell(totalStrawberries.ToString(), TextJustify, 0.6f, TextColor))
                 .Add(new TextCell(Dialog.Deaths(totalDeaths), TextJustify, 0.6f, TextColor))
-                .Add(new TextCell(allLevelsDone && allMapsCompletedInSingleRun ? Dialog.Deaths(sumOfBestDeaths) : "-", TextJustify, 0.6f, TextColor))
+                .Add(new TextCell(allLevelsDone && allMapsCompletedInSingleRun ? Dialog.Deaths(sumOfBestDeaths) : "-", TextJustify, 0.6f, TextColor));
+
+            if (OuiJournalCollabProgressDashCountMod.IsDashCountEnabled()) {
+                totalsRow.Add(new TextCell(allLevelsDone && allMapsCompletedInSingleRun ? Dialog.Deaths(sumOfBestDashes) : "-", TextJustify, 0.6f, TextColor));
+            }
+
+            totalsRow
                 .Add(new TextCell(Dialog.Time(totalTime), TextJustify, 0.6f, TextColor))
                 .Add(new TextCell(allSpeedBerriesDone ? Dialog.Time(sumOfBestTimes) : "-", TextJustify, 0.6f, TextColor)).Add(null);
 
