@@ -148,6 +148,8 @@ namespace Celeste.Mod.CollabUtils2 {
             hookOnOuiJournalPoemLines = new ILHook(typeof(OuiJournalPoem).GetNestedType("PoemLine", BindingFlags.NonPublic).GetMethod("Render"), modJournalPoemHeartColors);
             hookOnOuiFileSelectSlotGolden = new ILHook(typeof(OuiFileSelectSlot).GetMethod("get_Golden", BindingFlags.NonPublic | BindingFlags.Instance), modSelectSlotCollectedStrawberries);
             hookOnOuiFileSelectSlotRender = new ILHook(typeof(OuiFileSelectSlot).GetMethod("orig_Render"), modOuiFileSelectSlotRender);
+
+            On.Monocle.Commands.ProcessMethod += onCommandLookupInMethod;
         }
 
         internal static void Unload() {
@@ -174,8 +176,22 @@ namespace Celeste.Mod.CollabUtils2 {
             hookOnOuiFileSelectSlotGolden?.Dispose();
             hookOnOuiFileSelectSlotRender?.Dispose();
 
+            On.Monocle.Commands.ProcessMethod -= onCommandLookupInMethod;
+
             if (Everest.Loader.DependencyLoaded(new EverestModuleMetadata() { Name = "CelesteNet.Client", Version = new Version(2, 0, 0) })) {
                 teardownAdjustCollabIcon();
+            }
+        }
+
+        // TODO: this hook should be moved to Everest, I'm probably not the only one wanting to do optional dependencies like that
+
+        private static void onCommandLookupInMethod(On.Monocle.Commands.orig_ProcessMethod orig, Monocle.Commands self, MethodInfo method) {
+            try {
+                orig(self, method);
+            } catch (Exception e) {
+                // we probably met a method with some missing optional dependency, so just skip it.
+                Logger.Log(LogLevel.Warn, "commands", "Could not look for custom commands in method " + method.Name);
+                e.LogDetailed();
             }
         }
 

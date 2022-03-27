@@ -3,4 +3,4 @@
   DLL: bin/Debug/net452/CollabUtils2.dll
   Dependencies:
     - Name: Everest
-      Version: 1.3282.0
+      Version: 1.2882.0
