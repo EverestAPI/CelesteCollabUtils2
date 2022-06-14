@@ -205,13 +205,13 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             base.Update();
 
             // make sure the two blocks don't escape their boundaries when the door opens up.
-            if (TopSolid.Top != Y - height) {
+            if (TopSolid.Top != Y - height && Opened) {
                 // if the top block is at 12 instead of 16, and has height 30, make it height 26 instead.
                 float displacement = (Y - height) - TopSolid.Top; // 20 - 16 = 4
                 TopSolid.Collider.Height = height - displacement; // 30 - 4 = 26
                 TopSolid.Top = Y - height; // replace the block at 16
             }
-            if (BottomSolid.Bottom != Y + height) {
+            if (BottomSolid.Bottom != Y + height && Opened) {
                 float displacement = BottomSolid.Top - Y;
                 BottomSolid.Collider.Height = height - displacement;
             }
