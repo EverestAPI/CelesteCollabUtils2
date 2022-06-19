@@ -66,6 +66,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
         public OuiJournalCollabProgressInOverworld(OuiJournal journal)
             : base(journal) {
 
+            bool displaySpeedBerryColumn = shouldDisplaySpeedBerryColumn();
+
             PageTexture = "page";
             table = new Table()
                 .AddColumn(new TextCell(Dialog.Clean("journal_progress"), new Vector2(0f, 0.5f), 1f, Color.Black * 0.7f, 420f))
@@ -124,7 +126,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         lobbyTotalTime += lobbyMap.TotalTimePlayed;
                         lobbyAllMapsCompletedInSingleRun &= lobbyMap.Modes[0].SingleRunCompleted;
 
-                        if (shouldDisplaySpeedBerryColumn()) {
+                        if (displaySpeedBerryColumn) {
                             if (CollabMapDataProcessor.SpeedBerries.TryGetValue(lobbyMap.GetSID(), out CollabMapDataProcessor.SpeedBerryInfo mapSpeedBerryInfo)
                                 && CollabModule.Instance.SaveData.SpeedBerryPBs.TryGetValue(lobbyMap.GetSID(), out long mapSpeedBerryPB)) {
 
@@ -231,7 +233,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     if (lobbyMapLevelSet == null) {
                         row.Add(new TextCell("-", TextJustify, 0.5f, TextColor)).Add(null);
                     } else if (lobbySpeedBerryLevel < 4) {
-                        if (shouldDisplaySpeedBerryColumn()) {
+                        if (displaySpeedBerryColumn) {
                             row.Add(new TextCell(Dialog.Time(lobbySumOfBestTimes), TextJustify, 0.5f, getRankColor(lobbySpeedBerryLevel)));
                             row.Add(new IconCell(getRankIcon(lobbySpeedBerryLevel)));
                             sumOfBestTimes += lobbySumOfBestTimes;

@@ -68,6 +68,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         public static List<OuiJournalCollabProgressInLobby> GeneratePages(OuiJournal journal, string levelSet, bool showOnlyDiscovered) {
+            bool displaySpeedBerryColumn = shouldDisplaySpeedBerryColumn(levelSet);
+
             List<OuiJournalCollabProgressInLobby> pages = new List<OuiJournalCollabProgressInLobby>();
             int rowCount = 0;
 
@@ -215,7 +217,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     row.Add(new IconCell("dot"));
                 }
 
-                if (shouldDisplaySpeedBerryColumn(levelSet)) {
+                if (displaySpeedBerryColumn) {
                     if (CollabMapDataProcessor.SpeedBerries.TryGetValue(item.GetSID(), out CollabMapDataProcessor.SpeedBerryInfo speedBerryInfo)
                         && CollabModule.Instance.SaveData.SpeedBerryPBs.TryGetValue(item.GetSID(), out long speedBerryPB)) {
 
