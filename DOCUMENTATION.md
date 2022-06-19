@@ -282,6 +282,8 @@ You can also **define a custom display name for a lobby** in the overworld journ
 
 This is useful to make the journal say "Beginner Difficulty" instead of "Beginner Lobby" for example. This is optional; if you don't define it, the map name will be displayed instead.
 
+**To put an image in the last page of a lobby journal**, put it in `Graphics/Atlases/Journal/collabLobbyMaps/CollabName/LobbyName.png`. The Spring Collab uses this to display a rough map of the lobby.
+
 ## Map Metadata
 
 Collab Utils allow you to set randomized session flags in your map meta.yaml:

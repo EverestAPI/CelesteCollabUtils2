@@ -37,6 +37,32 @@ namespace Celeste.Mod.CollabUtils2.UI {
             return "CollabUtils2/speed_berry_bronze";
         }
 
+        private static bool shouldDisplaySpeedBerryColumn() {
+            if (CollabModule.Instance.Settings.BestTimeToDisplayInJournal == CollabSettings.BestTimeInJournal.SpeedBerry) {
+                foreach (AreaStats item in SaveData.Instance.Areas_Safe) {
+                    // start going through all maps belonging to the collab level set, or to a lobby level set belonging to this collab.
+                    bool belongsToCollab = false;
+
+                    if (item.LevelSet == SaveData.Instance.LevelSet) {
+                        belongsToCollab = true;
+                    } else {
+                        string lobby = LobbyHelper.GetLobbyForLevelSet(item.LevelSet);
+                        if (lobby != null && AreaData.Get(lobby).GetLevelSet() == SaveData.Instance.LevelSet) {
+                            belongsToCollab = true;
+                        }
+                    }
+
+                    if (belongsToCollab && CollabMapDataProcessor.SpeedBerries.ContainsKey(item.GetSID())) {
+                        // this level has a speed berry!
+                        return true;
+                    }
+                }
+            }
+
+            // either we disabled speed berries in the journal, or just went through all maps without finding any...
+            return false;
+        }
+
         public OuiJournalCollabProgressInOverworld(OuiJournal journal)
             : base(journal) {
 
@@ -98,7 +124,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         lobbyTotalTime += lobbyMap.TotalTimePlayed;
                         lobbyAllMapsCompletedInSingleRun &= lobbyMap.Modes[0].SingleRunCompleted;
 
-                        if (CollabModule.Instance.Settings.BestTimeToDisplayInJournal == CollabSettings.BestTimeInJournal.SpeedBerry) {
+                        if (shouldDisplaySpeedBerryColumn()) {
                             if (CollabMapDataProcessor.SpeedBerries.TryGetValue(lobbyMap.GetSID(), out CollabMapDataProcessor.SpeedBerryInfo mapSpeedBerryInfo)
                                 && CollabModule.Instance.SaveData.SpeedBerryPBs.TryGetValue(lobbyMap.GetSID(), out long mapSpeedBerryPB)) {
 
@@ -205,7 +231,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     if (lobbyMapLevelSet == null) {
                         row.Add(new TextCell("-", TextJustify, 0.5f, TextColor)).Add(null);
                     } else if (lobbySpeedBerryLevel < 4) {
-                        if (CollabModule.Instance.Settings.BestTimeToDisplayInJournal == CollabSettings.BestTimeInJournal.SpeedBerry) {
+                        if (shouldDisplaySpeedBerryColumn()) {
                             row.Add(new TextCell(Dialog.Time(lobbySumOfBestTimes), TextJustify, 0.5f, getRankColor(lobbySpeedBerryLevel)));
                             row.Add(new IconCell(getRankIcon(lobbySpeedBerryLevel)));
                             sumOfBestTimes += lobbySumOfBestTimes;

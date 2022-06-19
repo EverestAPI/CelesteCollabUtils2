@@ -52,6 +52,21 @@ namespace Celeste.Mod.CollabUtils2.UI {
             return "CollabUtils2/speed_berry_bronze";
         }
 
+        private static bool shouldDisplaySpeedBerryColumn(string levelSet) {
+            if (CollabModule.Instance.Settings.BestTimeToDisplayInJournal == CollabSettings.BestTimeInJournal.SpeedBerry) {
+                // start going through all maps belonging to our assigned level set.
+                foreach (AreaStats item in SaveData.Instance.Areas_Safe) {
+                    if (item.LevelSet == levelSet && CollabMapDataProcessor.SpeedBerries.ContainsKey(item.GetSID())) {
+                        // this level has a speed berry!
+                        return true;
+                    }
+                }
+            }
+
+            // either we disabled speed berries in the journal, or just went through all maps without finding any...
+            return false;
+        }
+
         public static List<OuiJournalCollabProgressInLobby> GeneratePages(OuiJournal journal, string levelSet, bool showOnlyDiscovered) {
             List<OuiJournalCollabProgressInLobby> pages = new List<OuiJournalCollabProgressInLobby>();
             int rowCount = 0;
@@ -200,7 +215,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     row.Add(new IconCell("dot"));
                 }
 
-                if (CollabModule.Instance.Settings.BestTimeToDisplayInJournal == CollabSettings.BestTimeInJournal.SpeedBerry) {
+                if (shouldDisplaySpeedBerryColumn(levelSet)) {
                     if (CollabMapDataProcessor.SpeedBerries.TryGetValue(item.GetSID(), out CollabMapDataProcessor.SpeedBerryInfo speedBerryInfo)
                         && CollabModule.Instance.SaveData.SpeedBerryPBs.TryGetValue(item.GetSID(), out long speedBerryPB)) {
 
