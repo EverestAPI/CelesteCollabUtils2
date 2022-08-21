@@ -27,6 +27,20 @@ namespace Celeste.Mod.CollabUtils2 {
         // textures that were lazily loaded, and therefore should have been loaded in advance!
         private static HashSet<string> newPaths = new HashSet<string>();
 
+        // these Gui assets won't be lazily loaded no matter what
+        private static readonly List<string> guiExcludedFromLazyLoading = new List<string>() { "areas/", "emoji/", "CollabUtils2/skulls/" };
+
+        // lazy loading config that can be filled in CollabUtils2LazyLoading.yaml
+        private class LazyLoadingConfig {
+            public class PrefixesExcludedFromLazyLoading {
+                public List<string> Gui { get; set; } = new List<string>();
+                public List<string> Gameplay { get; set; } = new List<string>();
+            }
+
+            public bool Enable { get; set; } = false;
+            public PrefixesExcludedFromLazyLoading ExcludedPrefixes { get; set; } = new PrefixesExcludedFromLazyLoading();
+        }
+
         private static string latestMapSID = null;
         private static bool preloadingTextures = false;
         private static ILHook hookOnTextureSafe;
@@ -70,14 +84,34 @@ namespace Celeste.Mod.CollabUtils2 {
         private static void registerLazyLoadingMods(ModContent modContent) {
             Logger.Log("CollabUtils2/LazyLoadingHandler", "Checking mod " + modContent.Name);
 
+            LazyLoadingConfig config = null;
+
             if (modContent.Map.ContainsKey("CollabUtils2LazyLoading")) {
+                // parse config as yaml
+                using (TextReader textReader = new StreamReader(modContent.Map["CollabUtils2LazyLoading"].Stream)) {
+                    config = YamlHelper.Deserializer.Deserialize<LazyLoadingConfig>(textReader);
+                }
+            }
+
+            if (config != null && config.Enable) {
                 // lazy loading activated!
                 foreach (KeyValuePair<string, ModAsset> asset in modContent.Map) {
+                    // find out which gameplay sprites we should lazy load
                     if (asset.Value.Type == typeof(Texture2D) && asset.Key.StartsWith("Graphics/Atlases/Gameplay/")) {
-                        // we will lazily load this gameplay sprite.
-                        lazilyLoadedTextures.Add(asset.Key);
+                        if (!matchesPrefixInList("Graphics/Atlases/Gameplay/", asset.Key, config.ExcludedPrefixes.Gameplay)) {
+                            lazilyLoadedTextures.Add(asset.Key);
+                            Logger.Log("CollabUtils2/LazyLoadingHandler", asset.Key + " was registered for lazy loading");
+                        }
+                    }
 
-                        Logger.Log("CollabUtils2/LazyLoadingHandler", asset.Key + " was registered for lazy loading");
+                    // find out which GUI sprites we should lazy load
+                    if (asset.Value.Type == typeof(Texture2D) && asset.Key.StartsWith("Graphics/Atlases/Gui/")) {
+                        if (!matchesPrefixInList("Graphics/Atlases/Gui/", asset.Key, guiExcludedFromLazyLoading)
+                            && !matchesPrefixInList("Graphics/Atlases/Gui/", asset.Key, config.ExcludedPrefixes.Gui)) {
+
+                            lazilyLoadedTextures.Add(asset.Key);
+                            Logger.Log("CollabUtils2/LazyLoadingHandler", asset.Key + " was registered for lazy loading");
+                        }
                     }
 
                     if (asset.Value.Type == typeof(AssetTypeMap)) {
@@ -103,6 +137,16 @@ namespace Celeste.Mod.CollabUtils2 {
                     }
                 }
             }
+        }
+
+        private static bool matchesPrefixInList(string basePath, string toCheck, List<string> list) {
+            foreach (string prefix in list) {
+                if (toCheck.StartsWith(basePath + prefix)) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static void fillInTexturesFromCache(string key, Stream input) {
