@@ -493,7 +493,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             while (cursor.TryGotoNext(MoveType.After,
                 instr => instr.MatchLdarg(0),
                 instr => instr.MatchLdstr("areaselect/cardtop_golden") || instr.MatchLdstr("areaselect/card_golden"),
-                instr => instr.MatchCall<OuiChapterPanel>("_ModCardTexture"))) {
+                instr => instr.MatchCall<OuiChapterPanel>("_ModCardTexture") || instr.MatchCall<OuiChapterPanel>("_ModAreaselectTexture"))) {
 
                 Logger.Log("CollabUtils2/InGameOverworldHelper", $"Modding chapter panel card at {cursor.Index} in IL for OuiChapterPanel.Render");
 
