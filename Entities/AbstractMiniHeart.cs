@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Monocle;
 
 namespace Celeste.Mod.CollabUtils2.Entities {

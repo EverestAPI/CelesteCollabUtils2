@@ -1,4 +1,4 @@
-﻿using Celeste.Mod.CollabUtils2.Entities;
+using Celeste.Mod.CollabUtils2.Entities;
 using Celeste.Mod.CollabUtils2.Triggers;
 using Celeste.Mod.CollabUtils2.UI;
 using Monocle;

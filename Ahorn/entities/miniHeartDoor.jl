@@ -1,4 +1,4 @@
-﻿module CollabUtils2MiniHeartDoor
+module CollabUtils2MiniHeartDoor
 
 using ..Ahorn, Maple
 

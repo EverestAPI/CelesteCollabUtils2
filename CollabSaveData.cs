@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace Celeste.Mod.CollabUtils2 {
     public class CollabSaveData : EverestModuleSaveData {

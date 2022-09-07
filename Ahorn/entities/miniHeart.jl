@@ -1,4 +1,4 @@
-﻿module CollabUtils2MiniHeart
+module CollabUtils2MiniHeart
 
 using ..Ahorn, Maple
 

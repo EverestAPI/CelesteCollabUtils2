@@ -1,4 +1,4 @@
-﻿module CollabUtils2RainbowBerry
+module CollabUtils2RainbowBerry
 
 using ..Ahorn, Maple
 

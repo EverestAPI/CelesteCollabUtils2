@@ -1,4 +1,4 @@
-﻿using Celeste.Mod.CollabUtils2.UI;
+using Celeste.Mod.CollabUtils2.UI;
 using Celeste.Mod.Entities;
 using FMOD.Studio;
 using Microsoft.Xna.Framework;

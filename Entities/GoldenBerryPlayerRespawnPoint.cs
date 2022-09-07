@@ -1,4 +1,4 @@
-﻿using Monocle;
+using Monocle;
 using MonoMod.Utils;
 using System.Linq;
 

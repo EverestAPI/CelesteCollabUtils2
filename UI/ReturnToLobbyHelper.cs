@@ -1,4 +1,4 @@
-﻿using Celeste.Mod.CollabUtils2.Triggers;
+using Celeste.Mod.CollabUtils2.Triggers;
 using Microsoft.Xna.Framework;
 using Monocle;
 using MonoMod.RuntimeDetour;

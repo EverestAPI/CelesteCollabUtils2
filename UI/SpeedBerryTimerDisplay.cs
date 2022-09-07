@@ -1,4 +1,4 @@
-﻿using Celeste.Mod.CollabUtils2.Entities;
+using Celeste.Mod.CollabUtils2.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
 using System;

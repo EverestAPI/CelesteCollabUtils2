@@ -1,4 +1,4 @@
-﻿module CollabUtils2GoldenBerryPlayerRespawnPoint
+module CollabUtils2GoldenBerryPlayerRespawnPoint
 
 using ..Ahorn, Maple
 

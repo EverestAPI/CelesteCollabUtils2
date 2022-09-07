@@ -1,4 +1,4 @@
-﻿using Celeste.Mod.CollabUtils2.UI;
+using Celeste.Mod.CollabUtils2.UI;
 using Microsoft.Xna.Framework;
 using Mono.Cecil;
 using Mono.Cecil.Cil;

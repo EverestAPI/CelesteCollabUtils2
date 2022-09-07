@@ -1,4 +1,4 @@
-﻿module CollabUtils2SilverBerry
+module CollabUtils2SilverBerry
 
 using ..Ahorn, Maple
 

@@ -1,4 +1,4 @@
-﻿
+
 namespace Celeste.Mod.CollabUtils2 {
     public class CollabSettings : EverestModuleSettings {
         public enum SpeedBerryTimerPositions { TopLeft, TopCenter };
