@@ -2,7 +2,11 @@ local trigger = {}
 trigger.name = "CollabUtils2/RainbowBerryUnlockCutsceneTrigger"
 trigger.placements = {
     {
-        name = "default"
+        name = "default",
+        data = {
+            levelSet = "",
+            maps = ""
+        }
     }
 }
 

@@ -1,4 +1,4 @@
-﻿# Chapter Panel Trigger
+# Chapter Panel Trigger
 placements.triggers.CollabUtils2/ChapterPanelTrigger.tooltips.map=The SID (string ID) of the map that will be entered with the trigger.
 placements.triggers.CollabUtils2/ChapterPanelTrigger.tooltips.returnToLobbyMode=Determines how "Return to Lobby" will behave after entering this map.\n- SetReturnToHere: the Return to Lobby button will return the player to the nearest spawn point in the current map.\n- RemoveReturn: the Return to Lobby button will disappear from the pause menu.\n- DoNotChangeReturn: the current Return to Lobby button will not be changed.
 placements.triggers.CollabUtils2/ChapterPanelTrigger.tooltips.allowSaving=If selected, the player will be allowed to save and return to the lobby in the map this trigger teleports to, by selecting "Save" when returning to lobby. Not compatible with maps that have checkpoints.
@@ -24,6 +24,7 @@ placements.entities.CollabUtils2/FakeMiniHeart.tooltips.particleColor=The color 
 
 # Rainbow Berry
 placements.entities.CollabUtils2/RainbowBerry.tooltips.levelSet=The rainbow berry will only spawn if all silver berries in this level set have been collected.
+placements.entities.CollabUtils2/RainbowBerry.tooltips.maps=This setting allows to restrict which maps in the level set this rainbow berry takes into account. To do this, list the map names (.bin names only) separated by commas.\nLeave empty if you want the player to collect all silver berries in the level set to make the rainbow berry spawn.
 
 # Mini Heart Door
 placements.entities.CollabUtils2/MiniHeartDoor.tooltips.requires=Determines the number of Crystal Hearts required to open the heart door. Counts hearts within the level set specified in the "Level Set" attribute.
@@ -44,3 +45,7 @@ placements.entities.CollabUtils2/SpeedBerry.tooltips.bronzeTime=The time (in sec
 
 # Mini Heart Door Unlock Cutscene Trigger
 placements.triggers.CollabUtils2/MiniHeartDoorUnlockCutsceneTrigger.tooltips.doorID=The ID of the door this cutscene should unlock. Only useful if you have multiple heart doors in the same lobby, otherwise you can leave that empty.
+
+# Rainbow Berry Unlock Cutscene Trigger
+placements.triggers.CollabUtils2/RainbowBerryUnlockCutsceneTrigger.tooltips.levelSet=If you have multiple rainbow berries in the same lobby, copy the "Level Set" setting of the rainbow berry this trigger should affect here.\nIf you only have one rainbow berry in the lobby, you don't need to fill out this field.
+placements.triggers.CollabUtils2/RainbowBerryUnlockCutsceneTrigger.tooltips.maps=If you have multiple rainbow berries in the same lobby, copy the "Maps" setting of the rainbow berry this trigger should affect here.\nIf you only have one rainbow berry in the lobby, you don't need to fill out this field.

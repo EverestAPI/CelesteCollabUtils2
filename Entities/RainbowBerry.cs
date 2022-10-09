@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Monocle;
 using MonoMod.Utils;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
     /// <summary>
@@ -11,13 +12,27 @@ namespace Celeste.Mod.CollabUtils2.Entities {
     [CustomEntity("CollabUtils2/RainbowBerry")]
     [RegisterStrawberry(tracked: false, blocksCollection: false)]
     public class RainbowBerry : Strawberry {
-        private string levelSet;
+        private readonly string levelSet;
+        private readonly string mapsRaw;
+        private readonly string[] maps;
 
         internal HoloRainbowBerry HologramForCutscene;
         internal int CutsceneTotalBerries;
 
         public RainbowBerry(EntityData data, Vector2 offset, EntityID gid) : base(data, offset, gid) {
             levelSet = data.Attr("levelSet");
+
+            if (string.IsNullOrEmpty(data.Attr("maps"))) {
+                maps = null;
+                mapsRaw = null;
+            } else {
+                maps = data.Attr("maps").Split(',');
+                mapsRaw = data.Attr("maps");
+
+                for (int i = 0; i < maps.Length; i++) {
+                    maps[i] = levelSet + "/" + maps[i];
+                }
+            }
         }
 
         public override void Added(Scene scene) {
@@ -29,13 +44,17 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
             if (CollabMapDataProcessor.SilverBerries.ContainsKey(levelSet)) {
                 int missingBerries = 0;
-                int totalBerries = CollabMapDataProcessor.SilverBerries[levelSet].Count;
+                int totalBerries = 0;
                 foreach (KeyValuePair<string, EntityID> requiredSilver in CollabMapDataProcessor.SilverBerries[levelSet]) {
-                    // check if the silver was collected.
-                    AreaStats stats = SaveData.Instance.GetAreaStatsFor(AreaData.Get(requiredSilver.Key).ToKey());
-                    if (!stats.Modes[0].Strawberries.Contains(requiredSilver.Value)) {
-                        // this berry wasn't collected!
-                        missingBerries++;
+                    if (maps == null || maps.Contains(requiredSilver.Key)) {
+                        totalBerries++;
+
+                        // check if the silver was collected.
+                        AreaStats stats = SaveData.Instance.GetAreaStatsFor(AreaData.Get(requiredSilver.Key).ToKey());
+                        if (!stats.Modes[0].Strawberries.Contains(requiredSilver.Value)) {
+                            // this berry wasn't collected!
+                            missingBerries++;
+                        }
                     }
                 }
 
@@ -47,7 +66,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     RemoveSelf();
                 } else {
                     // all berries are here! check if we should play the unlock cutscene.
-                    if (!CollabModule.Instance.SaveData.CombinedRainbowBerries.Contains((scene as Level).Session.Area.GetSID())) {
+                    if (!CollabModule.Instance.SaveData.CombinedRainbowBerries.Contains(GetCombinedRainbowId(scene as Level))) {
                         // spawn the hologram for the animation...
                         HoloRainbowBerry hologram = new HoloRainbowBerry(Position, totalBerries, totalBerries);
                         hologram.Tag = Tags.FrozenUpdate;
@@ -64,6 +83,26 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     }
                 }
             }
+        }
+
+        public string GetCombinedRainbowId(Level level) {
+            if (maps != null) {
+                return string.Join(",", maps);
+            } else {
+                return level.Session.Area.GetSID();
+            }
+        }
+
+        public bool MatchesRainbowBerryTriggerWithSettings(string levelSet, string maps) {
+            if (!string.IsNullOrEmpty(levelSet) && this.levelSet != levelSet) {
+                return false;
+            }
+
+            if (!string.IsNullOrEmpty(maps) && this.mapsRaw != maps) {
+                return false;
+            }
+
+            return true;
         }
     }
 }
