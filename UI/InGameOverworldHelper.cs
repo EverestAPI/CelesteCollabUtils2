@@ -799,14 +799,16 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 cursor.Index--;
                 cursor.Emit(OpCodes.Ldarg_0);
                 cursor.EmitDelegate<Func<float, OuiChapterPanel, float>>((orig, self) => {
-                    string mapAuthor = DynamicData.For(self).Get<string>("chapter");
-                    if (Engine.Scene == overworldWrapper?.Scene && mapAuthor?.Length != 0) {
-                        // if the map has author, use the wider one between it and the map title
-                        float width = ActiveFont.Measure(mapAuthor).X * 0.6f;
-                        return Math.Max(orig, width);
-                    } else {
-                        return orig;
+                    if (Engine.Scene == overworldWrapper?.Scene) {
+                        string mapAuthor = DynamicData.For(self).Get<string>("chapter");
+                        if (mapAuthor?.Length != 0) {
+                            // if the map has author, use the wider one between it and the map title
+                            float width = ActiveFont.Measure(mapAuthor).X * 0.6f;
+                            return Math.Max(orig, width);
+                        }
                     }
+
+                    return orig;
                 });
             }
         }
