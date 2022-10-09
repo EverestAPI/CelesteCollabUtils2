@@ -47,6 +47,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.OuiChapterPanel.Start += OnOuiChapterPanelStart;
             On.Celeste.Player.Die += OnPlayerDie;
             On.Celeste.Mod.AssetReloadHelper.ReloadLevel += OnReloadLevel;
+            IL.Celeste.OuiChapterPanel._FixTitleLength += ModFixTitleLength;
 
             hookOnMapDataOrigLoad = new Hook(
                 typeof(MapData).GetMethod("orig_Load", BindingFlags.NonPublic | BindingFlags.Instance),
@@ -84,6 +85,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.OuiChapterPanel.Start -= OnOuiChapterPanelStart;
             On.Celeste.Player.Die -= OnPlayerDie;
             On.Celeste.Mod.AssetReloadHelper.ReloadLevel -= OnReloadLevel;
+            IL.Celeste.OuiChapterPanel._FixTitleLength -= ModFixTitleLength;
 
             foreach (Hook hook in altSidesHelperHooks) {
                 hook.Dispose();
@@ -783,6 +785,30 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 panel = (AssetReloadHelper.ReturnToScene as Overworld).GetUI<OuiChapterPanel>();
             }
             return LobbyHelper.GetLobbyLevelSet(panel?.Area.GetSID() ?? "") != null;
+        }
+
+        private static void ModFixTitleLength(ILContext il) {
+            ILCursor cursor = new ILCursor(il);
+
+            if (cursor.TryGotoNext(MoveType.After,
+                instr => instr.MatchCallOrCallvirt(typeof(ActiveFont), "Measure"),
+                instr => instr.MatchLdfld<Vector2>("X"),
+                instr => instr.MatchStloc(0))
+            ) {
+                Logger.Log("CollabUtils2/InGameOverworldHelper", $"Modding chapter panel title bookmark position at {cursor.Index} in IL for OuiChapterPanel._FixTitleLength");
+                cursor.Index--;
+                cursor.Emit(OpCodes.Ldarg_0);
+                cursor.EmitDelegate<Func<float, OuiChapterPanel, float>>((orig, self) => {
+                    string mapAuthor = DynamicData.For(self).Get<string>("chapter");
+                    if (Engine.Scene == overworldWrapper?.Scene && mapAuthor?.Length != 0) {
+                        // if the map has author, use the wider one between it and the map title
+                        float width = ActiveFont.Measure(mapAuthor).X * 0.6f;
+                        return Math.Max(orig, width);
+                    } else {
+                        return orig;
+                    }
+                });
+            }
         }
     }
 }
