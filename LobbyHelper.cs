@@ -6,6 +6,7 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Monocle;
 using MonoMod.Cil;
+using MonoMod.ModInterop;
 using MonoMod.RuntimeDetour;
 using MonoMod.Utils;
 using System;
@@ -148,6 +149,8 @@ namespace Celeste.Mod.CollabUtils2 {
             hookOnOuiJournalPoemLines = new ILHook(typeof(OuiJournalPoem).GetNestedType("PoemLine", BindingFlags.NonPublic).GetMethod("Render"), modJournalPoemHeartColors);
             hookOnOuiFileSelectSlotGolden = new ILHook(typeof(OuiFileSelectSlot).GetMethod("get_Golden", BindingFlags.NonPublic | BindingFlags.Instance), modSelectSlotCollectedStrawberries);
             hookOnOuiFileSelectSlotRender = new ILHook(typeof(OuiFileSelectSlot).GetMethod("orig_Render"), modOuiFileSelectSlotRender);
+
+            typeof(ModExports).ModInterop();
         }
 
         internal static void Unload() {
@@ -661,6 +664,30 @@ namespace Celeste.Mod.CollabUtils2 {
                     }
                     return orig;
                 });
+            }
+        }
+
+        // ModInterop exports
+
+        [ModExportName("CollabUtils2.LobbyHelper")]
+        private static class ModExports {
+            public static string GetLobbyLevelSet(string sid) {
+                return LobbyHelper.GetLobbyLevelSet(sid);
+            }
+            public static bool IsCollabLevelSet(string levelSet) {
+                return LobbyHelper.IsCollabLevelSet(levelSet);
+            }
+            public static string GetLobbyForLevelSet(string levelSet) {
+                return LobbyHelper.GetLobbyForLevelSet(levelSet);
+            }
+            public static string GetLobbyForGym(string gymSID) {
+                return LobbyHelper.GetLobbyForGym(gymSID);
+            }
+            public static string GetCollabNameForSID(string sid) {
+                return LobbyHelper.GetCollabNameForSID(sid);
+            }
+            public static bool IsHeartSide(string sid) {
+                return LobbyHelper.IsHeartSide(sid);
             }
         }
     }
