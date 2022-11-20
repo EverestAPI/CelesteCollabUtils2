@@ -91,6 +91,46 @@ namespace Celeste.Mod.CollabUtils2 {
         }
 
         /// <summary>
+        /// Returns the SID of the lobby corresponding to this map.
+        /// </summary>
+        /// <param name="sid">The SID of the map</param>
+        /// <returns>The SID of the lobby for this map, or null if the given map does not belong to a collab or has no matching lobby.</returns>
+        public static string GetLobbyForMap(string sid) {
+            AreaData areaData = AreaData.Get(sid);
+            if (areaData == null) {
+                return null;
+            }
+            return GetLobbyForLevelSet(areaData.LevelSet);
+        }
+
+        /// <summary>
+        /// Returns true if the given SID is from a collab map (a map accessible from a lobby).
+        /// </summary>
+        /// <param name="sid">The SID to check</param>
+        /// <returns>true if the SID is from a collab map, false otherwise</returns>
+        public static bool IsCollabMap(string sid) {
+            return GetLobbyForMap(sid) != null;
+        }
+
+        /// <summary>
+        /// Returns true if the given SID is from a collab lobby.
+        /// </summary>
+        /// <param name="sid">The SID to check</param>
+        /// <returns>true if the SID is from a collab lobby, false otherwise</returns>
+        public static bool IsCollabLobby(string sid) {
+            return GetLobbyLevelSet(sid) != null;
+        }
+
+        /// <summary>
+        /// Returns true if the given SID is from a collab gym.
+        /// </summary>
+        /// <param name="sid">The SID to check</param>
+        /// <returns>true if the SID is from a collab gym, false otherwise</returns>
+        public static bool IsCollabGym(string sid) {
+            return GetLobbyForGym(sid) != null;
+        }
+
+        /// <summary>
         /// Returns the SID of the lobby corresponding to this gym.
         /// </summary>
         /// <param name="gymSID">The gym SID</param>
@@ -193,12 +233,9 @@ namespace Celeste.Mod.CollabUtils2 {
         private class CelesteNet {
             internal static void adjustCollabIcon(CelesteNetPlayerListComponent.BlobPlayer blob, DataPlayerState state) {
                 // if we are in a collab map, change the icon displayed in the CelesteNet player list to the lobby icon.
-                AreaData data = AreaData.Get(state.SID);
-                if (data != null) {
-                    string lobbySID = GetLobbyForLevelSet(data.LevelSet);
-                    if (lobbySID != null) {
-                        blob.Location.Icon = AreaData.Get(lobbySID)?.Icon ?? blob.Location.Icon;
-                    }
+                string lobbySID = GetLobbyForMap(state.SID);
+                if (lobbySID != null) {
+                    blob.Location.Icon = AreaData.Get(lobbySID)?.Icon ?? blob.Location.Icon;
                 }
             }
         }
@@ -671,11 +708,23 @@ namespace Celeste.Mod.CollabUtils2 {
 
         [ModExportName("CollabUtils2.LobbyHelper")]
         private static class ModExports {
-            public static string GetLobbyLevelSet(string sid) {
-                return LobbyHelper.GetLobbyLevelSet(sid);
-            }
             public static bool IsCollabLevelSet(string levelSet) {
                 return LobbyHelper.IsCollabLevelSet(levelSet);
+            }
+            public static bool IsCollabMap(string sid) {
+                return LobbyHelper.IsCollabMap(sid);
+            }
+            public static bool IsCollabLobby(string sid) {
+                return LobbyHelper.IsCollabLobby(sid);
+            }
+            public static bool IsCollabGym(string sid) {
+                return LobbyHelper.IsCollabGym(sid);
+            }
+            public static string GetLobbyForMap(string sid) {
+                return LobbyHelper.GetLobbyForMap(sid);
+            }
+            public static string GetLobbyLevelSet(string sid) {
+                return LobbyHelper.GetLobbyLevelSet(sid);
             }
             public static string GetLobbyForLevelSet(string levelSet) {
                 return LobbyHelper.GetLobbyForLevelSet(levelSet);

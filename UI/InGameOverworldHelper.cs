@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Mono.Cecil.Cil;
 using Monocle;
 using MonoMod.Cil;
+using MonoMod.ModInterop;
 using MonoMod.RuntimeDetour;
 using MonoMod.Utils;
 using System;
@@ -52,6 +53,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
             hookOnMapDataOrigLoad = new Hook(
                 typeof(MapData).GetMethod("orig_Load", BindingFlags.NonPublic | BindingFlags.Instance),
                 typeof(InGameOverworldHelper).GetMethod("ModMapDataLoad", BindingFlags.NonPublic | BindingFlags.Static));
+
+            typeof(ModExports).ModInterop();
         }
 
         public static void Initialize() {
@@ -223,28 +226,12 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private static void customizeCrystalHeart(OuiChapterPanel panel) {
             // customize heart gem icon
-            string animId = null;
-
             string sid = panel.Area.GetSID();
             string mapName = sid.DialogKeyify();
-            string mapLevelSet = AreaData.Get(sid)?.GetLevelSet().DialogKeyify();
 
             Sprite[] heartSprites = new DynData<OuiChapterPanel>(panel).Get<HeartGemDisplay>("heart").Sprites;
             for (int side = 0; side < 3; side++) {
-                string sideName = mapName;
-                if (side == 1) {
-                    sideName += "_B";
-                } else if (side == 2) {
-                    sideName += "_C";
-                }
-
-                if (HeartSpriteBank.Has("crystalHeart_" + sideName)) {
-                    // this map has a custom heart registered: use it.
-                    animId = "crystalHeart_" + sideName;
-                } else if (HeartSpriteBank.Has("crystalHeart_" + mapLevelSet)) {
-                    // this level set has a custom heart registered: use it.
-                    animId = "crystalHeart_" + mapLevelSet;
-                }
+                string animId = GetGuiHeartSpriteId(mapName, (AreaMode) side);
 
                 if (animId != null) {
                     Sprite heartSprite = HeartSpriteBank.Create(animId);
@@ -255,6 +242,33 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     new DynData<OuiChapterPanel>(panel)["heartDirty"] = true;
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns the GUI heart sprite ID (for display in the chapter panel) matching the given map and side, to read from the HeartSpriteBank.
+        /// </summary>
+        /// <param name="mapSID">The map SID to get the heart sprite for</param>
+        /// <param name="side">The side to get the heart sprite for</param>
+        /// <returns>The sprite ID to pass to HeartSpriteBank.Create to get the custom heart sprite, or null if none was found</returns>
+        public static string GetGuiHeartSpriteId(string mapSID, AreaMode side) {
+            string mapLevelSet = AreaData.Get(mapSID)?.GetLevelSet().DialogKeyify();
+
+            string sideName = mapSID;
+            if (side == AreaMode.BSide) {
+                sideName += "_B";
+            } else if (side == AreaMode.CSide) {
+                sideName += "_C";
+            }
+
+            if (HeartSpriteBank.Has("crystalHeart_" + sideName)) {
+                // this map has a custom heart registered: use it.
+                return "crystalHeart_" + sideName;
+            } else if (HeartSpriteBank.Has("crystalHeart_" + mapLevelSet)) {
+                // this level set has a custom heart registered: use it.
+                return "crystalHeart_" + mapLevelSet;
+            }
+
+            return null;
         }
 
         // AltSidesHelper does very similar stuff to us, and we want to override what it does if the XMLs are asking for it.
@@ -568,8 +582,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             // mod the death icon: for the path, use the current level set, or for lobbies, the lobby's matching level set.
             string pathToSkull = "CollabUtils2/skulls/" + self.Area.GetLevelSet();
-            if (LobbyHelper.GetLobbyLevelSet(self.Area.GetSID()) != null) {
-                pathToSkull = "CollabUtils2/skulls/" + LobbyHelper.GetLobbyLevelSet(self.Area.GetSID());
+            string lobbyLevelSet = LobbyHelper.GetLobbyLevelSet(self.Area.GetSID());
+            if (lobbyLevelSet != null) {
+                pathToSkull = "CollabUtils2/skulls/" + lobbyLevelSet;
             }
             if (GFX.Gui.Has(pathToSkull)) {
                 new DynData<DeathsCounter>(deathsCounter)["icon"] = GFX.Gui[pathToSkull];
@@ -784,7 +799,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (panel == null) {
                 panel = (AssetReloadHelper.ReturnToScene as Overworld).GetUI<OuiChapterPanel>();
             }
-            return LobbyHelper.GetLobbyLevelSet(panel?.Area.GetSID() ?? "") != null;
+            return LobbyHelper.IsCollabLobby(panel?.Area.GetSID() ?? "");
         }
 
         private static void ModFixTitleLength(ILContext il) {
@@ -810,6 +825,18 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
                     return orig;
                 });
+            }
+        }
+
+        // ModInterop exports
+
+        [ModExportName("CollabUtils2.InGameOverworldHelper")]
+        private static class ModExports {
+            public static SpriteBank GetHeartSpriteBank() {
+                return HeartSpriteBank;
+            }
+            public static string GetGuiHeartSpriteId(string mapSID, AreaMode side) {
+                return InGameOverworldHelper.GetGuiHeartSpriteId(mapSID, side);
             }
         }
     }
