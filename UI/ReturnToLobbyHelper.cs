@@ -50,6 +50,12 @@ namespace Celeste.Mod.CollabUtils2.UI {
             DynData<Overworld> data = new DynData<Overworld>(self.Overworld);
             AreaData forceArea = self.Overworld == null ? null : data.Get<AreaData>("collabInGameForcedArea");
             if (forceArea != null) {
+                if (Engine.Scene is Level level) {
+                    // we're exiting the lobby, so we need to make sure mods are aware we're exiting the level!
+                    // calling the LevelExit constructor triggers the Level.Exit Everest event, so that makes mods less confused about what's going on.
+                    new LevelExit(LevelExit.Mode.GiveUp, level.Session);
+                }
+
                 // current chapter panel is in-game: set up Return to Lobby.
                 ChapterPanelTrigger.ReturnToLobbyMode returnToLobbyMode = data.Get<ChapterPanelTrigger.ReturnToLobbyMode>("returnToLobbyMode");
 
