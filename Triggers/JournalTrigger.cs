@@ -29,13 +29,11 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
 
             AreaData forceArea = journal.Overworld == null ? null : new DynData<Overworld>(journal.Overworld).Get<AreaData>("collabInGameForcedArea");
             if (forceArea != null) {
-                // custom journal: throw away all pages, except the cover.
-                for (int i = 0; i < journal.Pages.Count; i++) {
-                    if (journal.Pages[i].GetType() != typeof(OuiJournalCover)) {
-                        journal.Pages.RemoveAt(i);
-                        i--;
-                    }
-                }
+                // custom journal: throw away all pages.
+                journal.Pages.Clear();
+
+                // add the cover with stickers.
+                journal.Pages.Add(new OuiJournalCoverWithStickers(journal));
 
                 // then, fill in the journal with our custom pages.
                 journal.Pages.AddRange(OuiJournalCollabProgressInLobby.GeneratePages(journal, forceArea.GetLevelSet(), showOnlyDiscovered));
@@ -44,6 +42,9 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
                 if (MTN.Journal.Has("collabLobbyMaps/" + forceArea.GetLevelSet())) {
                     journal.Pages.Add(new OuiJournalLobbyMap(journal, MTN.Journal["collabLobbyMaps/" + forceArea.GetLevelSet()]));
                 }
+
+                // redraw the first page to include the stickers
+                journal.Pages[0].Redraw(journal.CurrentPageBuffer);
             }
         }
 
