@@ -227,11 +227,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private static void customizeCrystalHeart(OuiChapterPanel panel) {
             // customize heart gem icon
             string sid = panel.Area.GetSID();
-            string mapName = sid.DialogKeyify();
 
             Sprite[] heartSprites = new DynData<OuiChapterPanel>(panel).Get<HeartGemDisplay>("heart").Sprites;
             for (int side = 0; side < 3; side++) {
-                string animId = GetGuiHeartSpriteId(mapName, (AreaMode) side);
+                string animId = GetGuiHeartSpriteId(sid, (AreaMode) side);
 
                 if (animId != null) {
                     Sprite heartSprite = HeartSpriteBank.Create(animId);
@@ -253,7 +252,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         public static string GetGuiHeartSpriteId(string mapSID, AreaMode side) {
             string mapLevelSet = AreaData.Get(mapSID)?.GetLevelSet().DialogKeyify();
 
-            string sideName = mapSID;
+            string sideName = mapSID.DialogKeyify();
             if (side == AreaMode.BSide) {
                 sideName += "_B";
             } else if (side == AreaMode.CSide) {
