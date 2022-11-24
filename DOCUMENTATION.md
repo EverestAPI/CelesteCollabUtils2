@@ -320,3 +320,26 @@ To help mitigate this, Collab Utils collects the list of textures it lazily load
 But you probably don't want gameplay to be stuttery the first time players play each map! To prevent that, **you should ship the .texturecache.txt files with your maps**. You just need to move the files out of your Cache folder and to put them next to your map bins. You should play through the map in order to see every texture (including secrets) before doing that.
 
 Note that if some textures are missing from the `.texturecache.txt` file you shipped with the map, Collab Utils will create the `.texturecache.txt` file in `Mods/Cache/CollabUtils2` again, and you will find a warning in log.txt saying: `Found X lazily loaded texture(s)! Saving them at [path].` This file only contains missing textures, so in order to add them to the `.texturecache.txt` file that ships with your mod, you should merge the files, rather than replacing the one shipping with your mod.
+
+## "Learn" tab in the chapter panel with gym teleports
+
+You can add a second tab to your collab maps in the lobby, that lists the tech used in a map and allows the player to teleport to a room teaching it:
+
+![image](https://cdn.discordapp.com/attachments/445236692136230943/1045411274881761390/image.png)
+
+Here is how you can do this:
+
+### Making the gym
+
+- Make a separate bin for the gyms, putting it in the `0-Gyms` folder: refer to [above](#some-extra-features-depending-on-folder-structure) for more details.
+- Make one room per tech you want to teach, and put an **Exit From Gym Trigger** at the end of them. This brings up the chapter panel of the map the player was originally entering, similar to the Chapter Panel Trigger, and this allows them to either pick another tech, enter the map, or return to the lobby.
+- Put a **Gym Marker** in the room (this is an invisible entity), and change its settings to designate a difficulty and give the tech a name (only use letters, numbers and _ in that name!).
+
+### Setting up the chapter panel visuals
+
+- Put the **image to display for the tech in the chapter panel** in `Graphics/Atlases/Checkpoints/{CollabName}/Gyms/{TechName}.png`.
+- Add the **name of the tech** in your `English.txt`: `{CollabName}_gym_{TechName}_name= The Tech Name`
+
+### Listing tech used in each map
+
+In order to make the "Learn" tab with the tech list show up in the chapter panel, just fill out the "Tech" option of the Chapter Panel Trigger. Separate the tech names with commas, and don't put spaces: `wavedash,wallbounce`.

@@ -49,6 +49,10 @@ triggers.CollabUtils2/ChapterPanelTrigger.placements.name.default=Chapter Panel
 triggers.CollabUtils2/ChapterPanelTrigger.attributes.description.map=The SID (string ID) of the map that will be entered with the trigger.
 triggers.CollabUtils2/ChapterPanelTrigger.attributes.description.returnToLobbyMode=Determines how "Return to Lobby" will behave after entering this map.\n- SetReturnToHere: the Return to Lobby button will return the player to the nearest spawn point in the current map.\n- RemoveReturn: the Return to Lobby button will disappear from the pause menu.\n- DoNotChangeReturn: the current Return to Lobby button will not be changed.
 triggers.CollabUtils2/ChapterPanelTrigger.attributes.description.allowSaving=If selected, the player will be allowed to save and return to the lobby in the map this trigger teleports to, by selecting "Save" when returning to lobby. Not compatible with maps that have checkpoints.
+triggers.CollabUtils2/ChapterPanelTrigger.attributes.description.tech=Comma-separated list of tech used in the level, corresponding to gym names (e.g. hyper,wallbounce,cornerboost).\nFilling this out will make a second tab appear in the chapter panel,\nthat allows the player to a room teaching a tech (be sure to put a Gym Marker inside it).
+
+# Exit From Gym Trigger
+triggers.CollabUtils2/ExitFromGymTrigger.placements.name.default=Exit From Gym
 
 # Journal Trigger
 triggers.CollabUtils2/JournalTrigger.placements.name.default=Journal
@@ -70,3 +74,8 @@ triggers.CollabUtils2/SilverBerryCollectTrigger.placements.name.default=Silver B
 
 # Speed Berry Collect Trigger
 triggers.CollabUtils2/SpeedBerryCollectTrigger.placements.name.default=Speed Berry Collect
+
+# Gym Marker
+entities.CollabUtils2/GymMarker.placements.name.controller=Gym Marker
+entities.CollabUtils2/GymMarker.attributes.description.name=The tech name of the current room.
+entities.CollabUtils2/GymMarker.attributes.description.difficulty=The difficulty of the tech.

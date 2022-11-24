@@ -16,6 +16,15 @@ collabutils2_speedberry_silver= Silver:
 collabutils2_speedberry_bronze= Bronze:
 collabutils2_speedberry_timeranout= Time ran out!
 
+collabutils2_difficulty_beginner= Beginner
+collabutils2_difficulty_intermediate= Intermediate
+collabutils2_difficulty_advanced= Advanced
+collabutils2_difficulty_expert= Expert
+collabutils2_difficulty_grandmaster= Grandmaster
+
+collabutils2_overworld_gym=LEARN
+collabutils2_overworld_exit=RETURN TO LOBBY
+
 collabutils2_chapterpanel_continue= Continue
 collabutils2_chapterpanel_start= Start Over
 

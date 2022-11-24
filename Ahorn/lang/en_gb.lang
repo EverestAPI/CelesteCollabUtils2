@@ -2,6 +2,7 @@
 placements.triggers.CollabUtils2/ChapterPanelTrigger.tooltips.map=The SID (string ID) of the map that will be entered with the trigger.
 placements.triggers.CollabUtils2/ChapterPanelTrigger.tooltips.returnToLobbyMode=Determines how "Return to Lobby" will behave after entering this map.\n- SetReturnToHere: the Return to Lobby button will return the player to the nearest spawn point in the current map.\n- RemoveReturn: the Return to Lobby button will disappear from the pause menu.\n- DoNotChangeReturn: the current Return to Lobby button will not be changed.
 placements.triggers.CollabUtils2/ChapterPanelTrigger.tooltips.allowSaving=If selected, the player will be allowed to save and return to the lobby in the map this trigger teleports to, by selecting "Save" when returning to lobby. Not compatible with maps that have checkpoints.
+placements.triggers.CollabUtils2/ChapterPanelTrigger.tooltips.tech=Comma-separated list of tech used in the level, corresponding to gym names (e.g. hyper,wallbounce,cornerboost).\nFilling this out will make a second tab appear in the chapter panel,\nthat allows the player to a room teaching a tech (be sure to put a Gym Marker inside it).
 
 # Journal Trigger
 placements.triggers.CollabUtils2/JournalTrigger.tooltips.levelset=The levelset for which the journal will be opened with the trigger.
@@ -49,3 +50,7 @@ placements.triggers.CollabUtils2/MiniHeartDoorUnlockCutsceneTrigger.tooltips.doo
 # Rainbow Berry Unlock Cutscene Trigger
 placements.triggers.CollabUtils2/RainbowBerryUnlockCutsceneTrigger.tooltips.levelSet=If you have multiple rainbow berries in the same lobby, copy the "Level Set" setting of the rainbow berry this trigger should affect here.\nIf you only have one rainbow berry in the lobby, you don't need to fill out this field.
 placements.triggers.CollabUtils2/RainbowBerryUnlockCutsceneTrigger.tooltips.maps=If you have multiple rainbow berries in the same lobby, copy the "Maps" setting of the rainbow berry this trigger should affect here.\nIf you only have one rainbow berry in the lobby, you don't need to fill out this field.
+
+# Gym Marker
+placements.entities.CollabUtils2/GymMarker.tooltips.name=The tech name of the current room.
+placements.entities.CollabUtils2/GymMarker.tooltips.difficulty=The difficulty of the tech.

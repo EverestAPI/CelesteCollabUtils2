@@ -16,6 +16,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private static string temporaryRoomHolder;
         private static Vector2 temporarySpawnPointHolder;
         private static bool temporarySaveAllowedHolder;
+        private static string temporaryGymExitMapSIDHolder;
+        private static bool temporaryGymExitSaveAllowedHolder;
 
         internal static void Load() {
             On.Celeste.OuiChapterPanel.StartRoutine += modChapterPanelStartRoutine;
@@ -88,11 +90,26 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     temporaryRoomHolder = null;
                     temporarySpawnPointHolder = Vector2.Zero;
                 }
+
+                if (LobbyHelper.IsCollabLobby((Engine.Scene as Level)?.Session?.MapData?.Area.GetSID() ?? "")) {
+                    // be sure to grab the gym map SID if there is one!
+                    if (data.Data.TryGetValue("gymExitMapSID", out object gymExitMapSID)) {
+                        temporaryGymExitMapSIDHolder = (string) gymExitMapSID;
+                        temporaryGymExitSaveAllowedHolder = data.Get<bool>("gymExitSaveAllowed");
+                    }
+                } else {
+                    // be sure to carry over the gym map SID, especially if we're going from gym to gym.
+                    temporaryGymExitMapSIDHolder = CollabModule.Instance.Session.GymExitMapSID;
+                    temporaryGymExitSaveAllowedHolder = CollabModule.Instance.Session.GymExitSaveAllowed;
+                }
             } else {
                 // current chapter panel isn't in-game: make sure the "temporary" variables are empty.
                 temporaryLobbySIDHolder = null;
                 temporaryRoomHolder = null;
                 temporarySpawnPointHolder = Vector2.Zero;
+                temporarySaveAllowedHolder = false;
+                temporaryGymExitMapSIDHolder = null;
+                temporaryGymExitSaveAllowedHolder = false;
             }
         }
 
@@ -103,10 +120,14 @@ namespace Celeste.Mod.CollabUtils2.UI {
             CollabModule.Instance.Session.LobbySpawnPointX = temporarySpawnPointHolder.X;
             CollabModule.Instance.Session.LobbySpawnPointY = temporarySpawnPointHolder.Y;
             CollabModule.Instance.Session.SaveAndReturnToLobbyAllowed = temporarySaveAllowedHolder;
+            CollabModule.Instance.Session.GymExitMapSID = temporaryGymExitMapSIDHolder;
+            CollabModule.Instance.Session.GymExitSaveAllowed = temporaryGymExitSaveAllowedHolder;
             temporaryLobbySIDHolder = null;
             temporaryRoomHolder = null;
             temporarySpawnPointHolder = Vector2.Zero;
             temporarySaveAllowedHolder = false;
+            temporaryGymExitMapSIDHolder = null;
+            temporaryGymExitSaveAllowedHolder = false;
 
             if (CollabModule.Instance.Session.LobbySID == null) {
                 Session session = SaveData.Instance.CurrentSession_Safe;

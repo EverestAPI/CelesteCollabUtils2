@@ -7,7 +7,8 @@ trigger.placements = {
         data = {
             map = "Celeste/1-ForsakenCity",
             returnToLobbyMode = "SetReturnToHere",
-            allowSaving = true
+            allowSaving = true,
+            tech = ""
         }
     }
 }

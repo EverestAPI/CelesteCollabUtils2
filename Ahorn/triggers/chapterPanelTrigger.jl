@@ -3,7 +3,7 @@ module CollabUtils2ChapterPanelTrigger
 using ..Ahorn, Maple
 
 @mapdef Trigger "CollabUtils2/ChapterPanelTrigger" ChapterPanelTrigger(x::Integer, y::Integer, width::Integer=Maple.defaultTriggerWidth, height::Integer=Maple.defaultTriggerHeight,
-    map::String="Celeste/1-ForsakenCity", returnToLobbyMode::String="SetReturnToHere", allowSaving::Bool=true)
+    map::String="Celeste/1-ForsakenCity", returnToLobbyMode::String="SetReturnToHere", allowSaving::Bool=true, tech::String="")
 
 const placements = Ahorn.PlacementDict(
     "Chapter Panel Trigger (Collab Utils 2 / READ DOCS)" => Ahorn.EntityPlacement(
