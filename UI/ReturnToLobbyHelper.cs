@@ -41,21 +41,23 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private static IEnumerator modChapterPanelStartRoutine(On.Celeste.OuiChapterPanel.orig_StartRoutine orig, OuiChapterPanel self, string checkpoint) {
+            DynData<Overworld> data = new DynData<Overworld>(self.Overworld);
+            AreaData forceArea = self.Overworld == null ? null : data.Get<AreaData>("collabInGameForcedArea");
+
             // wait for the "chapter start" animation to finish.
             IEnumerator origRoutine = orig(self, checkpoint);
             while (origRoutine.MoveNext()) {
                 yield return origRoutine.Current;
-            }
 
-            DynData<Overworld> data = new DynData<Overworld>(self.Overworld);
-            AreaData forceArea = self.Overworld == null ? null : data.Get<AreaData>("collabInGameForcedArea");
-            if (forceArea != null) {
-                if (Engine.Scene is Level level) {
+                // the last step before calling LevelEnter.Go is a yield return 0.5f.
+                if (origRoutine.Current is float f && f == 0.5f && Engine.Scene is Level level) {
                     // we're exiting the lobby, so we need to make sure mods are aware we're exiting the level!
                     // calling the LevelExit constructor triggers the Level.Exit Everest event, so that makes mods less confused about what's going on.
                     new LevelExit(LevelExit.Mode.GiveUp, level.Session);
                 }
+            }
 
+            if (forceArea != null) {
                 // current chapter panel is in-game: set up Return to Lobby.
                 ChapterPanelTrigger.ReturnToLobbyMode returnToLobbyMode = data.Get<ChapterPanelTrigger.ReturnToLobbyMode>("returnToLobbyMode");
 
