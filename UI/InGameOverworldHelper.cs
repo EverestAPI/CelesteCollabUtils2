@@ -31,6 +31,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private static List<Hook> altSidesHelperHooks = new List<Hook>();
         private static Hook hookOnMapDataOrigLoad;
 
+        private static Hook hookOnDiscordRichPresenceChange;
+
+        private static bool presenceLock = false;
+
         internal static void Load() {
             Everest.Events.Level.OnPause += OnPause;
             On.Celeste.Audio.SetMusic += OnSetMusic;
@@ -49,6 +53,21 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.Player.Die += OnPlayerDie;
             On.Celeste.Mod.AssetReloadHelper.ReloadLevel += OnReloadLevel;
             IL.Celeste.OuiChapterPanel._FixTitleLength += ModFixTitleLength;
+            On.Celeste.OuiMainMenu.CreateButtons += OnOuiMainMenuCreateButtons;
+
+            // hooks the Discord rich presence update method of stable version 3650
+            MethodInfo discordRichPresence = typeof(EverestModule).Assembly.GetType("Celeste.Mod.Everest+Discord")?.GetMethod("UpdateText");
+            if (discordRichPresence != null) {
+                hookOnDiscordRichPresenceChange = new Hook(discordRichPresence, typeof(InGameOverworldHelper)
+                    .GetMethod("OnDiscordChangePresenceOld", BindingFlags.NonPublic | BindingFlags.Static));
+            }
+
+            // hooks the Discord rich presence update method of pull request https://github.com/EverestAPI/Everest/pull/543
+            discordRichPresence = typeof(EverestModule).Assembly.GetType("Celeste.Mod.Everest+DiscordSDK")?.GetMethod("UpdatePresence", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (discordRichPresence != null) {
+                hookOnDiscordRichPresenceChange = new Hook(discordRichPresence, typeof(InGameOverworldHelper)
+                    .GetMethod("OnDiscordChangePresenceNew", BindingFlags.NonPublic | BindingFlags.Static));
+            }
 
             hookOnMapDataOrigLoad = new Hook(
                 typeof(MapData).GetMethod("orig_Load", BindingFlags.NonPublic | BindingFlags.Instance),
@@ -89,6 +108,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.Player.Die -= OnPlayerDie;
             On.Celeste.Mod.AssetReloadHelper.ReloadLevel -= OnReloadLevel;
             IL.Celeste.OuiChapterPanel._FixTitleLength -= ModFixTitleLength;
+            On.Celeste.OuiMainMenu.CreateButtons -= OnOuiMainMenuCreateButtons;
 
             foreach (Hook hook in altSidesHelperHooks) {
                 hook.Dispose();
@@ -97,6 +117,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             hookOnMapDataOrigLoad?.Dispose();
             hookOnMapDataOrigLoad = null;
+
+            hookOnDiscordRichPresenceChange?.Dispose();
+            hookOnDiscordRichPresenceChange = null;
         }
 
         private static void OnOuiChapterPanelStart(On.Celeste.OuiChapterPanel.orig_Start orig, OuiChapterPanel self, string checkpoint) {
@@ -147,6 +170,24 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
 
             orig();
+        }
+
+        private static void OnDiscordChangePresenceOld(Action<string, string, Session> orig, string details, string state, Session session) {
+            if (!presenceLock) {
+                orig(details, state, session);
+            }
+        }
+
+
+        private static void OnDiscordChangePresenceNew(Action<object, Session> orig, object self, Session session) {
+            if (!presenceLock) {
+                orig(self, session);
+            }
+        }
+
+        private static void OnOuiMainMenuCreateButtons(On.Celeste.OuiMainMenu.orig_CreateButtons orig, OuiMainMenu self) {
+            orig(self);
+            presenceLock = false;
         }
 
         private static bool OnSetMusic(On.Celeste.Audio.orig_SetMusic orig, string path, bool startPlaying, bool allowFadeOut) {
@@ -670,6 +711,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
 
             player.Drop();
+            presenceLock = true;
+
             Open(player, AreaData.Get(sid) ?? AreaData.Get(0), out OuiHelper_EnterChapterPanel.Start,
                 overworld => {
                     new DynData<Overworld>(overworld).Set("returnToLobbyMode", returnToLobbyMode);
@@ -679,6 +722,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         public static void OpenJournal(Player player, string levelset) {
             player.Drop();
+            presenceLock = true;
+
             Open(player, AreaData.Areas.FirstOrDefault(area => area.LevelSet == levelset) ?? AreaData.Get(0), out OuiHelper_EnterJournal.Start);
         }
 
