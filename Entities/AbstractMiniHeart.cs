@@ -48,8 +48,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             Add(holdableCollider = new HoldableCollider(onHoldable));
         }
 
-        public override void Awake(Scene scene) {
-            base.Awake(scene);
+        public override void Added(Scene scene) {
+            base.Added(scene);
 
             AreaKey area = (scene as Level).Session.Area;
 
