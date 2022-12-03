@@ -20,7 +20,7 @@ collabutils2_chapterpanel_continue= Kontynuuj
 collabutils2_chapterpanel_start= Zacznij od nowa
 
 collabutils2_speedberry_optionmessage=
-	Możesz zmienić pozycję zegara pośpiesznej truskawki w {# 9B3FB5}Opcjach Modów{#}.
+    Możesz zmienić pozycję zegara pośpiesznej truskawki w {# 9B3FB5}Opcjach Modów{#}.
 
 modoptions_collab_speedberrytimerposition=Zegar Pośpiesznej Truskawki
 modoptions_collab_speedberrytimerposition_topleft= Lewy Górny Róg
@@ -28,7 +28,7 @@ modoptions_collab_speedberrytimerposition_topcenter= Szczyt Ekranu
 modoptions_collab_hidespeedberrytimerduringgameplay= Ukryj Czas Pospiesznej Truskawki Podczas Gry
 
 modoptions_collab_displayendscreenforallmaps= Zawsze wyświetlaj Ekran Końcowy
-modoptions_collab_displayendscreenforallmaps_description= Wymagane przy zgłaszaniu speedrunów IL na speedrun.com 
+modoptions_collab_displayendscreenforallmaps_description= Wymagane przy zgłaszaniu speedrunów IL na speedrun.com
 
 modoptions_collab_besttimetodisplayinjournal= Najlepszy Czas w Dzienniku
 modoptions_collab_besttimetodisplayinjournal_speedberry= Pośpieszna Truskawka

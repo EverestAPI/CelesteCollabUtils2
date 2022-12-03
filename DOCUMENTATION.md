@@ -158,7 +158,7 @@ You can also use custom ones by dropping them somewhere in `Graphics/Atlases/Gui
 
 You can pick which heart to use by changing the `path`: you can use the vanilla hearts (`collectables/heartgem/0/` with 0 = blue, 1 = red, 2 = yellow, 3 = grey/ghost), ones from the collab (`CollabUtils2/crystalHeart/expert/` for orange and `CollabUtils2/crystalHeart/grandmaster/` for purple), or custom ones by dropping them somewhere in `Graphics/Atlases/Gui/YourCollabName`.
 
-If you use one of the vanilla crystal heart sprites (`collectables/heartgem/1/`, `collectables/heartgem/2/`) or the "expert" or "grandmaster" sprites that ship with the collab utils (`CollabUtils2/crystalHeart/expert/`, `CollabUtils2/crystalHeart/grandmaster/`), the text color on the poem screen will be changed accordingly to red, yellow, orange or purple. 
+If you use one of the vanilla crystal heart sprites (`collectables/heartgem/1/`, `collectables/heartgem/2/`) or the "expert" or "grandmaster" sprites that ship with the collab utils (`CollabUtils2/crystalHeart/expert/`, `CollabUtils2/crystalHeart/grandmaster/`), the text color on the poem screen will be changed accordingly to red, yellow, orange or purple.
 
 If you want a custom text color on the poem screen, include `poemtextcolor_[hexcode]` somewhere in the texture path: for example `path="MyMod/customcrystalheart_poemtextcolor_ff0000/"`.
 
@@ -241,7 +241,7 @@ When using a Chapter Panel Trigger, you can make a "Return to Lobby" button appe
 - "Remove Return": the "Return to Lobby" button will be removed from the pause menu. Useful for lobby > lobby or map > lobby teleports.
 - "Do Not Change Return": the "Return to Lobby" button won't be changed. Useful for teleports within maps.
 
-If you followed the collab structure described at the beginning of this document, you'll also get a fallback measure: if someone uses the `load` command to teleport straight into a map, the collab utils will automatically add a "Return to Lobby" button to the corresponding lobby. 
+If you followed the collab structure described at the beginning of this document, you'll also get a fallback measure: if someone uses the `load` command to teleport straight into a map, the collab utils will automatically add a "Return to Lobby" button to the corresponding lobby.
 Since this is a fallback, using it will bring the player back to the starting point of the lobby.
 
 #### Customizing the skull (death counter) for a lobby

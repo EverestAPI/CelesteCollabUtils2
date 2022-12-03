@@ -49,7 +49,7 @@ function heartsPossible(width::Integer, edgeSprite::Ahorn.Sprite, heartSprite::A
             return i - 1
         end
     end
-    
+
     return required
 end
 
@@ -103,7 +103,7 @@ function Ahorn.renderAbs(ctx::Ahorn.Cairo.CairoContext, entity::MiniHeartDoor, r
 
             startX = x + round(Int, (width - drawWidth) / 2) + edgeSprite.width - 1
             startY = y - round(Int, rows / 2 * (heartSprite.height + heartPadding)) - heartPadding - 1
-            
+
             for col in 1:fits
                 drawX = (col - 1) * (heartSprite.width + heartPadding) - heartPadding
                 drawY = row * (heartSprite.height + heartPadding) - heartPadding

@@ -5,9 +5,9 @@ using ..Ahorn, Maple
 @mapdef Entity "CollabUtils2/SpeedBerry" SpeedBerry(x::Integer, y::Integer, bronzeTime::Integer=15, silverTime::Integer=10, goldTime::Integer=5)
 
 const placements = Ahorn.PlacementDict(
-	"Speed Berry (Collab Utils 2 / READ DOCS)" => Ahorn.EntityPlacement(
-		SpeedBerry
-	)
+    "Speed Berry (Collab Utils 2 / READ DOCS)" => Ahorn.EntityPlacement(
+        SpeedBerry
+    )
 )
 
 sprite = "CollabUtils2/speedBerry/Idle_g06"

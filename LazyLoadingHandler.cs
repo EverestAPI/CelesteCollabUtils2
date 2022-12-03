@@ -18,7 +18,7 @@ namespace Celeste.Mod.CollabUtils2 {
         // complete list of all textures in maps that have CollabUtils2LazyLoading = true
         private static HashSet<string> lazilyLoadedTextures = new HashSet<string>();
 
-        // map SID => list of texture paths that have to be loaded when entering that map 
+        // map SID => list of texture paths that have to be loaded when entering that map
         private static Dictionary<string, HashSet<string>> pathsPerMap = new Dictionary<string, HashSet<string>>();
 
         // map SID => list of textures that were preloaded matching those in pathsPerMap, so that we can actually load them when entering the map.

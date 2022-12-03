@@ -33,8 +33,8 @@ assignees: ''
 
 
 **Information:**
- - Operating System: 
- - Celeste Version: 
+ - Operating System:
+ - Celeste Version:
  - Everest Version:
 
 

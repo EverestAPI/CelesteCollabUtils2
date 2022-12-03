@@ -20,7 +20,7 @@ collabutils2_chapterpanel_continue= Continuar
 collabutils2_chapterpanel_start= Recomeçar
 
 collabutils2_speedberry_optionmessage=
-	Você pode mudar a posição do cronômetro do morango-relógio em {# 9B3FB5}Opções de mod{#}.
+    Você pode mudar a posição do cronômetro do morango-relógio em {# 9B3FB5}Opções de mod{#}.
 
 modoptions_collab_speedberrytimerposition= Posição do cronômetro do morango-relógio
 modoptions_collab_speedberrytimerposition_topleft= Superior esquerdo

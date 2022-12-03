@@ -20,7 +20,7 @@ collabutils2_chapterpanel_continue= 继续
 collabutils2_chapterpanel_start= 从头开始
 
 collabutils2_speedberry_optionmessage=
-	你可以在 {# 9B3FB5}Mod 选项{#}中改变速通草莓计时器的显示位置。
+    你可以在 {# 9B3FB5}Mod 选项{#}中改变速通草莓计时器的显示位置。
 
 modoptions_collab_speedberrytimerposition= 速通草莓计时器显示位置
 modoptions_collab_speedberrytimerposition_topleft= 左上方

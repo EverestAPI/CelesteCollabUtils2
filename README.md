@@ -20,6 +20,6 @@ Developing directly on the master branch is only allowed if you've forked the re
 - `cd` to your mods folder.
 - `git clone URL`
     - Make sure to replace `URL` with the URL to your fork.
-	- Click on the green "Clone or download" button to obtain the URL.
+    - Click on the green "Clone or download" button to obtain the URL.
 - Open the `.sln` in VS.
 - Submit pull requests (PRs).

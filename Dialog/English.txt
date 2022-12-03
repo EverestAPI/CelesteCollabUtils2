@@ -20,7 +20,7 @@ collabutils2_chapterpanel_continue= Continue
 collabutils2_chapterpanel_start= Start Over
 
 collabutils2_speedberry_optionmessage=
-	You can change the speedberry timer position in {# 9B3FB5}Mod Options{#}.
+    You can change the speedberry timer position in {# 9B3FB5}Mod Options{#}.
 
 modoptions_collab_speedberrytimerposition= Speed Berry Timer Position
 modoptions_collab_speedberrytimerposition_topleft= Top-Left

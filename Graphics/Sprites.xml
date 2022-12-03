@@ -2,7 +2,7 @@
   <!-- Speed Berry animations -->
   <CollabUtils2_speedBerry path="CollabUtils2/speedBerry/" start="idle">
     <Center />
-    
+
     <!-- Sprites matching the vanilla animations, preventing crashes -->
     <Anim id="idle" path="Idle_g" delay=".1" frames="9" goto="idle_gold"/>
     <Anim id="collect" path="collect_g" delay=".07" frames="0-3"/>
@@ -11,24 +11,24 @@
     <Loop id="idle_bronze" path="Idle_b" delay=".1" frames="0-9" />
     <Loop id="idle_silver" path="Idle_s" delay=".1" frames="0-9" />
     <Loop id="idle_gold" path="Idle_g" delay=".1" frames="0-9" />
-    
+
     <!-- Transition animations -->
     <Anim id="transition_to_silver" path="transition_g" delay=".1" frames="0-2" goto="idle_silver"/>
     <Anim id="transition_to_bronze" path="transition_s" delay=".1" frames="0-2" goto="idle_bronze"/>
     <Anim id="explosion" path="transition_b" delay=".1" frames="0-11" goto="idle_bronze"/>
-    
+
     <!-- Collect animations -->
     <Anim id="collect_gold" path="collect_g" delay=".07" frames="0-3"/>
     <Anim id="collect_silver" path="collect_s" delay=".07" frames="0-3"/>
     <Anim id="collect_bronze" path="collect_b" delay=".07" frames="0-3"/>
   </CollabUtils2_speedBerry>
-  
+
   <!-- Explosion animation -->
   <CollabUtils2_speedBerryExplosion path="CollabUtils2/speedBerry/" start="explosion">
-    <Justify x=".52" y=".59" />    
+    <Justify x=".52" y=".59" />
     <Anim id="explosion" path="explode_" delay=".1" frames="0-7"/>
   </CollabUtils2_speedBerryExplosion>
-  
+
   <!-- Rainbow Berry animations -->
   <CollabUtils2_rainbowBerry path="CollabUtils2/rainbowBerry/rberry" start="idle">
     <Center />
@@ -36,29 +36,29 @@
     <Loop id="idle" path="" delay=".08" frames="0-31" />
     <Anim id="collect" path="" delay=".07" frames="32-37"/>
   </CollabUtils2_rainbowBerry>
-  
+
   <CollabUtils2_ghostRainbowBerry path="CollabUtils2/ghostbowBerry/rberry(g)" start="idle">
     <Center />
 
     <Loop id="idle" path="" delay=".08" frames="0-31" />
     <Anim id="collect" path="" delay=".07" frames="32-37"/>
   </CollabUtils2_ghostRainbowBerry>
-  
+
   <CollabUtils2_perfectAnimation path="CollabUtils2/perfectStrawberryText/" start="perfect">
     <Justify x=".47" y=".6" />
     <Anim id="perfect" path="" delay=".1" frames="0-49"/>
   </CollabUtils2_perfectAnimation>
-  
+
   <CollabUtils2_holoRainbowBerry path="CollabUtils2/holoRainbowBerry/" start="idle">
     <Center />
     <Loop id="idle" path="holo" delay=".08" frames="0-31" />
   </CollabUtils2_holoRainbowBerry>
-  
+
   <CollabUtils2_desaturatedHoloRainbowBerry path="CollabUtils2/desaturatedHoloRainbowBerry/" start="idle">
     <Center />
     <Loop id="idle" path="holo" delay=".08" frames="0-31" />
   </CollabUtils2_desaturatedHoloRainbowBerry>
-  
+
   <!-- Silver Berry animations -->
   <CollabUtils2_silverBerry path="CollabUtils2/silverBerry/" start="idle">
     <Center />
