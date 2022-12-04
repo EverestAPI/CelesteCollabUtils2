@@ -328,6 +328,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (Engine.Scene == overworldWrapper?.Scene)
                 return orig(self, area) ||
                 Dialog.Has(new DynData<Overworld>(overworldWrapper.WrappedScene).Get<AreaData>("collabInGameForcedArea").Name + "_collabcredits") ||
+                Dialog.Has(new DynData<Overworld>(overworldWrapper.WrappedScene).Get<AreaData>("collabInGameForcedArea").Name + "_collabcreditstags") ||
                 CollabModule.Instance.SaveData.SessionsPerLevel.ContainsKey(area.GetSID());
 
             return orig(self, area);
@@ -349,6 +350,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private static void OnChapterPanelSwap(On.Celeste.OuiChapterPanel.orig_Swap orig, OuiChapterPanel self) {
             if (Engine.Scene != overworldWrapper?.Scene ||
                 (!Dialog.Has(new DynData<Overworld>(overworldWrapper.WrappedScene).Get<AreaData>("collabInGameForcedArea").Name + "_collabcredits")
+                && !Dialog.Has(new DynData<Overworld>(overworldWrapper.WrappedScene).Get<AreaData>("collabInGameForcedArea").Name + "_collabcreditstags")
                 && !CollabModule.Instance.SaveData.SessionsPerLevel.ContainsKey(self.Area.GetSID()))) {
 
                 // this isn't an in-game chapter panel, or there is no custom second page (no credits, no saved state) => use vanilla
@@ -377,7 +379,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private static IEnumerator ChapterPanelSwapRoutine(OuiChapterPanel self, DynData<OuiChapterPanel> data) {
             float fromHeight = data.Get<float>("height");
-            int toHeight = Dialog.Has(new DynData<Overworld>(overworldWrapper.WrappedScene).Get<AreaData>("collabInGameForcedArea").Name + "_collabcredits") ? 730 : 300;
+            string forcedArea = new DynData<Overworld>(overworldWrapper.WrappedScene).Get<AreaData>("collabInGameForcedArea").Name;
+            int toHeight = Dialog.Has(forcedArea + "_collabcredits") ? 730 : (Dialog.Has(forcedArea + "_collabcreditstags") ? 450 : 300);
 
             data["resizing"] = true;
             m_PlayExpandSfx.Invoke(self, new object[] { fromHeight, (float) toHeight });
@@ -449,10 +452,12 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 return;
             }
 
-            // panel height is 730 pixels when completely open. Tags should fade out quicker than text, because they are near the bottom of the panel,
-            // and it looks bad more quickly when the panel closes.
+            bool hasCredits = Dialog.Has(new DynData<Overworld>(overworldWrapper.WrappedScene).Get<AreaData>("collabInGameForcedArea").Name + "_collabcredits");
+
+            // panel height is 730 pixels when completely open, or 450 if there are only tags.
+            // Tags should fade out quicker than text, because they are near the bottom of the panel, and it looks bad more quickly when the panel closes.
             float alphaText = Calc.ClampedMap(selfData.Get<float>("height"), 600, 730);
-            float alphaTags = Calc.ClampedMap(selfData.Get<float>("height"), 700, 730);
+            float alphaTags = Calc.ClampedMap(selfData.Get<float>("height"), hasCredits ? 700 : 540, hasCredits ? 730 : 450);
 
             float heightTakenByTags = 0f;
 
@@ -492,7 +497,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 }
 
                 // now, draw the tags bottom up.
-                float y = center.Y + 230f;
+                float y = center.Y;
+                if (hasCredits) {
+                    y += 230f;
+                } else {
+                    y -= 80f + 30f - (26f * (lines.Count - 1));
+                }
+
                 for (int i = lines.Count - 1; i >= 0; i--) {
                     // starting position is all the way left.
                     float x = center.X - (lineWidths[i] / 2f) + 15f;
