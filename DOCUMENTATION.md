@@ -23,6 +23,7 @@ If anything is wrong or unclear, yell at max480 (max480#4596 on [the Celeste Dis
   - [Journal Trigger](#journal-trigger)
 - [Map Metadata](#map-metadata)
 - [Lazy Loading](#lazy-loading)
+- ["Learn" tab in the chapter panel with gym teleports](learn-tab-in-the-chapter-panel-with-gym-teleports)
 
 ## Setting up your mod as a collab
 
