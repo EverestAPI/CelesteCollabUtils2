@@ -6,7 +6,8 @@ rainbowBerry.placements = {
         name = "default",
         data = {
             levelSet = "SpringCollab2020/1-Beginner",
-            maps = ""
+            maps = "",
+            requires = ""
         }
     }
 }

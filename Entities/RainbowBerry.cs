@@ -2,6 +2,7 @@ using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
 using MonoMod.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -15,6 +16,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private readonly string levelSet;
         private readonly string mapsRaw;
         private readonly string[] maps;
+        private readonly int? requiredBerries;
 
         internal HoloRainbowBerry HologramForCutscene;
         internal int CutsceneTotalBerries;
@@ -33,6 +35,10 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     maps[i] = levelSet + "/" + maps[i];
                 }
             }
+
+            if (!string.IsNullOrEmpty(data.Attr("requires"))) {
+                requiredBerries = int.Parse(data.Attr("requires"));
+            }
         }
 
         public override void Added(Scene scene) {
@@ -45,6 +51,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             if (CollabMapDataProcessor.SilverBerries.ContainsKey(levelSet)) {
                 int missingBerries = 0;
                 int totalBerries = 0;
+
                 foreach (KeyValuePair<string, EntityID> requiredSilver in CollabMapDataProcessor.SilverBerries[levelSet]) {
                     if (maps == null || maps.Contains(requiredSilver.Key)) {
                         totalBerries++;
@@ -56,6 +63,14 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                             missingBerries++;
                         }
                     }
+                }
+
+                if (requiredBerries.HasValue) {
+                    // adjust the total and missing berry count to account for the forced berry count.
+                    int collectedBerries = totalBerries - missingBerries;
+
+                    missingBerries = Math.Max(0, requiredBerries.Value - collectedBerries);
+                    totalBerries = requiredBerries.Value;
                 }
 
                 if (missingBerries != 0) {
