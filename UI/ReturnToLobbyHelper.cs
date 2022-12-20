@@ -18,6 +18,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private static bool temporarySaveAllowedHolder;
         private static string temporaryGymExitMapSIDHolder;
         private static bool temporaryGymExitSaveAllowedHolder;
+        private static bool forceInitializeModSession;
 
         internal static void Load() {
             On.Celeste.OuiChapterPanel.StartRoutine += modChapterPanelStartRoutine;
@@ -110,6 +111,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 temporarySaveAllowedHolder = false;
                 temporaryGymExitMapSIDHolder = null;
                 temporaryGymExitSaveAllowedHolder = false;
+                forceInitializeModSession = false;
+            }
+
+            if (forceInitializeModSession) {
+                // we want to initialize the session even when we selected "Continue", since we want to use the chapter panel settings
+                // instead of whatever we had in our session last time.
+                OnSessionCreated();
             }
         }
 
@@ -128,6 +136,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             temporarySaveAllowedHolder = false;
             temporaryGymExitMapSIDHolder = null;
             temporaryGymExitSaveAllowedHolder = false;
+            forceInitializeModSession = false;
 
             if (CollabModule.Instance.Session.LobbySID == null) {
                 Session session = SaveData.Instance.CurrentSession_Safe;
@@ -174,6 +183,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 temporaryRoomHolder = CollabModule.Instance.Session.LobbyRoom;
                 temporarySpawnPointHolder = new Vector2(CollabModule.Instance.Session.LobbySpawnPointX, CollabModule.Instance.Session.LobbySpawnPointY);
                 temporarySaveAllowedHolder = CollabModule.Instance.Session.SaveAndReturnToLobbyAllowed;
+                temporaryGymExitMapSIDHolder = CollabModule.Instance.Session.GymExitMapSID;
+                temporaryGymExitSaveAllowedHolder = CollabModule.Instance.Session.GymExitSaveAllowed;
             }
             if ((mode == LevelExit.Mode.GiveUp || mode == LevelExit.Mode.Completed) && CollabModule.Instance.Session.LobbySID != null) {
                 // be sure that Return to Map and such from a collab entry returns to the lobby, not to the collab entry...
@@ -220,6 +231,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         Dictionary<string, string> modSessions = new Dictionary<string, string>();
                         Dictionary<string, string> modSessionsBinary = new Dictionary<string, string>();
                         foreach (EverestModule mod in Everest.Modules) {
+                            if (mod == CollabModule.Instance) {
+                                // we do NOT want to mess with our own session!
+                                continue;
+                            }
+
                             if (mod.SaveDataAsync) {
                                 // new save data API: session is serialized into a byte array.
                                 byte[] sessionBinary = mod.SerializeSession(SaveData.Instance.FileSlot);
@@ -300,6 +316,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 temporaryRoomHolder = CollabModule.Instance.Session.LobbyRoom;
                 temporarySpawnPointHolder = new Vector2(CollabModule.Instance.Session.LobbySpawnPointX, CollabModule.Instance.Session.LobbySpawnPointY);
                 temporarySaveAllowedHolder = CollabModule.Instance.Session.SaveAndReturnToLobbyAllowed;
+                temporaryGymExitMapSIDHolder = CollabModule.Instance.Session.GymExitMapSID;
+                temporaryGymExitSaveAllowedHolder = CollabModule.Instance.Session.GymExitSaveAllowed;
             }
 
             orig(self, session, startPosition);
@@ -344,6 +362,12 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
                 // restore all mod sessions we can restore.
                 foreach (EverestModule mod in Everest.Modules) {
+                    if (mod == CollabModule.Instance) {
+                        // it is too early to load the Collab Utils mod session, but we should do that when the start routine is over.
+                        forceInitializeModSession = true;
+                        continue;
+                    }
+
                     if (mod.SaveDataAsync && sessionsBinary != null && sessionsBinary.TryGetValue(mod.Metadata.Name, out string savedSessionBinary)) {
                         // new save data API: session is deserialized by passing the byte array as is.
                         mod.DeserializeSession(SaveData.Instance.FileSlot, Convert.FromBase64String(savedSessionBinary));
@@ -374,6 +398,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
             temporaryRoomHolder = null;
             temporarySpawnPointHolder = Vector2.Zero;
             temporarySaveAllowedHolder = false;
+            temporaryGymExitMapSIDHolder = null;
+            temporaryGymExitSaveAllowedHolder = false;
+            forceInitializeModSession = false;
 
             orig(self);
         }
