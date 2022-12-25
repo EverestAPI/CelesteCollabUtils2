@@ -11,6 +11,7 @@ If anything is wrong or unclear, yell at max480 (max480#4596 on [the Celeste Dis
 
 - [Setting up your mod as a collab](#setting-up-your-mod-as-a-collab)
 - [Entities](#entities)
+  - [Crystal Hearts (Return to Lobby)](#crystal-hearts-return-to-lobby)
   - [Golden Berry Respawn Points](#golden-berry-respawn-points)
   - [Silver Berries](#silver-berries)
   - [Silver Blocks](#silver-blocks)
@@ -104,6 +105,12 @@ Maps/
 - When in a lobby, **session flags will be set for every map the player has beaten in this lobby**. These flags are named `CollabUtils2_MapCompleted_{binname}`. In the example above, if you beat map3, the session flag `CollabUtils2_MapCompleted_map3` will be set when you enter the `2-Summer` lobby. For example, you can use this to make stylegrounds (dis)appear, or to trigger flag-controlled entities like flag switch gates (from max480's Helping Hand) or flag temple gates (from Pandora's Box), allowing you to open/close paths.
 
 ## Entities
+
+### Crystal Hearts (Return to Lobby)
+
+Work just like regular Crystal Hearts, except they return to lobby instead of returning to map once collected.
+
+If "Display End Screen For All Maps" is enabled in Mod Options, the endscreen information (total time, map name and version information) wiill appear at the same time as the poem text.
 
 ### Golden Berry Respawn Points
 

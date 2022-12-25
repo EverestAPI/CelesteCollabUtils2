@@ -80,3 +80,7 @@ triggers.CollabUtils2/SpeedBerryCollectTrigger.placements.name.default=Speed Ber
 entities.CollabUtils2/GymMarker.placements.name.controller=Gym Marker
 entities.CollabUtils2/GymMarker.attributes.description.name=The tech name of the current room.
 entities.CollabUtils2/GymMarker.attributes.description.difficulty=The difficulty of the tech.
+
+# Collab Crystal Heart
+entities.CollabUtils2/CollabCrystalHeart.placements.name.crystal_heart=Crystal Heart (Return to Lobby)
+entities.CollabUtils2/CollabCrystalHeart.attributes.description.removeCameraTriggers=Whether the heart should remove camera triggers once it's collected.

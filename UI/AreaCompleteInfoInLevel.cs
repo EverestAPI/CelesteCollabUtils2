@@ -11,6 +11,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
     /// <summary>
     /// A standalone entity displaying the area complete stats directly in a level.
     /// </summary>
+    [Tracked]
     public class AreaCompleteInfoInLevel : Entity {
         private static FieldInfo areaCompleteVersionFull = typeof(AreaComplete).GetField("versionFull", BindingFlags.NonPublic | BindingFlags.Static);
 

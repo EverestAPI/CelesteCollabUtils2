@@ -55,3 +55,6 @@ placements.triggers.CollabUtils2/RainbowBerryUnlockCutsceneTrigger.tooltips.maps
 # Gym Marker
 placements.entities.CollabUtils2/GymMarker.tooltips.name=The tech name of the current room.
 placements.entities.CollabUtils2/GymMarker.tooltips.difficulty=The difficulty of the tech.
+
+# Collab Crystal Heart
+placements.entities.CollabUtils2/CollabCrystalHeart.tooltips.removeCameraTriggers=Whether the heart should remove camera triggers once it's collected.
