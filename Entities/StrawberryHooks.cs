@@ -25,25 +25,31 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         internal static void Load() {
             IL.Celeste.Strawberry.Added += modStrawberrySprite;
             collectRoutineHook = HookHelper.HookCoroutine("Celeste.Strawberry", "CollectRoutine", modStrawberrySound);
-            On.Celeste.Player.Die += onPlayerDie;
             playerDeathRoutineHook = HookHelper.HookCoroutine("Celeste.PlayerDeadBody", "DeathRoutine", modDeathSound);
             Everest.Events.Level.OnCreatePauseMenuButtons += onCreatePauseMenuButtons;
             On.Celeste.Player.Added += Player_Added;
             On.Celeste.SaveData.AddStrawberry_AreaKey_EntityID_bool += onSaveDataAddStrawberry;
             On.Celeste.Strawberry.CollectRoutine += onStrawberryCollectRoutine;
             On.Celeste.Level.End += onLevelEnd;
+
+            // Any other mod blocking calls to Die to make Madeline invincible (like shadow dashes) should be able to also block the call to that hook on Die.
+            // Otherwise, speed berries turn not golden and collect when Madeline is on the ground. This is bad.
+            using (new DetourContext { Before = { "*" } }) {
+                On.Celeste.Player.Die += onPlayerDie;
+            }
         }
 
         internal static void Unload() {
             IL.Celeste.Strawberry.Added -= modStrawberrySprite;
             collectRoutineHook?.Dispose();
-            On.Celeste.Player.Die -= onPlayerDie;
             playerDeathRoutineHook?.Dispose();
             Everest.Events.Level.OnCreatePauseMenuButtons -= onCreatePauseMenuButtons;
             On.Celeste.Player.Added -= Player_Added;
             On.Celeste.SaveData.AddStrawberry_AreaKey_EntityID_bool -= onSaveDataAddStrawberry;
             On.Celeste.Strawberry.CollectRoutine -= onStrawberryCollectRoutine;
             On.Celeste.Level.End -= onLevelEnd;
+
+            On.Celeste.Player.Die -= onPlayerDie;
         }
 
         private static void Player_Added(On.Celeste.Player.orig_Added orig, Player self, Scene scene) {
