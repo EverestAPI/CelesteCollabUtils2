@@ -12,6 +12,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private bool requireDashToBreak;
         private bool noGhostSprite;
         private string particleColor;
+        private bool playPulseSound;
 
         protected Wiggler scaleWiggler;
 
@@ -34,6 +35,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             requireDashToBreak = data.Bool("requireDashToBreak", defaultValue: true);
             noGhostSprite = data.Bool("noGhostSprite", defaultValue: false);
             particleColor = data.Attr("particleColor");
+            playPulseSound = data.Bool("playPulseSound", defaultValue: true);
 
             Collider = new Hitbox(12f, 12f, -6f, -6f);
 
@@ -70,7 +72,9 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             sprite.CenterOrigin();
             sprite.OnLoop = anim => {
                 if (Visible) {
-                    Audio.Play("event:/SC2020_heartShard_pulse", Position);
+                    if (playPulseSound) {
+                        Audio.Play("event:/SC2020_heartShard_pulse", Position);
+                    }
                     scaleWiggler.Start();
                     (Scene as Level).Displacement.AddBurst(Position + sprite.Position, 0.35f, 4f, 24f, 0.25f);
                 }

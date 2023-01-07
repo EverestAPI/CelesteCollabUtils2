@@ -10,6 +10,7 @@ entities.CollabUtils2/MiniHeart.attributes.description.refillDash=Whether bounci
 entities.CollabUtils2/MiniHeart.attributes.description.requireDashToBreak=Whether the player needs to dash on the heart to collect it.\nIf this is unchecked, the player will be able to collect the heart by just touching it.
 entities.CollabUtils2/MiniHeart.attributes.description.noGhostSprite=If checked, the heart will never use the "ghost" sprite even when already collected.
 entities.CollabUtils2/MiniHeart.attributes.description.particleColor=The color of the particles emitted by the mini heart. Leave empty to use default colors.
+entities.CollabUtils2/MiniHeart.attributes.description.playPulseSound=Whether the heart should play a sound along with its pulse.
 
 # Fake Mini Heart
 entities.CollabUtils2/FakeMiniHeart.placements.name.default=Fake Mini Heart
@@ -18,6 +19,7 @@ entities.CollabUtils2/FakeMiniHeart.attributes.description.refillDash=Whether bo
 entities.CollabUtils2/FakeMiniHeart.attributes.description.requireDashToBreak=Whether the player needs to dash on the heart to make it disappear.\nIf this is unchecked, the heart will disappear when the player touches it.
 entities.CollabUtils2/FakeMiniHeart.attributes.description.noGhostSprite=If checked, the heart will never use the "ghost" sprite even when already collected.
 entities.CollabUtils2/FakeMiniHeart.attributes.description.particleColor=The color of the particles emitted by the fake mini heart. Leave empty to use default colors.
+entities.CollabUtils2/FakeMiniHeart.attributes.description.playPulseSound=Whether the heart should play a sound along with its pulse.
 
 # Mini Heart Door
 entities.CollabUtils2/MiniHeartDoor.placements.name.door=Mini Heart Door
