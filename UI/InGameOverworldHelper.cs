@@ -66,6 +66,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.OuiMainMenu.CreateButtons += OnOuiMainMenuCreateButtons;
 
             // hooks the Discord rich presence update method of stable version 3650
+            // TODO: this should be replace with On.Celeste when this will have reached stable
             MethodInfo discordRichPresence = typeof(EverestModule).Assembly.GetType("Celeste.Mod.Everest+Discord")?.GetMethod("UpdateText");
             if (discordRichPresence != null) {
                 hookOnDiscordRichPresenceChange = new Hook(discordRichPresence, typeof(InGameOverworldHelper)

@@ -28,6 +28,9 @@ namespace Celeste.Mod.CollabUtils2 {
         private static ILHook hookOnLevelSetSwitch;
         private static ILHook hookOnOuiFileSelectSlotRender;
 
+        // TODO: replace this with On.Celeste once Discord Game SDK reached stable
+        private static Hook hookDiscordGameSDKIcon;
+
         private static HashSet<string> collabNames = new HashSet<string>();
 
         internal static void OnInitialize() {
@@ -190,6 +193,12 @@ namespace Celeste.Mod.CollabUtils2 {
             hookOnOuiFileSelectSlotGolden = new ILHook(typeof(OuiFileSelectSlot).GetMethod("get_Golden", BindingFlags.NonPublic | BindingFlags.Instance), modSelectSlotCollectedStrawberries);
             hookOnOuiFileSelectSlotRender = new ILHook(typeof(OuiFileSelectSlot).GetMethod("orig_Render"), modOuiFileSelectSlotRender);
 
+            MethodInfo discordRichPresence = typeof(EverestModule).Assembly.GetType("Celeste.Mod.Everest+DiscordSDK")?.GetMethod("GetMapIconURL", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (discordRichPresence != null) {
+                hookDiscordGameSDKIcon = new Hook(discordRichPresence, typeof(LobbyHelper)
+                    .GetMethod("onDiscordGetPresenceIcon", BindingFlags.NonPublic | BindingFlags.Static));
+            }
+
             typeof(ModExports).ModInterop();
         }
 
@@ -217,6 +226,8 @@ namespace Celeste.Mod.CollabUtils2 {
             hookOnOuiFileSelectSlotGolden?.Dispose();
             hookOnOuiFileSelectSlotRender?.Dispose();
 
+            hookDiscordGameSDKIcon?.Dispose();
+
             if (Everest.Loader.DependencyLoaded(new EverestModuleMetadata() { Name = "CelesteNet.Client", Version = new Version(2, 0, 0) })) {
                 teardownAdjustCollabIcon();
             }
@@ -238,6 +249,16 @@ namespace Celeste.Mod.CollabUtils2 {
                     blob.Location.Icon = AreaData.Get(lobbySID)?.Icon ?? blob.Location.Icon;
                 }
             }
+        }
+
+        private static void onDiscordGetPresenceIcon(Func<object, AreaData, string> orig, object self, AreaData areaData) {
+            // if we are in a collab map, change the icon displayed in Discord Rich Presence to the lobby icon.
+            string lobbySID = GetLobbyForMap(state.SID);
+            if (lobbySID != null) {
+                areaData = AreaData.Get(lobbySID);
+            }
+
+            return orig(self, areaData);
         }
 
         public static void OnSessionCreated() {
