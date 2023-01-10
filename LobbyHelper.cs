@@ -251,9 +251,9 @@ namespace Celeste.Mod.CollabUtils2 {
             }
         }
 
-        private static void onDiscordGetPresenceIcon(Func<object, AreaData, string> orig, object self, AreaData areaData) {
+        private static string onDiscordGetPresenceIcon(Func<object, AreaData, string> orig, object self, AreaData areaData) {
             // if we are in a collab map, change the icon displayed in Discord Rich Presence to the lobby icon.
-            string lobbySID = GetLobbyForMap(state.SID);
+            string lobbySID = GetLobbyForMap(areaData.SID);
             if (lobbySID != null) {
                 areaData = AreaData.Get(lobbySID);
             }
