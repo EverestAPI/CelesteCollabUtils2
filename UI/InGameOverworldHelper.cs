@@ -501,7 +501,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 self.Add(new Coroutine(ChapterPanelSwapGymsRoutine(self, data)));
             } else {
                 string areaName = new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea").Name;
-                data["collabCredits"] = Dialog.Clean(areaName + "_collabcredits");
+                data["collabCredits"] = FancyText.Parse(Dialog.Get(areaName + "_collabcredits").Replace("{break}", "{n}"), int.MaxValue, int.MaxValue, defaultColor: Color.Black);
                 data["collabCreditsTags"] = (areaName + "_collabcreditstags").DialogCleanOrNull();
                 self.Focused = false;
                 self.Overworld.ShowInputUI = !selectingMode;
@@ -636,7 +636,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         return;
                     }
                 } else {
-                    string collabCredits = selfData.Get<string>("collabCredits");
+                    FancyText.Text collabCredits = selfData.Get<FancyText.Text>("collabCredits");
                     if (collabCredits != null) {
                         OnChapterPanelDrawCollabCreditsCheckpoint(self, center, checkpointIndex);
                         return;
@@ -649,7 +649,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private static void OnChapterPanelDrawCollabCreditsCheckpoint(OuiChapterPanel self, Vector2 center, int checkpointIndex) {
             DynData<OuiChapterPanel> selfData = new DynData<OuiChapterPanel>(self);
-            string collabCredits = selfData.Get<string>("collabCredits");
+            FancyText.Text collabCredits = selfData.Get<FancyText.Text>("collabCredits");
 
             if (checkpointIndex > 0) {
                 return;
@@ -729,17 +729,16 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
 
             // compute the maximum scale the credits can take (max 1) to fit the remaining space.
-            Vector2 size = ActiveFont.Measure(collabCredits);
-            float scale = Math.Min(1f, Math.Min((410f - heightTakenByTags) / size.Y, 800f / size.X));
+            float creditsWidth = collabCredits.WidestLine();
+            float creditsHeight = collabCredits.Font.Get(collabCredits.BaseSize).LineHeight * (collabCredits.Nodes.OfType<FancyText.NewLine>().Count() + 1);
+            float scale = Math.Min(1f, Math.Min((410f - heightTakenByTags) / creditsHeight, 800f / creditsWidth));
 
             // draw the credits.
-            ActiveFont.Draw(
-                collabCredits,
+            collabCredits.DrawJustifyPerLine(
                 center + new Vector2(0f, 40f - heightTakenByTags / 2f),
                 Vector2.One * 0.5f,
                 Vector2.One * scale,
-                Color.Black * 0.8f * alphaText
-            );
+                0.8f * alphaText);
         }
 
         private static void OnChapterPanelDrawGymCheckpoint(OuiChapterPanel self, Vector2 center, object option, int checkpointIndex, string[] collabTech) {
