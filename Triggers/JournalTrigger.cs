@@ -9,8 +9,10 @@ using System.Collections;
 using System.Collections.Generic;
 
 namespace Celeste.Mod.CollabUtils2.Triggers {
-    [CustomEntity("CollabUtils2/JournalTrigger")]
+    [CustomEntity(ENTITY_NAME)]
     public class JournalTrigger : Trigger {
+        public const string ENTITY_NAME = "CollabUtils2/JournalTrigger";
+        
         private static bool showOnlyDiscovered;
         private static bool vanillaJournal;
 

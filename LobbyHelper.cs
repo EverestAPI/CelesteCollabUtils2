@@ -1,5 +1,6 @@
 using Celeste.Mod.CelesteNet.Client.Components;
 using Celeste.Mod.CelesteNet.DataTypes;
+using Celeste.Mod.CollabUtils2.Entities;
 using Celeste.Mod.CollabUtils2.UI;
 using Celeste.Mod.UI;
 using Mono.Cecil;
@@ -167,6 +168,21 @@ namespace Celeste.Mod.CollabUtils2 {
             return collabNames.Any(collabName => sid.StartsWith($"{collabName}/")) && sid.EndsWith("/ZZ-HeartSide");
         }
 
+        /// <summary>
+        /// Returns all the <see cref="LobbyMapController"/> entity data for lobbies in the specified collab that have
+        /// at least one activated warp.
+        /// </summary>
+        /// <returns></returns>
+        public static List<EntityData> GetActivatedLobbyMapControllersForCollab(string collab) {
+            // var warps = CollabModule.Instance.SaveData.ActivatedLobbyWarps.Where(pair => GetCollabNameForSID(pair.Key) == collab);
+            // foreach (var pair in warps) {
+            //     var areaData = AreaData.Get(pair.Key);
+            //     areaData.Mode.
+            // }
+            // AreaData.Areas.Where(ad => GetCollabNameForSID(ad.SID) == collab)
+            return new List<EntityData>(); // TODO
+        }
+        
         internal static void Load() {
             // timer pausing when returning to lobby
             On.Celeste.Level.LoadLevel += onLoadLevel;

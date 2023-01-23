@@ -156,5 +156,17 @@ namespace Celeste.Mod.CollabUtils2 {
 
             Logger.Log(LogLevel.Info, "CollabUtils2/CollabModule", $"Reloaded CrystalHeartSwaps.xml: {crystalHeartSwaps.SpriteData.Count} sprite(s) are registered");
         }
+        
+        [Command("cu2_lobby_map", "Displays the lobby map")]
+        private static void CmdLobbyMap()
+        {
+            if (!(Engine.Scene is Level level)) return;
+            level.Add(new LobbyMapUI());
+        }
+
+        [Command("cu2_lobby_map_reveal", "Toggles the fog-of-war effect on the lobby map")]
+        private static void CmdToggleMapReveal() {
+            Instance.SaveData.RevealMap = !Instance.SaveData.RevealMap;
+        }
     }
 }

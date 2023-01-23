@@ -10,9 +10,11 @@ namespace Celeste.Mod.CollabUtils2.Entities {
     /// <summary>
     /// A rainbow berry behaves just like a red berry, but appears when you got all silver berries in a defined level set.
     /// </summary>
-    [CustomEntity("CollabUtils2/RainbowBerry")]
+    [CustomEntity(ENTITY_NAME)]
     [RegisterStrawberry(tracked: false, blocksCollection: false)]
     public class RainbowBerry : Strawberry {
+        public const string ENTITY_NAME = "CollabUtils2/RainbowBerry";
+        
         private readonly string levelSet;
         private readonly string mapsRaw;
         private readonly string[] maps;

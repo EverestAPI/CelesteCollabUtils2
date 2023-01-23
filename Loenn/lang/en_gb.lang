@@ -86,3 +86,6 @@ entities.CollabUtils2/GymMarker.attributes.description.difficulty=The difficulty
 # Collab Crystal Heart
 entities.CollabUtils2/CollabCrystalHeart.placements.name.crystal_heart=Crystal Heart (Return to Lobby)
 entities.CollabUtils2/CollabCrystalHeart.attributes.description.removeCameraTriggers=Whether the heart should remove camera triggers once it's collected.
+
+entities.CollabUtils2/LobbyMapController.placements.name.default=Lobby Map Controller
+entities.CollabUtils2/LobbyMapWarp.placements.name.default=Lobby Map Warp
