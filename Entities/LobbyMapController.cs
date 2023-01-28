@@ -174,6 +174,19 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 if (RoomWidth <= 0) RoomWidth = data.Level.TileBounds.Width;
                 if (RoomHeight <= 0) RoomHeight = data.Level.TileBounds.Height;
             }
+
+            public bool ShouldShowFeature(FeatureInfo feature) {
+                switch (feature.Type) {
+                    case FeatureType.Custom: return true;
+                    case FeatureType.Warp: return ShowWarps;
+                    case FeatureType.RainbowBerry: return ShowRainbowBerry;
+                    case FeatureType.HeartDoor: return ShowHeartDoor;
+                    case FeatureType.Gym: return ShowGyms;
+                    case FeatureType.Map: return ShowMaps;
+                    case FeatureType.Journal: return ShowJournals;
+                    default: return true;
+                }
+            }
         }
         
         public struct FeatureInfo {
@@ -213,8 +226,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 } else if (data.Name == "XaphanHelper/WarpStation") {
                     value.Type = FeatureType.Warp;
                     value.CanWarpTo = true;
-                    value.DialogKey = data.Attr("dialogKey");
                     value.FeatureId = data.Int("index").ToString();
+                    value.DialogKey = $"{LobbyHelper.GetCollabNameForLevelSet(controllerInfo.LevelSet)}_0_Lobbies_Warp_Ch{controllerInfo.LobbyIndex}_{data.Level.Name}_{value.FeatureId}";
                 } else if (data.Has("cu2map_type")) {
                     value.Custom = true;
                     value.Type = data.Enum("cu2map_type", FeatureType.Custom);
@@ -299,7 +312,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             Gym,
             Map,
             Journal,
-            HeartSide,
         }
     }
 }

@@ -14,7 +14,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private readonly string spriteName;
         private readonly string spriteAnimation;
         private readonly string activateSpriteName;
-        private readonly string activateSpriteAnimation;
         private readonly Facings playerFacing;
         private readonly bool flipX;
         

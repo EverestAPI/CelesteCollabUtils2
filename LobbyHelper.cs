@@ -159,6 +159,10 @@ namespace Celeste.Mod.CollabUtils2 {
             return collabNames.FirstOrDefault(collabName => sid.StartsWith($"{collabName}/"));
         }
 
+        public static string GetCollabNameForLevelSet(string levelSet) {
+            return collabNames.FirstOrDefault(collabName => levelSet.StartsWith($"{collabName}/"));
+        }
+
         /// <summary>
         /// Check if the given SID matches a collab heart side level.
         /// </summary>

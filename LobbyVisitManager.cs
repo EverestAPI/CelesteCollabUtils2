@@ -21,7 +21,6 @@ namespace Celeste.Mod.CollabUtils2 {
         public LobbyVisitManager(string sid, string room = null) {
             SID = sid;
             Room = room;
-            Logger.Log(LogLevel.Warn, nameof(CollabModule), $"Key is {Key}");
             VisitedPoints = CollabModule.Instance.SaveData.VisitedLobbyPositions.TryGetValue(Key, out var value) ? FromBase64(value) : new List<VisitedPoint>();
         }
 
