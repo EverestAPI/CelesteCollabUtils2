@@ -36,6 +36,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private readonly List<Component> featureComponents = new List<Component>();
         private readonly MTexture arrowTexture = GFX.Gui["towerarrow"];
         private Sprite heartSprite;
+        private Image playerIcon;
+        private Image playerIconHair;
 
         // current view
         private int zoomLevel = -1;
@@ -52,6 +54,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private int lastSelectedWarpIndex = -1;
         private float scaleMultiplier = 1f;
         private float finalScale => actualScale * scaleMultiplier;
+        private float playerVisibleForceTime;
+        private float playerVisibleIntervalOffset;
 
         private Rectangle bounds;
 
@@ -169,6 +173,19 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 }
             }
 
+            // update flashing player
+            if (Scene?.Tracker.GetEntity<Player>() is Player player && playerIcon != null) {
+                playerIconHair.Color = player.Hair.Color;
+                if (playerVisibleForceTime > 0) {
+                    playerVisibleForceTime -= Engine.RawDeltaTime;
+                    if (playerVisibleForceTime <= 0) {
+                        playerVisibleIntervalOffset = Scene.RawTimeActive;
+                    }
+                } else if (Scene.OnRawInterval(0.3f, playerVisibleIntervalOffset)) {
+                    playerIcon.Visible = playerIconHair.Visible = !playerIcon.Visible;
+                }
+            }
+            
             // update map position for warp selection
             if (lastSelectedWarpIndex != selectedWarpIndexes[selectedLobbyIndex]) {
                 var warp = activeWarps[selectedWarpIndexes[selectedLobbyIndex]];
@@ -289,6 +306,15 @@ namespace Celeste.Mod.CollabUtils2.UI {
             var boundsAspectRatio = (float) padded.Width / padded.Height;
             scaleMultiplier = mapAspectRatio > boundsAspectRatio ? (float) padded.Width / mapTexture.Width : (float) padded.Height / mapTexture.Height;
 
+            // add player icon
+            playerIcon?.RemoveSelf();
+            playerIconHair?.RemoveSelf();
+            Add(playerIcon = new Image(GFX.Gui["maps/player"]));
+            playerIcon.CenterOrigin();
+            Add(playerIconHair = new Image(GFX.Gui["maps/player_hair"]));
+            playerIconHair.CenterOrigin();
+            resetPlayerFlash();
+            
             // update feature positions
             updateFeatures();
             
@@ -320,6 +346,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private Component createFeatureComponent(LobbyMapController.FeatureInfo featureInfo) {
             return new FeatureImage(featureInfo);
+        }
+
+        private void resetPlayerFlash() {
+            playerIcon.Visible = playerIconHair.Visible = true;
+            playerVisibleForceTime = 0.8f;
         }
 
         #endregion
@@ -450,6 +481,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 image.Position = new Vector2(bounds.Center.X + originOffset.X * actualWidth, bounds.Center.Y + originOffset.Y * actualHeight);
                 image.Scale = new Vector2(imageScale);
                 image.Visible = reveal || IsVisited(image.Info.Position);
+            }
+
+            if (playerIcon != null) {
+                var selectedOriginOffset = selectedOrigin - actualOrigin;
+                playerIcon.Position = playerIconHair.Position = new Vector2(bounds.Center.X + selectedOriginOffset.X * actualWidth, bounds.Center.Y + selectedOriginOffset.Y * actualHeight);
             }
         }
 
