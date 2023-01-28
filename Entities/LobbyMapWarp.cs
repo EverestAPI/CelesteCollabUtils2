@@ -31,7 +31,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
             LobbyMapController.FeatureInfo.TryParse(data, default, out info);
             
-            Add(new TalkComponent(new Rectangle(-16, -32, 32, 32), Vector2.Zero, onTalk) {
+            Add(new TalkComponent(new Rectangle(-16, -32, 32, 32), new Vector2(0, data.Float("interactOffsetY", -16f)), onTalk) {
                 PlayerMustBeFacing = false,
             });
 

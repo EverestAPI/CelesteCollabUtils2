@@ -13,6 +13,7 @@ lobbyMapWarp.placements = {
             flipX = false,
             playerFacing = 1,
             depth = 2000,
+            interactOffsetY = -16,
         }
     }
 }
