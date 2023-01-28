@@ -21,12 +21,13 @@ lobbyMapController.placements = {
             gymIcon = "CollabUtils2/lobbies/gym",
             mapIcon = "CollabUtils2/lobbies/map",
             journalIcon = "CollabUtils2/lobbies/journal",
-            showWarps = true, -- CollabUtils2/LobbyMapWarp
-            showRainbowBerry = true, -- CollabUtils2/RainbowBerry
-            showHeartDoor = true, -- CollabUtils2/MiniHeartDoor
-            showGyms = true, -- CollabUtils2/ChapterPanelTrigger
-            showMaps = true, -- CollabUtils2/ChapterPanelTrigger
-            showJournals = true, -- CollabUtils2/JournalTrigger
+            showWarps = true,
+            showRainbowBerry = true,
+            showHeartDoor = true,
+            showGyms = true,
+            showMaps = true,
+            showJournals = true,
+            showHeartCount = true,
         }
     }
 }

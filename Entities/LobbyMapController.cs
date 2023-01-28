@@ -209,6 +209,10 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 } else if (data.Name == ChapterPanelTrigger.CHAPTER_PANEL_TRIGGER_NAME) {
                     value.Map = data.Attr("map");
                     value.Type = value.Map.Contains("0-Gyms") ? FeatureType.Gym : FeatureType.Map;
+                } else if (data.Name == "XaphanHelper/WarpStation") {
+                    value.Type = FeatureType.Warp;
+                    value.DialogKey = data.Attr("dialogKey");
+                    value.FeatureId = data.Int("index").ToString();
                 } else if (data.Has("cu2map_type")) {
                     value.Type = data.Enum("cu2map_type", FeatureType.Custom);
                 } else {
@@ -218,8 +222,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 // ShowOnMap = data.Bool("cu2map_showOnMap");
 
                 value.Icon = data.Attr("cu2map_icon");
-                value.DialogKey = data.Attr("cu2map_dialogKey");
-                value.FeatureId = data.Attr("cu2map_id");
+                value.DialogKey = data.Attr("cu2map_dialogKey", value.DialogKey);
+                value.FeatureId = data.Attr("cu2map_id", value.FeatureId);
                 value.Map = data.Attr("cu2map_map", value.Map);
                 value.Position = data.Position;
 
