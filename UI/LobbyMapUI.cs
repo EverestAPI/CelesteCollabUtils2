@@ -390,11 +390,14 @@ namespace Celeste.Mod.CollabUtils2.UI {
             var scale = finalScale;
             var actualWidth = mapTexture.Width * scale;
             var actualHeight = mapTexture.Height * scale;
+            var scaleOffset = lobbyMapInfo.ZoomLevels[1] - actualScale;
+            var imageScale = scaleOffset <= 0 ? 1f : Calc.LerpClamp(1f, 0.75f, scaleOffset / (lobbyMapInfo.ZoomLevels[1] - lobbyMapInfo.ZoomLevels[0]));
 
             foreach (FeatureImage image in featureComponents) {
                 var origin = originForPosition(image.Info.Position);
                 var originOffset = origin - actualOrigin;
                 image.Position = new Vector2(bounds.Center.X + originOffset.X * actualWidth, bounds.Center.Y + originOffset.Y * actualHeight);
+                image.Scale = new Vector2(imageScale);
             }
         }
 
