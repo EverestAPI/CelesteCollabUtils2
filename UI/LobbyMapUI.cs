@@ -1,3 +1,4 @@
+using Celeste.Mod.CollabUtils2.Cutscenes;
 using Celeste.Mod.CollabUtils2.Entities;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -6,8 +7,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-
-using CelesteEngine = Celeste.Celeste;
 
 namespace Celeste.Mod.CollabUtils2.UI {
     [Tracked]
@@ -33,7 +32,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private Texture2D overlayTexture;
         private VirtualRenderTarget renderTarget;
         private readonly List<Component> featureComponents = new List<Component>();
-        private static readonly MTexture arrowTexture = GFX.Gui["towerarrow"];
+        private readonly MTexture arrowTexture = GFX.Gui["towerarrow"];
 
         // current view
         private int zoomLevel = -1;
@@ -149,22 +148,22 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     }
                 }
 
-                if (!Input.MenuConfirm.Pressed) {
-                    var close = false;
-                    if (Input.MenuCancel.Pressed) {
-                        close = true;
-                    } else if (Input.ESC.Pressed) {
-                        close = true;
-                        Input.ESC.ConsumeBuffer();
-                    } else if (Input.Pause.Pressed) {
-                        close = true;
-                        Input.Pause.ConsumeBuffer();
-                    }
+                var close = false;
+                if (Input.MenuConfirm.Pressed) {
+                    var warp = activeWarps[selectedWarpIndex];
+                    teleportToWarp(warp, "Fade", 0.5f);
+                } else if (Input.MenuCancel.Pressed) {
+                    close = true;
+                } else if (Input.ESC.Pressed) {
+                    close = true;
+                    Input.ESC.ConsumeBuffer();
+                } else if (Input.Pause.Pressed) {
+                    close = true;
+                    Input.Pause.ConsumeBuffer();
+                }
 
-                    if (close) {
-                        closeScreen();
-                        return;
-                    }
+                if (close) {
+                    closeScreen();
                 }
             }
 
@@ -539,60 +538,36 @@ namespace Celeste.Mod.CollabUtils2.UI {
             return array;
         }
 
-        // private void teleportToWarp(LobbyMapController.FeatureInfo warp, string wipeType, float wipeDuration)
-        // {
-        //     if (Scene is Level level && level.Tracker.GetEntity<Player>() is Player player)
-        //     {
-        //         if (warp.SID == level.Session.Area.SID)
-        //         {
-        //             level.Add(new TeleportCutscene(player, warp.Room, warp.Position, 0, 0, true, 0f, wipeType, wipeDuration));
-        //         }
-        //         else
-        //         {
-        //             // XaphanModule.ModSaveData.DestinationRoom = warp.Room;
-        //             // XaphanModule.ModSaveData.Spawn = warp.Position;
-        //             // XaphanModule.ModSaveData.Wipe = wipeType;
-        //             // XaphanModule.ModSaveData.WipeDuration = wipeDuration;
-        //
-        //             ScreenWipe wipe = null;
-        //             if (typeof(Celeste).Assembly.GetType($"Celeste.{wipeType}Wipe") is Type type)
-        //             {
-        //                 wipe = (ScreenWipe)Activator.CreateInstance(type, new object[] {
-        //                     level, false, new Action(() => TeleportToChapter(warp.are))
-        //                 });
-        //             }
-        //             else
-        //             {
-        //                 wipe = new FadeWipe(level, false, new Action(() => TeleportToChapter(warp.SID)));
-        //             }
-        //
-        //             wipe.Duration = Math.Min(1.35f, wipeDuration);
-        //         }
-        //     }
-        // }
-        //
-        // private static void TeleportToChapter(int areaId)
-        // {
-        //     if (Engine.Scene is Level level)
-        //     {
-        //         // if (XaphanModule.useMergeChaptersController && (level.Session.Area.LevelSet == "Xaphan/0" ? !XaphanModule.ModSaveData.SpeedrunMode : true))
-        //         // {
-        //         //     long currentTime = level.Session.Time;
-        //         //     LevelEnter.Go(new Session(new AreaKey(areaId))
-        //         //         {
-        //         //             Time = currentTime,
-        //         //             DoNotLoad = XaphanModule.ModSaveData.SavedNoLoadEntities[level.Session.Area.LevelSet],
-        //         //             Strawberries = XaphanModule.ModSaveData.SavedSessionStrawberries[level.Session.Area.LevelSet]
-        //         //         }
-        //         //         , fromSaveData: false);
-        //         // }
-        //         // else
-        //         {
-        //             LevelEnter.Go(new Session(new AreaKey(areaId)), fromSaveData: false);
-        //         }
-        //     }
-        // }
+        private void teleportToWarp(LobbyMapController.FeatureInfo warp, string wipeType, float wipeDuration) {
+            if (Scene is Level level && level.Tracker.GetEntity<Player>() is Player player) {
+                if (warp.SID == level.Session.Area.SID) {
+                    level.Add(new TeleportCutscene(player, warp.Room, warp.Position, 0, 0, true, 0f, wipeType, wipeDuration));
+                } else {
+                    var targetAreaId = AreaData.Areas.FirstOrDefault(a => a.SID == warp.SID)?.ID ?? level.Session.Area.ID;
+
+                    ScreenWipe wipe = null;
+                    if (typeof(Celeste).Assembly.GetType($"Celeste.{wipeType}Wipe") is Type type) {
+                        wipe = (ScreenWipe) Activator.CreateInstance(type, level, false, new Action(() => teleportToChapter(targetAreaId, warp.Room, warp.Position)));
+                    } else {
+                        wipe = new FadeWipe(level, false, () => teleportToChapter(targetAreaId, warp.Room, warp.Position));
+                    }
+
+                    wipe.Duration = Math.Min(1.35f, wipeDuration);
+                }
+            }
+        }
         
+        private static void teleportToChapter(int areaId, string room, Vector2 position)
+        {
+            var levelData = AreaData.Get(new AreaKey(areaId)).Mode[0].MapData.Get(room);
+            var session = new Session(new AreaKey(areaId)) {
+                Level = room,
+                FirstLevel = false,
+                RespawnPoint = levelData.Spawns.ClosestTo(levelData.Position + position),
+            };
+            LevelEnter.Go(session, fromSaveData: false);
+        }
+
         #endregion
         
         private EntityData findEntityData(LevelData levelData, string entityName) =>

@@ -50,7 +50,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             VisitManager?.Save();
             base.SceneEnd(scene);
         }
-        
+
         /// <summary>
         /// EntityData is parsed into a struct so that it can be reused in <see cref="LobbyMapUI"/>
         /// without having to load the entire entity.
@@ -153,7 +153,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     .Where(f => f > 0)
                     .ToArray();
 
-                if (false) {//zoomLevels.Any()) {
+                if (zoomLevels.Any()) {
                     ZoomLevels = zoomLevels;
                 } else {
                     ZoomLevels = new[] {

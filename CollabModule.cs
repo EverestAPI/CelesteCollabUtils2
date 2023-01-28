@@ -168,5 +168,19 @@ namespace Celeste.Mod.CollabUtils2 {
         private static void CmdToggleMapReveal() {
             Instance.SaveData.RevealMap = !Instance.SaveData.RevealMap;
         }
+        
+        [Command("cu2_lobby_map_reset", "Resets all explored areas and warps for the current lobby map")]
+        private static void CmdLobbyMapReset() {
+            if (!(Engine.Scene is Level level)) return;
+            
+            if (level.Tracker.GetEntity<LobbyMapController>() is LobbyMapController lmc) {
+                lmc.VisitManager?.Reset();
+                lmc.VisitManager?.Save();
+            }
+
+            if (Instance.SaveData.ActivatedLobbyWarps.ContainsKey(level.Session.Area.SID)) {
+                Instance.SaveData.ActivatedLobbyWarps.Remove(level.Session.Area.SID);
+            }
+        }
     }
 }

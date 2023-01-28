@@ -25,6 +25,11 @@ namespace Celeste.Mod.CollabUtils2 {
             VisitedPoints = CollabModule.Instance.SaveData.VisitedLobbyPositions.TryGetValue(Key, out var value) ? FromBase64(value) : new List<VisitedPoint>();
         }
 
+        public void Reset() {
+            VisitedPoints.Clear();
+            lastVisitedPoint = new VisitedPoint(Vector2.Zero);
+        }
+        
         public void Save() {
             CollabModule.Instance.SaveData.VisitedLobbyPositions[Key] = ToBase64(VisitedPoints);
         }
