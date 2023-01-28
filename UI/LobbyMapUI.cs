@@ -578,7 +578,18 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             public FeatureImage(LobbyMapController.FeatureInfo info) : base(null) {
                 Info = info;
-                Texture = GFX.Gui[info.Icon];
+
+                var icon = info.Icon;
+                if (info.Type == LobbyMapController.FeatureType.Map) {
+                    if (info.MapInfo.Difficulty >= 0 && GFX.Gui.Has(icon + info.MapInfo.Difficulty)) {
+                        icon += info.MapInfo.Difficulty;
+                    }
+                    if (info.MapInfo.Completed && GFX.Gui.Has(icon + "Completed")) {
+                        icon += "Completed";
+                    }
+                }
+                
+                Texture = GFX.Gui[icon];
                 CenterOrigin();
             }
         }

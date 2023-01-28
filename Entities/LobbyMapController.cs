@@ -184,6 +184,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             public Vector2 Position;
             public string SID;
             public string Room;
+            public string Map;
+            public MapInfo MapInfo;
 
             public FeatureInfo(EntityData data, ControllerInfo controllerInfo) {
                 TryParse(data, controllerInfo, out this);
@@ -201,6 +203,9 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     value.Type = FeatureType.HeartDoor;
                 } else if (data.Name == JournalTrigger.ENTITY_NAME) {
                     value.Type = FeatureType.Journal;
+                } else if (data.Name == ChapterPanelTrigger.CHAPTER_PANEL_TRIGGER_NAME) {
+                    value.Map = data.Attr("map");
+                    value.Type = value.Map.Contains("0-Gyms") ? FeatureType.Gym : FeatureType.Map;
                 } else if (data.Has("cu2map_type")) {
                     value.Type = data.Enum("cu2map_type", FeatureType.Custom);
                 } else {
@@ -212,6 +217,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 value.Icon = data.Attr("cu2map_icon");
                 value.DialogKey = data.Attr("cu2map_dialogKey");
                 value.FeatureId = data.Attr("cu2map_id");
+                value.Map = data.Attr("cu2map_map", value.Map);
                 value.Position = data.Position;
 
                 var fallbackIcon = string.Empty;
@@ -240,18 +246,47 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     case FeatureType.Journal:
                         fallbackIcon = controllerInfo.JournalIcon ?? "CollabUtils2/lobbies/journal";
                         break;
-                    default:
-                        break;
                 }
 
                 if (string.IsNullOrWhiteSpace(value.Icon)) {
                     value.Icon = fallbackIcon;
                 }
 
+                if (value.Type == FeatureType.Map && !string.IsNullOrWhiteSpace(value.Map)) {
+                    value.MapInfo = new MapInfo(value.Map);
+                }
+
                 value.CanWarpFrom = data.Bool("cu2map_canWarpFrom", fallbackWarpFrom);
                 value.CanWarpTo = data.Bool("cu2map_canWarpTo", fallbackWarpTo);
 
                 return true;
+            }
+        }
+
+        public struct MapInfo {
+            public string SID;
+            public bool Completed;
+            public int Difficulty;
+
+            public MapInfo(string mapName) {
+                SID = string.Empty;
+                Completed = false;
+                Difficulty = -1;
+                
+                if (AreaData.Get(mapName) is AreaData areaData) {
+                    SID = areaData.SID;
+                    AreaStats areaStatsFor = SaveData.Instance.GetAreaStatsFor(areaData.ToKey());
+                    Completed = areaStatsFor != null && areaStatsFor.Modes[0].Completed;
+
+                    string mapDifficultyIconPath = areaData.Icon;
+                    if (!string.IsNullOrWhiteSpace(mapDifficultyIconPath)) {
+                        var iconFilename = mapDifficultyIconPath.Split('/').LastOrDefault() ?? string.Empty;
+                        var firstToken = iconFilename.Split('-').FirstOrDefault() ?? string.Empty;
+                        if (!string.IsNullOrWhiteSpace(firstToken)) {
+                            int.TryParse(firstToken, out Difficulty);
+                        }
+                    }
+                }
             }
         }
         
@@ -263,6 +298,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             Gym,
             Map,
             Journal,
+            HeartSide,
         }
     }
 }
