@@ -1,10 +1,10 @@
 using Celeste.Mod.CollabUtils2.UI;
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Monocle;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
     [CustomEntity(ENTITY_NAME)]
@@ -16,6 +16,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private readonly string activateSpriteName;
         private readonly string activateSpriteAnimation;
         private readonly Facings playerFacing;
+        private readonly bool flipX;
         
         private readonly Sprite sprite;
         private LobbyMapController.FeatureInfo info;
@@ -23,8 +24,10 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         public LobbyMapWarp(EntityData data, Vector2 offset) : base(data.Position + offset) {
             spriteName = data.Attr("spriteName");
             spriteAnimation = data.Attr("spriteAnimation");
+            flipX = data.Bool("flipX");
             activateSpriteName = data.Attr("activateSpriteName");
             playerFacing = (Facings) data.Int("playerFacing", (int) Facings.Right);
+            Depth = data.Int("depth", Depths.Below);
 
             LobbyMapController.FeatureInfo.TryParse(data, default, out info);
             
@@ -35,6 +38,9 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             if (!string.IsNullOrWhiteSpace(spriteName)) {
                 Add(sprite = GFX.SpriteBank.Create(spriteName));
                 sprite.JustifyOrigin(0.5f, 1f);
+                if (flipX) {
+                    sprite.Effects = SpriteEffects.FlipHorizontally;
+                }
                 if (!string.IsNullOrWhiteSpace(spriteAnimation)) {
                     sprite.Play(spriteAnimation);
                 }
@@ -79,6 +85,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             playerSprite.Add("idle", "", 0.08f);
             playerSprite.CenterOrigin();
             playerSprite.Position += new Vector2(0, -16);
+            playerSprite.Effects = flipX ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
             Add(playerSprite);
 
             var playerHairSprite = new Sprite(GFX.Game, activateSpriteName + "Hair");
@@ -86,6 +93,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             playerHairSprite.CenterOrigin();
             playerHairSprite.Position += new Vector2(0, -16);
             playerHairSprite.Color = player.Hair.Color;
+            playerHairSprite.Effects = flipX ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
             Add(playerHairSprite);
             
             playerSprite.Play("idle");

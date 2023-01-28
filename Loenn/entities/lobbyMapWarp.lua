@@ -5,11 +5,14 @@ lobbyMapWarp.placements = {
     {
         name = "default",
         data = {
+            warpId = "",
+            dialogKey = "",
             sprite = "",
             spriteAnimation = "",
-            cu2map_type = "Warp",
-            cu2map_id = "",
-            cu2map_dialogKey = "",
+            activateSpriteName = "",
+            flipX = false,
+            playerFacing = 1,
+            depth = 2000,
         }
     }
 }

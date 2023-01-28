@@ -124,7 +124,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             public bool ShowJournals;
 
             public bool ShowHeartCount;
-            
+
             public ControllerInfo(EntityData data, MapData mapData = null) {
                 MapTexture = data.Attr("mapTexture");
                 LevelSet = data.Attr("levelSet");
@@ -177,10 +177,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         }
         
         public struct FeatureInfo {
-            // public readonly bool ShowOnMap;
             public string Icon;
             public string DialogKey;
-            public bool CanWarpFrom;
             public bool CanWarpTo;
             public string FeatureId;
             public FeatureType Type;
@@ -189,6 +187,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             public string Room;
             public string Map;
             public MapInfo MapInfo;
+            public bool Custom;
 
             public FeatureInfo(EntityData data, ControllerInfo controllerInfo) {
                 TryParse(data, controllerInfo, out this);
@@ -197,9 +196,11 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             public static bool TryParse(EntityData data, ControllerInfo controllerInfo, out FeatureInfo value) {
                 value = default;
                 
-                // special case for CU2 entities
                 if (data.Name == LobbyMapWarp.ENTITY_NAME) {
                     value.Type = FeatureType.Warp;
+                    value.DialogKey = data.Attr("dialogKey");
+                    value.FeatureId = data.Attr("warpId");
+                    value.CanWarpTo = true;
                 } else if (data.Name == RainbowBerry.ENTITY_NAME) {
                     value.Type = FeatureType.RainbowBerry;
                 } else if (data.Name == MiniHeartDoor.ENTITY_NAME) {
@@ -211,60 +212,53 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     value.Type = value.Map.Contains("0-Gyms") ? FeatureType.Gym : FeatureType.Map;
                 } else if (data.Name == "XaphanHelper/WarpStation") {
                     value.Type = FeatureType.Warp;
+                    value.CanWarpTo = true;
                     value.DialogKey = data.Attr("dialogKey");
                     value.FeatureId = data.Int("index").ToString();
                 } else if (data.Has("cu2map_type")) {
+                    value.Custom = true;
                     value.Type = data.Enum("cu2map_type", FeatureType.Custom);
+                    value.Icon = data.Attr("cu2map_icon");
+                    value.DialogKey = data.Attr("cu2map_dialogKey");
+                    value.Map = data.Attr("cu2map_map");
+                    value.CanWarpTo = data.Bool("cu2map_canWarpTo", value.Type == FeatureType.Warp);
+                    value.FeatureId = data.Attr("cu2map_id");
                 } else {
                     return false;
                 }
                 
-                // ShowOnMap = data.Bool("cu2map_showOnMap");
-
-                value.Icon = data.Attr("cu2map_icon");
-                value.DialogKey = data.Attr("cu2map_dialogKey", value.DialogKey);
-                value.FeatureId = data.Attr("cu2map_id", value.FeatureId);
-                value.Map = data.Attr("cu2map_map", value.Map);
                 value.Position = data.Position;
 
-                var fallbackIcon = string.Empty;
-                var fallbackWarpFrom = false;
-                var fallbackWarpTo = false;
-                
-                switch (value.Type) {
-                    case FeatureType.Warp:
-                        // value.Icon = "CollabUtils2/lobbyMap/warp";
-                        fallbackIcon = controllerInfo.WarpIcon ?? "CollabUtils2/lobbies/warp";
-                        fallbackWarpFrom = true;
-                        fallbackWarpTo = true;
-                        break;
-                    case FeatureType.RainbowBerry:
-                        fallbackIcon = controllerInfo.RainbowBerryIcon ?? "CollabUtils2/lobbies/rainbowBerry";
-                        break;
-                    case FeatureType.HeartDoor:
-                        fallbackIcon = controllerInfo.HeartDoorIcon ?? "CollabUtils2/lobbies/heartgate";
-                        break;
-                    case FeatureType.Gym:
-                        fallbackIcon = controllerInfo.GymIcon ?? "CollabUtils2/lobbies/gym";
-                        break;
-                    case FeatureType.Map:
-                        fallbackIcon = controllerInfo.MapIcon ?? "CollabUtils2/lobbies/map";
-                        break;
-                    case FeatureType.Journal:
-                        fallbackIcon = controllerInfo.JournalIcon ?? "CollabUtils2/lobbies/journal";
-                        break;
+                if (string.IsNullOrWhiteSpace(value.FeatureId)) {
+                    value.FeatureId = $"{value.Type}_{data.ID}";
                 }
 
                 if (string.IsNullOrWhiteSpace(value.Icon)) {
-                    value.Icon = fallbackIcon;
+                    switch (value.Type) {
+                        case FeatureType.Warp:
+                            value.Icon = controllerInfo.WarpIcon ?? "CollabUtils2/lobbies/warp";
+                            break;
+                        case FeatureType.RainbowBerry:
+                            value.Icon = controllerInfo.RainbowBerryIcon ?? "CollabUtils2/lobbies/rainbowBerry";
+                            break;
+                        case FeatureType.HeartDoor:
+                            value.Icon = controllerInfo.HeartDoorIcon ?? "CollabUtils2/lobbies/heartgate";
+                            break;
+                        case FeatureType.Gym:
+                            value.Icon = controllerInfo.GymIcon ?? "CollabUtils2/lobbies/gym";
+                            break;
+                        case FeatureType.Map:
+                            value.Icon = controllerInfo.MapIcon ?? "CollabUtils2/lobbies/map";
+                            break;
+                        case FeatureType.Journal:
+                            value.Icon = controllerInfo.JournalIcon ?? "CollabUtils2/lobbies/journal";
+                            break;
+                    }
                 }
 
                 if (value.Type == FeatureType.Map && !string.IsNullOrWhiteSpace(value.Map)) {
                     value.MapInfo = new MapInfo(value.Map);
                 }
-
-                value.CanWarpFrom = data.Bool("cu2map_canWarpFrom", fallbackWarpFrom);
-                value.CanWarpTo = data.Bool("cu2map_canWarpTo", fallbackWarpTo);
 
                 return true;
             }
