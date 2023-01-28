@@ -122,6 +122,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             public bool ShowGyms;
             public bool ShowMaps;
             public bool ShowJournals;
+
+            public bool ShowHeartCount;
             
             public ControllerInfo(EntityData data, MapData mapData = null) {
                 MapTexture = data.Attr("mapTexture");
@@ -132,6 +134,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 CustomFeatures = data.Attr("customFeatures");
                 RoomWidth = data.Int("roomWidth");
                 RoomHeight = data.Int("roomHeight");
+                ShowHeartCount = data.Bool("showHeartCount", true);
 
                 WarpIcon = data.Attr("warpIcon", "CollabUtils2/lobbies/warp");
                 RainbowBerryIcon = data.Attr("rainbowBerryIcon", "CollabUtils2/lobbies/rainbowBerry");

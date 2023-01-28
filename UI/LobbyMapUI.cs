@@ -26,6 +26,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private readonly List<LobbyMapController.FeatureInfo> lobbyMapFeatures = new List<LobbyMapController.FeatureInfo>();
         private ByteArray2D visitedTiles;
         private LobbyVisitManager visitManager;
+        private int heartCount;
 
         // resources
         private Texture2D mapTexture;
@@ -33,6 +34,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private VirtualRenderTarget renderTarget;
         private readonly List<Component> featureComponents = new List<Component>();
         private readonly MTexture arrowTexture = GFX.Gui["towerarrow"];
+        private Sprite heartSprite;
 
         // current view
         private int zoomLevel = -1;
@@ -54,7 +56,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private Rectangle bounds;
 
         private bool focused;
-        
+
         #endregion
 
         public LobbyMapUI() {
@@ -65,11 +67,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
             bounds = new Rectangle(100, 182, Engine.Width - 2 * 100, Engine.Height - 2 * 182);
 
             renderTarget = VirtualContent.CreateRenderTarget("CU2_LobbyMapUI", bounds.Width, bounds.Height);
-            
+
             Add(new BeforeRenderHook(beforeRender));
             Add(new Coroutine(mapFocusRoutine()));
         }
-        
+
         private Vector2 originForPosition(Vector2 point) {
             var tileX = point.X / 8f;
             var tileY = point.Y / 8f;
@@ -171,7 +173,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (lastSelectedWarpIndex != selectedWarpIndex) {
                 var warp = activeWarps[selectedWarpIndex];
                 selectedOrigin = originForPosition(warp.Position);
-                
+
                 if (lastSelectedWarpIndex < 0) {
                     actualOrigin = shouldCentreOrigin ? new Vector2(0.5f) : selectedOrigin;
                 } else if (!shouldCentreOrigin) {
@@ -199,11 +201,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (!activeWarpLobbyKeys.Contains(level.Session.Area.SID)) {
                 activeWarpLobbyKeys.Add(level.Session.Area.SID);
             }
-            
+
             Logger.Log(LogLevel.Warn, nameof(CollabModule), $"{collabName},{string.Join(",", activeWarpLobbyKeys)}");
-            
+
             lobbySelections.Clear();
-            
+
             foreach (var key in activeWarpLobbyKeys) {
                 var mapData = AreaData.Get(key)?.Mode.FirstOrDefault()?.MapData;
                 var entityData = mapData?.Levels.Select(l => findEntityData(l, LobbyMapController.ENTITY_NAME)).FirstOrDefault();
@@ -212,16 +214,16 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     lobbySelections.Add(new LobbySelection(entityData, mapData));
                 }
             }
-            
+
             lobbySelections.Sort((lhs, rhs) => lhs.Info.LobbyIndex - rhs.Info.LobbyIndex);
 
             selectedLobbyIndex = lobbySelections.FindIndex(s => s.SID == level.Session.Area.SID);
         }
-        
+
         public void updateSelectedLobby() {
             var selection = lobbySelections[selectedLobbyIndex];
             lobbyMapInfo = selection.Info;
-            
+
             // get the feature infos
             lobbyMapFeatures.Clear();
             foreach (var data in selection.Data.Level.Entities.Concat(selection.Data.Level.Triggers)) {
@@ -274,12 +276,37 @@ namespace Celeste.Mod.CollabUtils2.UI {
             // calculate multiplier by aspect ratios
             var padded = bounds;
             padded.Inflate(-10, -10);
-            var mapAspectRatio = (float)mapTexture.Width / mapTexture.Height;
-            var boundsAspectRatio = (float)padded.Width / padded.Height;
-            scaleMultiplier = mapAspectRatio > boundsAspectRatio ? (float)padded.Width / mapTexture.Width : (float)padded.Height / mapTexture.Height;
-            
+            var mapAspectRatio = (float) mapTexture.Width / mapTexture.Height;
+            var boundsAspectRatio = (float) padded.Width / padded.Height;
+            scaleMultiplier = mapAspectRatio > boundsAspectRatio ? (float) padded.Width / mapTexture.Width : (float) padded.Height / mapTexture.Height;
+
             // update feature positions
             updateFeatures();
+            
+            // add heart component
+            if (heartSprite != null && !lobbyMapInfo.ShowHeartCount) {
+                heartSprite?.RemoveSelf();
+                heartSprite = null;
+            }
+            else if (lobbyMapInfo.ShowHeartCount) {
+                var heartPath = lobbyMapInfo.LobbyIndex <= 3
+                    ? $"collectables/heartgem/{lobbyMapInfo.LobbyIndex - 1}/"
+                    : $"CollabUtils2/crystalHeart/{(lobbyMapInfo.LobbyIndex == 4 ? "expert" : "grandmaster")}/";
+                if (heartSprite == null || heartSprite.Path != heartPath) {
+                    var lastFrame = heartSprite?.CurrentAnimationFrame ?? 0;
+                    heartSprite?.RemoveSelf();
+                    Add(heartSprite = new Sprite(GFX.Gui, heartPath));
+                    heartSprite.CenterOrigin();
+                    heartSprite.AddLoop("spin", "spin", 0.1f, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+                    heartSprite.Scale = Vector2.One / 2f;
+                    heartSprite.Play("spin");
+                    heartSprite.SetAnimationFrame(lastFrame);
+                    heartSprite.Position = new Vector2(bounds.Left + 10, bounds.Top + 10);
+                }
+
+                var levelSetStats = SaveData.Instance.GetLevelSets().FirstOrDefault(ls => ls.Name == lobbyMapInfo.LevelSet);
+                heartCount = levelSetStats?.TotalHeartGems ?? 0;
+            }
         }
 
         private Component createFeatureComponent(LobbyMapController.FeatureInfo featureInfo) {
@@ -324,7 +351,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     ColorDestinationBlend = Blend.Zero,
                 });
             } else {
-                Draw.SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend); 
+                Draw.SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend);
             }
 
             Draw.SpriteBatch.Draw(mapTexture, destRect, Color.White);
@@ -355,7 +382,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             var safeBounds = new Rectangle(-safety, -safety, Engine.Width + 2 * safety, Engine.Height + 2 * safety);
             var border = bounds;
             border.Inflate(margin + thickness, margin + thickness);
-            
+
             Draw.Rect(safeBounds.Left, safeBounds.Top, safeBounds.Width, bounds.Top - safeBounds.Top, Color.Black);
             Draw.Rect(safeBounds.Left, bounds.Bottom, safeBounds.Width, safeBounds.Bottom - bounds.Bottom, Color.Black);
             Draw.Rect(safeBounds.Left, bounds.Top - safety, bounds.Left - safeBounds.Left, bounds.Height + 2 * safety, Color.Black);
@@ -368,7 +395,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             var lobby = lobbySelections[selectedLobbyIndex];
             var title = Dialog.Clean(lobby.SID);
             var colorAlpha = 1f;
-            
+
             ActiveFont.DrawEdgeOutline(title, new Vector2(Celeste.TargetWidth / 2f, 80f), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.Gray * colorAlpha, 4f, Color.DarkSlateBlue * colorAlpha, 2f, Color.Black * colorAlpha);
 
             if (selectedLobbyIndex > 0) {
@@ -376,7 +403,15 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
 
             if (selectedLobbyIndex < lobbySelections.Count - 1) {
-                arrowTexture.DrawCentered(new Vector2(960f + ActiveFont.Measure(title).X + 100f, 80f), Color.White * colorAlpha , 1f, (float)Math.PI);
+                arrowTexture.DrawCentered(new Vector2(960f + ActiveFont.Measure(title).X + 100f, 80f), Color.White * colorAlpha, 1f, (float) Math.PI);
+            }
+
+            if (lobbyMapInfo.ShowHeartCount && heartSprite != null) {
+                var heartCountColor = heartCount >= lobbyMapInfo.TotalMaps ? Color.Gold : Color.White;
+                var heartText = $"{heartCount} / {lobbyMapInfo.TotalMaps}";
+                var measured = ActiveFont.Measure(heartText);
+                var position = new Vector2(heartSprite.Position.X + heartSprite.Width / 2f + 10f + measured.X / 2f, heartSprite.Position.Y + heartSprite.Height / 4f); 
+                ActiveFont.DrawOutline(heartText, position, new Vector2(0.5f), Vector2.One, heartCountColor, 2f, Color.Black);
             }
         }
 
@@ -471,9 +506,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private IEnumerator transitionRoutine(float duration = 0.5f, Action onFadeOut = null, Action onFadeIn = null) {
             duration = Math.Max(0f, duration);
-            
+
             focused = false;
-            
+
             yield return new FadeWipe(Scene, false) {
                 Duration = duration / 2f,
                 OnComplete = onFadeOut,
@@ -483,7 +518,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 Duration = duration / 2f,
                 OnComplete = onFadeIn,
             }.Wait();
-            
+
             focused = true;
         }
 
@@ -559,9 +594,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 }
             }
         }
-        
-        private static void teleportToChapter(int areaId, string room, Vector2 position)
-        {
+
+        private static void teleportToChapter(int areaId, string room, Vector2 position) {
             var levelData = AreaData.Get(new AreaKey(areaId)).Mode[0].MapData.Get(room);
             var session = new Session(new AreaKey(areaId)) {
                 Level = room,
@@ -572,7 +606,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         #endregion
-        
+
         private EntityData findEntityData(LevelData levelData, string entityName) =>
             levelData.Entities.FirstOrDefault(e => e.Name == entityName);
 
@@ -591,7 +625,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         icon += "Completed";
                     }
                 }
-                
+
                 Texture = GFX.Gui[icon];
                 CenterOrigin();
             }
