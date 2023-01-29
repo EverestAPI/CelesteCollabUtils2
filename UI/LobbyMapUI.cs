@@ -38,6 +38,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private Sprite heartSprite;
         private Image playerIcon;
         private Image playerIconHair;
+        private Wiggler selectWarpWiggler;
+        private Wiggler selectLobbyWiggler;
+        private Wiggler closeWiggler;
+        private Wiggler confirmWiggler;
+        private Wiggler zoomWiggler;
 
         // current view
         private int zoomLevel = -1;
@@ -68,9 +73,15 @@ namespace Celeste.Mod.CollabUtils2.UI {
             Depth = Depths.FGTerrain - 2;
             Visible = false;
 
-            bounds = new Rectangle(100, 182, Engine.Width - 2 * 100, Engine.Height - 2 * 182);
+            const int top = 182, bottom = 80, left = 100, right = 100;
+            bounds = new Rectangle(left, top, Engine.Width - left - right, Engine.Height - top - bottom);
 
             renderTarget = VirtualContent.CreateRenderTarget("CU2_LobbyMapUI", bounds.Width, bounds.Height);
+            Add(selectWarpWiggler = Wiggler.Create(0.4f, 4f));
+            Add(selectLobbyWiggler = Wiggler.Create(0.4f, 4f));
+            Add(closeWiggler = Wiggler.Create(0.4f, 4f));
+            Add(confirmWiggler = Wiggler.Create(0.4f, 4f));
+            Add(zoomWiggler = Wiggler.Create(0.4f, 4f));
 
             Add(new BeforeRenderHook(beforeRender));
             Add(new Coroutine(mapFocusRoutine()));
@@ -109,28 +120,32 @@ namespace Celeste.Mod.CollabUtils2.UI {
             base.Update();
 
             if (focused) {
-                if (Input.MenuDown.Pressed) {
-                    if (selectedWarpIndexes[selectedLobbyIndex] < activeWarps.Count - 1) {
-                        Audio.Play("event:/ui/main/rollover_down");
-                        selectedWarpIndexes[selectedLobbyIndex]++;
-                    }
-                } else if (Input.MenuUp.Pressed) {
+                if (Input.MenuUp.Pressed) {
                     if (selectedWarpIndexes[selectedLobbyIndex] > 0) {
                         Audio.Play("event:/ui/main/rollover_up");
+                        selectWarpWiggler.Start();
                         selectedWarpIndexes[selectedLobbyIndex]--;
+                    }
+                } else if (Input.MenuDown.Pressed) {
+                    if (selectedWarpIndexes[selectedLobbyIndex] < activeWarps.Count - 1) {
+                        Audio.Play("event:/ui/main/rollover_down");
+                        selectWarpWiggler.Start();
+                        selectedWarpIndexes[selectedLobbyIndex]++;
                     }
                 }
 
                 if (Input.MenuLeft.Pressed) {
                     if (selectedLobbyIndex > 0) {
-                        Audio.Play("event:/ui/main/rollover_down");
+                        Audio.Play("event:/ui/main/rollover_up");
+                        selectLobbyWiggler.Start();
                         lastSelectedWarpIndex = -1;
                         selectedLobbyIndex--;
                         updateSelectedLobby();
                     }
                 } else if (Input.MenuRight.Pressed) {
                     if (selectedLobbyIndex < lobbySelections.Count - 1) {
-                        Audio.Play("event:/ui/main/rollover_up");
+                        Audio.Play("event:/ui/main/rollover_down");
+                        selectLobbyWiggler.Start();
                         lastSelectedWarpIndex = -1;
                         selectedLobbyIndex++;
                         updateSelectedLobby();
@@ -139,6 +154,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
                 if (Input.MenuJournal.Pressed) {
                     Audio.Play("event:/ui/main/rollover_down");
+                    zoomWiggler.Start();
                     zoomLevel--;
                     if (zoomLevel < 0) {
                         zoomLevel = lobbyMapInfo.ZoomLevels.Length - 1;
@@ -157,6 +173,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 var close = false;
                 if (Input.MenuConfirm.Pressed) {
                     var warp = activeWarps[selectedWarpIndexes[selectedLobbyIndex]];
+                    confirmWiggler.Start();
                     teleportToWarp(warp, "Fade", 0.5f);
                 } else if (Input.MenuCancel.Pressed) {
                     close = true;
@@ -169,6 +186,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 }
 
                 if (close) {
+                    closeWiggler.Start();
                     closeScreen();
                 }
             }
@@ -437,6 +455,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             var title = Dialog.Clean(lobby.SID);
             var colorAlpha = 1f;
 
+            // draw lobby title
             ActiveFont.DrawEdgeOutline(title, new Vector2(Celeste.TargetWidth / 2f, 80f), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.Gray * colorAlpha, 4f, Color.DarkSlateBlue * colorAlpha, 2f, Color.Black * colorAlpha);
 
             if (selectedLobbyIndex > 0) {
@@ -447,6 +466,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 arrowTexture.DrawCentered(new Vector2(960f + ActiveFont.Measure(title).X + 100f, 80f), Color.White * colorAlpha, 1f, (float) Math.PI);
             }
 
+            // draw heart count
             if (lobbyMapInfo.ShowHeartCount && heartSprite != null) {
                 var heartCountColor = heartCount >= lobbyMapInfo.TotalMaps ? Color.Gold : Color.White;
                 var heartText = $"{heartCount} / {lobbyMapInfo.TotalMaps}";
@@ -455,10 +475,43 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 ActiveFont.DrawOutline(heartText, position, new Vector2(0.5f), Vector2.One, heartCountColor, 2f, Color.Black);
             }
 
+            // draw selected warp title
             if (!string.IsNullOrWhiteSpace(warp.DialogKey)) {
                 var clean = Dialog.Clean(warp.DialogKey);
                 ActiveFont.DrawOutline(clean, new Vector2(bounds.Center.X, bounds.Bottom - 30f), new Vector2(0.5f), Vector2.One, Color.White, 2f, Color.Black);
             }
+
+            // draw controls
+            var changeDestinationLabel = Dialog.Clean("collabutils2_lobbymap_change_destination");
+            var changeLobbyLabel = Dialog.Clean("collabutils2_lobbymap_change_lobby");
+            var closeLabel = Dialog.Clean("collabutils2_lobbymap_close");
+            var confirmLabel = Dialog.Clean("collabutils2_lobbymap_confirm");
+            var zoomLabel = Dialog.Clean("collabutils2_lobbymap_zoom");
+            const float buttonScale = 0.5f;
+            const float xOffset = 32f, yOffset = 45f;
+            const float wiggleAmount = 0.05f;
+            
+            var buttonPosition = new Vector2(bounds.Left + xOffset, bounds.Bottom + yOffset);
+            
+            if (activeWarps.Count > 1) {
+                renderDoubleButton(buttonPosition, changeDestinationLabel, Input.MenuUp, Input.MenuDown,
+                    buttonScale, true, true, 0f, selectWarpWiggler.Value * wiggleAmount);
+                buttonPosition.X += measureDoubleButton(changeDestinationLabel, Input.MenuUp, Input.MenuDown) / 2f + xOffset;
+            }
+
+            if (lobbySelections.Count > 1) {
+                renderDoubleButton(buttonPosition, changeLobbyLabel, Input.MenuLeft, Input.MenuRight,
+                    buttonScale, selectedLobbyIndex > 0, selectedLobbyIndex < lobbySelections.Count - 1, 0f, selectLobbyWiggler.Value * wiggleAmount);
+            }
+
+            var closeWidth = ButtonUI.Width(closeLabel, Input.MenuCancel);
+            var confirmWidth = ButtonUI.Width(confirmLabel, Input.MenuConfirm);
+            buttonPosition.X = bounds.Right + xOffset / 2f;
+            ButtonUI.Render(buttonPosition, closeLabel, Input.MenuCancel, buttonScale, 1f, closeWiggler.Value * wiggleAmount);
+            buttonPosition.X -= closeWidth / 2f + xOffset;
+            ButtonUI.Render(buttonPosition, confirmLabel, Input.MenuConfirm, buttonScale, 1f, confirmWiggler.Value * wiggleAmount);
+            buttonPosition.X -= confirmWidth / 2f + xOffset;
+            ButtonUI.Render(buttonPosition, zoomLabel, Input.MenuJournal, buttonScale, 1f, zoomWiggler.Value * wiggleAmount);
         }
 
         private void drawMap() {
@@ -658,6 +711,37 @@ namespace Celeste.Mod.CollabUtils2.UI {
             LevelEnter.Go(session, fromSaveData: false);
         }
 
+        public static float measureDoubleButton(string label, VirtualButton button1, VirtualButton button2) {
+            MTexture mTexture1 = Input.GuiButton(button1, "controls/keyboard/oemquestion");
+            MTexture mTexture2 = Input.GuiButton(button2, "controls/keyboard/oemquestion");
+            return ActiveFont.Measure(label).X + 8f + mTexture1.Width + mTexture2.Width;
+        }
+
+        public static void renderDoubleButton(Vector2 position, string label, VirtualButton button1, VirtualButton button2, float scale, bool displayButton1, bool displayButton2, float justifyX = 0.5f, float wiggle = 0f, float alpha = 1f) {
+            MTexture mTexture1 = Input.GuiButton(button1, "controls/keyboard/oemquestion");
+            MTexture mTexture2 = Input.GuiButton(button2, "controls/keyboard/oemquestion");
+            float num = ActiveFont.Measure(label).X + 8f + mTexture1.Width;
+            position.X -= scale * num * (justifyX - 0.5f) + mTexture2.Width / 2;
+            drawText(label, position, num / 2f, scale + wiggle, alpha);
+            if (displayButton1 && !displayButton2) {
+                mTexture1.Draw(position, new Vector2(mTexture1.Width - num / 2f, mTexture1.Height / 2f), Color.White * alpha, scale + wiggle);
+            }
+
+            if (!displayButton1 && displayButton2) {
+                mTexture2.Draw(position, new Vector2(mTexture2.Width - num / 2f, mTexture2.Height / 2f), Color.White * alpha, scale + wiggle);
+            }
+
+            if (displayButton1 && displayButton2) {
+                mTexture1.Draw(position, new Vector2(mTexture1.Width - num / 2f, mTexture1.Height / 2f), Color.White * alpha, scale + wiggle);
+                mTexture2.Draw(position + new Vector2(mTexture1.Width / 2, 0f), new Vector2(mTexture2.Width - num / 2f, mTexture2.Height / 2f), Color.White * alpha, scale + wiggle);
+            }
+        }
+
+        private static void drawText(string text, Vector2 position, float justify, float scale, float alpha) {
+            float x = ActiveFont.Measure(text).X;
+            ActiveFont.DrawOutline(text, position, new Vector2(justify / x, 0.5f), Vector2.One * scale, Color.White * alpha, 2f, Color.Black * alpha);
+        }
+        
         #endregion
 
         private EntityData findEntityData(LevelData levelData, string entityName) =>
