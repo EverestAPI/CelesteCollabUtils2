@@ -117,17 +117,19 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             // handle input
             if (focused) {
-                if (Input.MenuUp.Pressed) {
-                    if (selectedWarpIndexes[selectedLobbyIndex] > 0) {
-                        Audio.Play("event:/ui/main/rollover_up");
-                        selectWarpWiggler.Start();
-                        selectedWarpIndexes[selectedLobbyIndex]--;
-                    }
-                } else if (Input.MenuDown.Pressed) {
-                    if (selectedWarpIndexes[selectedLobbyIndex] < activeWarps.Count - 1) {
-                        Audio.Play("event:/ui/main/rollover_down");
-                        selectWarpWiggler.Start();
-                        selectedWarpIndexes[selectedLobbyIndex]++;
+                if (activeWarps.Count > 0) {
+                    if (Input.MenuUp.Pressed) {
+                        if (selectedWarpIndexes[selectedLobbyIndex] > 0) {
+                            Audio.Play("event:/ui/main/rollover_up");
+                            selectWarpWiggler.Start();
+                            selectedWarpIndexes[selectedLobbyIndex]--;
+                        }
+                    } else if (Input.MenuDown.Pressed) {
+                        if (selectedWarpIndexes[selectedLobbyIndex] < activeWarps.Count - 1) {
+                            Audio.Play("event:/ui/main/rollover_down");
+                            selectWarpWiggler.Start();
+                            selectedWarpIndexes[selectedLobbyIndex]++;
+                        }
                     }
                 }
 
@@ -168,8 +170,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 }
 
                 var close = false;
-                if (Input.MenuConfirm.Pressed) {
-                    var warp = activeWarps[selectedWarpIndexes[selectedLobbyIndex]];
+                var warpIndex = selectedWarpIndexes[selectedLobbyIndex];
+                if (Input.MenuConfirm.Pressed && warpIndex >= 0 && warpIndex < activeWarps.Count) {
+                    var warp = activeWarps[warpIndex];
                     confirmWiggler.Start();
                     teleportToWarp(warp, "Fade", 0.5f);
                 } else if (Input.MenuCancel.Pressed) {
@@ -203,7 +206,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
             
             // update map position for warp selection
-            if (lastSelectedWarpIndex != selectedWarpIndexes[selectedLobbyIndex]) {
+            if (activeWarps.Count > 0 && lastSelectedWarpIndex != selectedWarpIndexes[selectedLobbyIndex]) {
                 var warp = activeWarps[selectedWarpIndexes[selectedLobbyIndex]];
                 selectedOrigin = originForPosition(warp.Position);
 
@@ -304,6 +307,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             
             // if this is the first time we've selected a lobby, select the nearest warp
             if (first && Engine.Scene is Level level && level.Tracker.GetEntity<Player>() is Player player) {
+                selectedWarpIndexes[selectedLobbyIndex] = 0;
                 var nearestWarpLengthSquared = float.MaxValue;
                 for (int i = 0; i < activeWarps.Count; i++) {
                     var warpPosition = activeWarps[i].Position + level.LevelOffset;
@@ -314,9 +318,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     }
                 }
             }
-            
-            var selectedWarp = activeWarps[selectedWarpIndexes[selectedLobbyIndex]];
 
+            var warpIndex = selectedWarpIndexes[selectedLobbyIndex];
+            
             // get or create a visit manager
             visitManager = new LobbyVisitManager(selection.SID, selection.Room);
 
@@ -338,7 +342,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             zoomLevel = Calc.Clamp(zoomLevel, 0, lobbyMapInfo.ZoomLevels.Length);
             actualScale = lobbyMapInfo.ZoomLevels[zoomLevel];
             shouldCentreOrigin = zoomLevel == 0;
-            selectedOrigin = originForPosition(selectedWarp.Position);
+            selectedOrigin = warpIndex >= 0 && warpIndex < activeWarps.Count ? originForPosition(activeWarps[warpIndex].Position) : new Vector2(0.5f);
             actualOrigin = shouldCentreOrigin ? new Vector2(0.5f) : selectedOrigin;
             translateTimeRemaining = 0f;
             scaleTimeRemaining = 0f;
@@ -510,7 +514,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             Draw.Rect(border.Right - thickness, border.Top, thickness, border.Height, Color.White);
 
             var lobby = lobbySelections[selectedLobbyIndex];
-            var warp = activeWarps[selectedWarpIndexes[selectedLobbyIndex]];
+            var warpIndex = selectedWarpIndexes[selectedLobbyIndex];
             var title = Dialog.Clean(lobby.SID);
             var colorAlpha = 1f;
 
@@ -533,8 +537,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
 
             // draw selected warp title
-            if (!string.IsNullOrWhiteSpace(warp.DialogKey)) {
-                var clean = Dialog.Clean(warp.DialogKey);
+            if (warpIndex >= 0 && warpIndex < activeWarps.Count && !string.IsNullOrWhiteSpace(activeWarps[warpIndex].DialogKey)) {
+                var clean = Dialog.Clean(activeWarps[warpIndex].DialogKey);
                 ActiveFont.DrawOutline(clean, new Vector2(bounds.Center.X, bounds.Bottom - 30f), new Vector2(0.5f), Vector2.One, Color.White, 2f, Color.Black);
             }
 
