@@ -4,6 +4,7 @@ using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
@@ -52,10 +53,12 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         }
 
         /// <summary>
-        /// EntityData is parsed into a struct so that it can be reused in <see cref="LobbyMapUI"/>
+        /// EntityData is parsed into a class so that it can be reused in <see cref="LobbyMapUI"/>
         /// without having to load the entire entity.
         /// </summary>
-        public struct ControllerInfo {
+        public class ControllerInfo {
+            private static readonly char[] semicolonSeparator = {';'};
+            
             /// <summary>
             /// An array of map scales to be used as zoom levels. Should be in increasing order.
             /// </summary>
@@ -94,10 +97,10 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             public int ExplorationRadius;
             
             /// <summary>
-            /// A comma-separated list of custom entity names that should be considered map features.
+            /// An array of custom entity names that should be considered map features.
             /// This is not required for CU2 entities.
             /// </summary>
-            public string CustomFeatures;
+            public CustomFeatureEntityInfo[] CustomFeatures;
             
             /// <summary>
             /// The width of the room in tiles.
@@ -124,14 +127,13 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             public bool ShowJournals;
 
             public bool ShowHeartCount;
-
+            
             public ControllerInfo(EntityData data, MapData mapData = null) {
                 MapTexture = data.Attr("mapTexture");
                 LevelSet = data.Attr("levelSet");
                 LobbyIndex = data.Int("lobbyIndex");
                 TotalMaps = data.Int("totalMaps");
                 ExplorationRadius = data.Int("explorationRadius", 20);
-                CustomFeatures = data.Attr("customFeatures");
                 RoomWidth = data.Int("roomWidth");
                 RoomHeight = data.Int("roomHeight");
                 ShowHeartCount = data.Bool("showHeartCount", true);
@@ -150,6 +152,20 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 ShowMaps = data.Bool("showMaps", true);
                 ShowJournals = data.Bool("showJournals", true);
 
+                var customFeatures = data.Attr("customFeatures");
+                if (!string.IsNullOrWhiteSpace(customFeatures)) {
+                    var customFeaturesList = new List<CustomFeatureEntityInfo>();
+                    var tokens = customFeatures.Split(semicolonSeparator, StringSplitOptions.None);
+                    foreach (var token in tokens) {
+                        if (CustomFeatureEntityInfo.TryParse(token, out var value)) {
+                            customFeaturesList.Add(value);
+                        }
+                    }
+                    CustomFeatures = customFeaturesList.ToArray();
+                } else {
+                    CustomFeatures = default;
+                }
+                
                 var zoomLevels = data.Attr("zoomLevels", string.Empty)
                     .Split(',')
                     .Select(s => float.TryParse(s, out var value) ? value : -1)
@@ -187,6 +203,68 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     default: return true;
                 }
             }
+
+            public bool TryCreateCustom(EntityData data, ref FeatureInfo value) {
+                if (CustomFeatures != null) {
+                    foreach (var custom in CustomFeatures) {
+                        if (custom.TryCreate(data, ref value)) {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            }
+        }
+        
+        public struct CustomFeatureEntityInfo {
+            private static readonly char[] commaSeparator = {','};
+            private static readonly char[] equalsSeparator = {'='};
+            
+            public string Name;
+            public FeatureType Type;
+            public string FeatureIdAttribute;
+            public string MapAttribute;
+
+            public static bool TryParse(string str, out CustomFeatureEntityInfo value) {
+                value = default;
+
+                var tokens = str.Split(commaSeparator, StringSplitOptions.RemoveEmptyEntries);
+                if (tokens.Length < 2) return false;
+                
+                value.Name = tokens[0];
+                if (!Enum.TryParse(tokens[1], true, out value.Type)) return false;
+
+                for (int i = 2; i < tokens.Length; i++) {
+                    var subtokens = tokens[i].Split(equalsSeparator, StringSplitOptions.RemoveEmptyEntries);
+                    if (subtokens.Length != 2) return false;
+                    if (subtokens[0].Equals("featureId", StringComparison.InvariantCultureIgnoreCase)) {
+                        value.FeatureIdAttribute = subtokens[1];
+                    } else if (subtokens[0].Equals("map", StringComparison.InvariantCultureIgnoreCase)) {
+                        value.MapAttribute = subtokens[1];
+                    } else {
+                        return false;
+                    }
+                }
+                
+                return true;
+            }
+
+            public bool TryCreate(EntityData data, ref FeatureInfo value) {
+                if (data.Name != Name) return false;
+                
+                value.Type = Type;
+
+                if (!string.IsNullOrWhiteSpace(FeatureIdAttribute) && data.Has(FeatureIdAttribute)) {
+                    value.FeatureId = data.Attr(FeatureIdAttribute);
+                }
+                
+                if (!string.IsNullOrWhiteSpace(MapAttribute) && data.Has(MapAttribute)) {
+                    value.Map = data.Attr(MapAttribute);
+                }
+
+                return true;
+            }
         }
         
         public struct FeatureInfo {
@@ -202,10 +280,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             public MapInfo MapInfo;
             public bool Custom;
 
-            public FeatureInfo(EntityData data, ControllerInfo controllerInfo) {
-                TryParse(data, controllerInfo, out this);
-            }
-            
             public static bool TryParse(EntityData data, ControllerInfo controllerInfo, out FeatureInfo value) {
                 value = default;
                 
@@ -213,6 +287,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     value.Type = FeatureType.Warp;
                     value.DialogKey = data.Attr("dialogKey");
                     value.FeatureId = data.Attr("warpId");
+                    value.Icon = data.Attr("icon");
                     value.CanWarpTo = true;
                 } else if (data.Name == RainbowBerry.ENTITY_NAME) {
                     value.Type = FeatureType.RainbowBerry;
@@ -223,7 +298,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 } else if (data.Name == ChapterPanelTrigger.CHAPTER_PANEL_TRIGGER_NAME) {
                     value.Map = data.Attr("map");
                     value.Type = value.Map.Contains("0-Gyms") ? FeatureType.Gym : FeatureType.Map;
-                } else if (data.Name == "XaphanHelper/WarpStation") {
+                } else if (data.Name == "XaphanHelper/WarpStation" && controllerInfo != null) {
                     value.Type = FeatureType.Warp;
                     value.CanWarpTo = true;
                     value.FeatureId = data.Int("index").ToString();
@@ -236,6 +311,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     value.Map = data.Attr("cu2map_map");
                     value.CanWarpTo = data.Bool("cu2map_canWarpTo", value.Type == FeatureType.Warp);
                     value.FeatureId = data.Attr("cu2map_id");
+                } else if (controllerInfo != null && controllerInfo.TryCreateCustom(data, ref value)) {
+                    // using a custom entity, so we'll continue
                 } else {
                     return false;
                 }
@@ -249,22 +326,22 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 if (string.IsNullOrWhiteSpace(value.Icon)) {
                     switch (value.Type) {
                         case FeatureType.Warp:
-                            value.Icon = controllerInfo.WarpIcon ?? "CollabUtils2/lobbies/warp";
+                            value.Icon = controllerInfo?.WarpIcon ?? "CollabUtils2/lobbies/warp";
                             break;
                         case FeatureType.RainbowBerry:
-                            value.Icon = controllerInfo.RainbowBerryIcon ?? "CollabUtils2/lobbies/rainbowBerry";
+                            value.Icon = controllerInfo?.RainbowBerryIcon ?? "CollabUtils2/lobbies/rainbowBerry";
                             break;
                         case FeatureType.HeartDoor:
-                            value.Icon = controllerInfo.HeartDoorIcon ?? "CollabUtils2/lobbies/heartgate";
+                            value.Icon = controllerInfo?.HeartDoorIcon ?? "CollabUtils2/lobbies/heartgate";
                             break;
                         case FeatureType.Gym:
-                            value.Icon = controllerInfo.GymIcon ?? "CollabUtils2/lobbies/gym";
+                            value.Icon = controllerInfo?.GymIcon ?? "CollabUtils2/lobbies/gym";
                             break;
                         case FeatureType.Map:
-                            value.Icon = controllerInfo.MapIcon ?? "CollabUtils2/lobbies/map";
+                            value.Icon = controllerInfo?.MapIcon ?? "CollabUtils2/lobbies/map";
                             break;
                         case FeatureType.Journal:
-                            value.Icon = controllerInfo.JournalIcon ?? "CollabUtils2/lobbies/journal";
+                            value.Icon = controllerInfo?.JournalIcon ?? "CollabUtils2/lobbies/journal";
                             break;
                     }
                 }
