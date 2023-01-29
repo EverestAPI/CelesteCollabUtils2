@@ -355,9 +355,9 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         }
 
         public struct MapInfo {
-            public string SID;
-            public bool Completed;
-            public int Difficulty;
+            public readonly string SID;
+            public readonly bool Completed;
+            public readonly int Difficulty;
 
             public MapInfo(string mapName) {
                 SID = string.Empty;

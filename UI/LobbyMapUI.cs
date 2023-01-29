@@ -20,8 +20,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private readonly List<LobbySelection> lobbySelections = new List<LobbySelection>();
 
         // all warps for the selected lobby
-        private List<LobbyMapController.FeatureInfo> allWarps;
-        private List<LobbyMapController.FeatureInfo> activeWarps;
+        private readonly List<LobbyMapController.FeatureInfo> allWarps = new List<LobbyMapController.FeatureInfo>();
+        private readonly List<LobbyMapController.FeatureInfo> activeWarps = new List<LobbyMapController.FeatureInfo>();
 
         // current lobby setup
         private int selectedLobbyIndex;
@@ -286,15 +286,21 @@ namespace Celeste.Mod.CollabUtils2.UI {
             var features = lobbySelections[selectedLobbyIndex].Features;
             lobbyMapInfo = selection.Info;
 
+            // find warps
+            allWarps.Clear();
+            activeWarps.Clear();
+            allWarps.AddRange(features.Where(f => f.CanWarpTo));
+            if (CollabModule.Instance.SaveData.RevealMap) {
+                activeWarps.AddRange(allWarps);
+            } else if (CollabModule.Instance.SaveData.ActivatedLobbyWarps.TryGetValue(selection.SID, out var warpNames)) {
+                activeWarps.AddRange(allWarps.Where(w => warpNames.Contains(w.FeatureId)));
+            }
+            
             // regenerate feature components
             featureComponents.ForEach(c => c.RemoveSelf());
             featureComponents.Clear();
             featureComponents.AddRange(features.Where(f => lobbyMapInfo.ShouldShowFeature(f)).Select(createFeatureComponent));
             featureComponents.ForEach(Add);
-
-            // find warps
-            allWarps = features.Where(f => f.Type == LobbyMapController.FeatureType.Warp).ToList();
-            activeWarps = allWarps.ToList(); // TODO: only keep active
             
             // if this is the first time we've selected a lobby, select the nearest warp
             if (first && Engine.Scene is Level level && level.Tracker.GetEntity<Player>() is Player player) {
@@ -386,7 +392,16 @@ namespace Celeste.Mod.CollabUtils2.UI {
         /// Creates a component that represents the passed feature. Currently only supports an Image subclass.
         /// </summary>
         private Component createFeatureComponent(LobbyMapController.FeatureInfo featureInfo) {
-            return new FeatureImage(featureInfo);
+            // create an image
+            var image = new FeatureImage(featureInfo);
+            // if the warp isn't active, make it faded
+            if (!CollabModule.Instance.SaveData.RevealMap &&
+                featureInfo.CanWarpTo &&
+                CollabModule.Instance.SaveData.ActivatedLobbyWarps.TryGetValue(featureInfo.MapInfo.SID, out var warps) &&
+                !warps.Contains(featureInfo.FeatureId)) {
+                image.Color *= 0.3f;
+            }
+            return image;
         }
 
         /// <summary>
