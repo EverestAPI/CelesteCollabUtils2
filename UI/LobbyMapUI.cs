@@ -327,9 +327,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
             // add player icon
             playerIcon?.RemoveSelf();
             playerIconHair?.RemoveSelf();
-            Add(playerIcon = new Image(GFX.Gui["maps/player"]));
+            Add(playerIcon = new Image(GFX.Gui["CollabUtils2/lobbyMap/player"]));
             playerIcon.CenterOrigin();
-            Add(playerIconHair = new Image(GFX.Gui["maps/player_hair"]));
+            Add(playerIconHair = new Image(GFX.Gui["CollabUtils2/lobbyMap/playerHair"]));
             playerIconHair.CenterOrigin();
             resetPlayerFlash();
             
