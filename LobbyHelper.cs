@@ -159,6 +159,11 @@ namespace Celeste.Mod.CollabUtils2 {
             return collabNames.FirstOrDefault(collabName => sid.StartsWith($"{collabName}/"));
         }
 
+        /// <summary>
+        /// Returns the name of the collab the levelset with the given name is part of.
+        /// </summary>
+        /// <param name="levelSet">The name of a LevelSet</param>
+        /// <returns>The name of the collab the levelset is part of, or null if it is a non-collab levelset</returns>
         public static string GetCollabNameForLevelSet(string levelSet) {
             return collabNames.FirstOrDefault(collabName => levelSet.StartsWith($"{collabName}/"));
         }
@@ -172,21 +177,6 @@ namespace Celeste.Mod.CollabUtils2 {
             return collabNames.Any(collabName => sid.StartsWith($"{collabName}/")) && sid.EndsWith("/ZZ-HeartSide");
         }
 
-        /// <summary>
-        /// Returns all the <see cref="LobbyMapController"/> entity data for lobbies in the specified collab that have
-        /// at least one activated warp.
-        /// </summary>
-        /// <returns></returns>
-        public static List<EntityData> GetActivatedLobbyMapControllersForCollab(string collab) {
-            // var warps = CollabModule.Instance.SaveData.ActivatedLobbyWarps.Where(pair => GetCollabNameForSID(pair.Key) == collab);
-            // foreach (var pair in warps) {
-            //     var areaData = AreaData.Get(pair.Key);
-            //     areaData.Mode.
-            // }
-            // AreaData.Areas.Where(ad => GetCollabNameForSID(ad.SID) == collab)
-            return new List<EntityData>(); // TODO
-        }
-        
         internal static void Load() {
             // timer pausing when returning to lobby
             On.Celeste.Level.LoadLevel += onLoadLevel;
@@ -775,6 +765,9 @@ namespace Celeste.Mod.CollabUtils2 {
             }
             public static string GetCollabNameForSID(string sid) {
                 return LobbyHelper.GetCollabNameForSID(sid);
+            }
+            public static string GetCollabNameForLevelSet(string levelSet) {
+                return LobbyHelper.GetCollabNameForLevelSet(levelSet);
             }
             public static bool IsHeartSide(string sid) {
                 return LobbyHelper.IsHeartSide(sid);

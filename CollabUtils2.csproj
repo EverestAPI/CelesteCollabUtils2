@@ -26,10 +26,6 @@
     </Reference>
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Graphics\Atlases\Gui\CollabUtils2\lobbyMap" />
-  </ItemGroup>
-
   <Choose>
     <When Condition="Exists('..\..\Celeste.exe')">
       <ItemGroup>

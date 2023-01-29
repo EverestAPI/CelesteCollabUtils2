@@ -157,6 +157,9 @@ namespace Celeste.Mod.CollabUtils2 {
             Logger.Log(LogLevel.Info, "CollabUtils2/CollabModule", $"Reloaded CrystalHeartSwaps.xml: {crystalHeartSwaps.SpriteData.Count} sprite(s) are registered");
         }
         
+        /// <summary>
+        /// Displays the lobby map.
+        /// </summary>
         [Command("cu2_lobby_map", "Displays the lobby map")]
         private static void CmdLobbyMap()
         {
@@ -164,11 +167,17 @@ namespace Celeste.Mod.CollabUtils2 {
             level.Add(new LobbyMapUI());
         }
 
+        /// <summary>
+        /// Toggles the fog-of-war effect on the lobby map.
+        /// </summary>
         [Command("cu2_lobby_map_reveal", "Toggles the fog-of-war effect on the lobby map")]
         private static void CmdToggleMapReveal() {
             Instance.SaveData.RevealMap = !Instance.SaveData.RevealMap;
         }
         
+        /// <summary>
+        /// Resets all explored areas and warps for the current lobby map.
+        /// </summary>
         [Command("cu2_lobby_map_reset", "Resets all explored areas and warps for the current lobby map")]
         private static void CmdLobbyMapReset() {
             if (!(Engine.Scene is Level level)) return;

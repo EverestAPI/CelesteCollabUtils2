@@ -151,8 +151,6 @@ namespace Celeste.Mod.CollabUtils2.Cutscenes {
 
         public override void OnEnd(Level level) {
             level.OnEndOfFrame += () => {
-                string Prefix = level.Session.Area.GetLevelSet();
-                // XaphanModule.ModSaveData.SavedFlags.Add(Prefix + "_teleporting"); TODO
                 Leader.StoreStrawberries(player.Leader);
                 level.Remove(player);
                 level.UnloadLevel();
@@ -272,13 +270,10 @@ namespace Celeste.Mod.CollabUtils2.Cutscenes {
                             };
                             level.Add(WipeL);
                             break;
-                        default:
-                            break;
                     }
                 }
 
                 Leader.RestoreStrawberries(level.Tracker.GetEntity<Player>().Leader);
-                // XaphanModule.ModSaveData.SavedFlags.Remove(Prefix + "_teleporting"); TODO
                 level.Tracker.GetEntity<Player>().StateMachine.State = Player.StNormal;
             };
         }

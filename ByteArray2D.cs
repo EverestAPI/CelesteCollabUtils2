@@ -1,6 +1,9 @@
 using System;
 
 namespace Celeste.Mod.CollabUtils2 {
+    /// <summary>
+    /// A utility wrapper on a two-dimensional byte array.
+    /// </summary>
     public class ByteArray2D {
         public int Width { get; }
         public int Height { get; }
@@ -29,6 +32,9 @@ namespace Celeste.Mod.CollabUtils2 {
             data = new byte[width * height];
         }
 
+        /// <summary>
+        /// Applies another ByteArray2D in the specified location using the Math.Max function.
+        /// </summary>
         public void Max(ByteArray2D other, int dx, int dy) {
             int minX = Math.Max(dx, 0);
             int minY = Math.Max(dy, 0);

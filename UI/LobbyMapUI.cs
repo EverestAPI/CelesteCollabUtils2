@@ -9,6 +9,9 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace Celeste.Mod.CollabUtils2.UI {
+    /// <summary>
+    /// Displays a map allowing the player to warp between certain locations in lobbies.
+    /// </summary>
     [Tracked]
     public class LobbyMapUI : Entity {
         #region Fields
@@ -24,7 +27,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private int selectedLobbyIndex;
         private int[] selectedWarpIndexes;
         private LobbyMapController.ControllerInfo lobbyMapInfo;
-        private readonly List<LobbyMapController.FeatureInfo> lobbyMapFeatures = new List<LobbyMapController.FeatureInfo>();
         private ByteArray2D visitedTiles;
         private LobbyVisitManager visitManager;
         private int heartCount;
@@ -38,11 +40,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private Sprite heartSprite;
         private Image playerIcon;
         private Image playerIconHair;
-        private Wiggler selectWarpWiggler;
-        private Wiggler selectLobbyWiggler;
-        private Wiggler closeWiggler;
-        private Wiggler confirmWiggler;
-        private Wiggler zoomWiggler;
+        private readonly Wiggler selectWarpWiggler;
+        private readonly Wiggler selectLobbyWiggler;
+        private readonly Wiggler closeWiggler;
+        private readonly Wiggler confirmWiggler;
+        private readonly Wiggler zoomWiggler;
 
         // current view
         private int zoomLevel = -1;
@@ -87,12 +89,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
             Add(new Coroutine(mapFocusRoutine()));
         }
 
-        private Vector2 originForPosition(Vector2 point) {
-            var tileX = point.X / 8f;
-            var tileY = point.Y / 8f;
-            return new Vector2(tileX / (overlayTexture?.Width ?? 1), tileY / (overlayTexture?.Height ?? 1));
-        }
-
         #region Entity Overrides
 
         public override void Added(Scene scene) {
@@ -119,6 +115,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         public override void Update() {
             base.Update();
 
+            // handle input
             if (focused) {
                 if (Input.MenuUp.Pressed) {
                     if (selectedWarpIndexes[selectedLobbyIndex] > 0) {
@@ -188,6 +185,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 if (close) {
                     closeWiggler.Start();
                     closeScreen();
+                    return;
                 }
             }
 
@@ -221,12 +219,28 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         #endregion
-
-        private bool IsVisited(Vector2 position, byte threshold = 0x7F) =>
+        
+        #region Lobby Configuration
+        
+        /// <summary>
+        /// Returns true if the given position has been revealed in the current lobby.
+        /// </summary>
+        private bool isVisited(Vector2 position, byte threshold = 0x7F) =>
             visitedTiles.TryGet((int)(position.X / 8), (int)(position.Y / 8), out var value) && value > threshold;
 
-        #region Lobby Configuration
-
+        /// <summary>
+        /// Calculates the correct origin within the overlay texture for a given level coordinate.
+        /// </summary>
+        /// <param name="point"></param>
+        private Vector2 originForPosition(Vector2 point) {
+            var tileX = point.X / 8f;
+            var tileY = point.Y / 8f;
+            return new Vector2(tileX / (overlayTexture?.Width ?? 1), tileY / (overlayTexture?.Height ?? 1));
+        }
+        
+        /// <summary>
+        /// Loads all LobbyMapController data from maps in this levelset, if at least one warp has been unlocked. 
+        /// </summary>
         private void getLobbyControllers(Level level) {
             // we can only return lobbies that have at least one warp unlocked, or this one
             var collabName = level.Session.Area.SID.Substring(0, level.Session.Area.SID.IndexOf("/", StringComparison.Ordinal) + 1);
@@ -234,46 +248,52 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (!activeWarpLobbyKeys.Contains(level.Session.Area.SID)) {
                 activeWarpLobbyKeys.Add(level.Session.Area.SID);
             }
-
+            
+            // parse all the features in all the lobbies that have active warps
             lobbySelections.Clear();
-
             foreach (var key in activeWarpLobbyKeys) {
                 var mapData = AreaData.Get(key)?.Mode.FirstOrDefault()?.MapData;
                 var entityData = mapData?.Levels.Select(l => findEntityData(l, LobbyMapController.ENTITY_NAME)).FirstOrDefault();
 
                 if (entityData != null) {
-                    lobbySelections.Add(new LobbySelection(entityData, mapData));
+                    var selection = new LobbySelection(entityData, mapData);
+                    var features = new List<LobbyMapController.FeatureInfo>();
+                    foreach (var data in selection.Data.Level.Entities.Concat(selection.Data.Level.Triggers)) {
+                        if (LobbyMapController.FeatureInfo.TryParse(data, lobbyMapInfo, out var value)) {
+                            value.SID = selection.SID;
+                            value.Room = selection.Room;
+                            features.Add(value);
+                        }
+                    }
+                    selection.Features = features.ToArray();
+                    lobbySelections.Add(selection);
                 }
             }
 
+            // sort lobbies by their index
             lobbySelections.Sort((lhs, rhs) => lhs.Info.LobbyIndex - rhs.Info.LobbyIndex);
 
+            // select the current lobby
             selectedLobbyIndex = lobbySelections.FindIndex(s => s.SID == level.Session.Area.SID);
             selectedWarpIndexes = new int[lobbySelections.Count];
         }
 
+        /// <summary>
+        /// Configures the UI for the currently selected lobby.
+        /// </summary>
         public void updateSelectedLobby(bool first = false) {
             var selection = lobbySelections[selectedLobbyIndex];
+            var features = lobbySelections[selectedLobbyIndex].Features;
             lobbyMapInfo = selection.Info;
-
-            // get the feature infos
-            lobbyMapFeatures.Clear();
-            foreach (var data in selection.Data.Level.Entities.Concat(selection.Data.Level.Triggers)) {
-                if (LobbyMapController.FeatureInfo.TryParse(data, lobbyMapInfo, out var value)) {
-                    value.SID = selection.SID;
-                    value.Room = selection.Room;
-                    lobbyMapFeatures.Add(value);
-                }
-            }
 
             // regenerate feature components
             featureComponents.ForEach(c => c.RemoveSelf());
             featureComponents.Clear();
-            featureComponents.AddRange(lobbyMapFeatures.Where(f => lobbyMapInfo.ShouldShowFeature(f)).Select(createFeatureComponent));
+            featureComponents.AddRange(features.Where(f => lobbyMapInfo.ShouldShowFeature(f)).Select(createFeatureComponent));
             featureComponents.ForEach(Add);
 
             // find warps
-            allWarps = lobbyMapFeatures.Where(f => f.Type == LobbyMapController.FeatureType.Warp).ToList();
+            allWarps = features.Where(f => f.Type == LobbyMapController.FeatureType.Warp).ToList();
             activeWarps = allWarps.ToList(); // TODO: only keep active
             
             // if this is the first time we've selected a lobby, select the nearest warp
@@ -295,7 +315,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             visitManager = new LobbyVisitManager(selection.SID, selection.Room);
 
             // generate the 2d array of visited tiles
-            visitedTiles = GenerateVisitedTiles(lobbyMapInfo, visitManager);
+            visitedTiles = generateVisitedTiles(lobbyMapInfo, visitManager);
 
             // get the map texture
             mapTexture = GFX.Gui[lobbyMapInfo.MapTexture].Texture.Texture;
@@ -362,10 +382,16 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
         }
 
+        /// <summary>
+        /// Creates a component that represents the passed feature. Currently only supports an Image subclass.
+        /// </summary>
         private Component createFeatureComponent(LobbyMapController.FeatureInfo featureInfo) {
             return new FeatureImage(featureInfo);
         }
 
+        /// <summary>
+        /// Forces the player icon to stop flashing for a short time.
+        /// </summary>
         private void resetPlayerFlash() {
             playerIcon.Visible = playerIconHair.Visible = true;
             playerVisibleForceTime = 0.8f;
@@ -375,6 +401,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         #region Rendering
 
+        /// <summary>
+        /// BeforeRenderHook that draws the map onto a RenderTarget.
+        /// This allows unexplored areas to be transparent rather than using a fake black overlay.
+        /// </summary>
         private void beforeRender() {
             // bail if there's nothing to draw
             if (renderTarget?.IsDisposed != false || overlayTexture?.IsDisposed != false || mapTexture?.IsDisposed != false) {
@@ -389,10 +419,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 (int) (position.X - actualOrigin.X * destWidth), (int) (position.Y - actualOrigin.Y * destHeight),
                 (int) destWidth, (int) destHeight);
 
+            // set the render target and clear it
             Engine.Graphics.GraphicsDevice.SetRenderTarget(renderTarget);
             Engine.Graphics.GraphicsDevice.Clear(Color.Transparent);
 
+            // only draw the overlay if reveal map is not enabled
             if (!CollabModule.Instance.SaveData.RevealMap) {
+                // draw the exploration as a direct alpha channel
                 Draw.SpriteBatch.Begin(SpriteSortMode.Immediate, new BlendState {
                     AlphaSourceBlend = Blend.One,
                     AlphaDestinationBlend = Blend.Zero,
@@ -402,6 +435,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 Draw.SpriteBatch.Draw(overlayTexture, destRect, Color.White);
                 Draw.SpriteBatch.End();
 
+                // begin a sprite batch that maintains the target alpha
                 Draw.SpriteBatch.Begin(SpriteSortMode.Immediate, new BlendState {
                     AlphaSourceBlend = Blend.Zero,
                     AlphaDestinationBlend = Blend.One,
@@ -409,12 +443,15 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     ColorDestinationBlend = Blend.Zero,
                 });
             } else {
+                // begin a sprite batch that overwrites the target alpha
                 Draw.SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend);
             }
 
+            // draw the map
             Draw.SpriteBatch.Draw(mapTexture, destRect, Color.White);
             Draw.SpriteBatch.End();
 
+            // draw a rectangle around the map if the console is open
             if (Engine.Commands.Open) {
                 Draw.SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend);
                 Draw.HollowRect(destRect, Color.Red);
@@ -429,10 +466,16 @@ namespace Celeste.Mod.CollabUtils2.UI {
             drawForeground();
         }
 
+        /// <summary>
+        /// Draws a tinted background.
+        /// </summary>
         private void drawBackground() {
-            Draw.Rect(new Vector2(100, 180), 1720, 840, Color.Black * 0.9f);
+            Draw.Rect(0, 0, Engine.Width, Engine.Height, Color.Black * 0.9f);
         }
 
+        /// <summary>
+        /// Draws all foreground components such as black borders, titles, heart count, etc.
+        /// </summary>
         private void drawForeground() {
             const int margin = 8;
             const int thickness = 8;
@@ -441,6 +484,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             var border = bounds;
             border.Inflate(margin + thickness, margin + thickness);
 
+            // draw borders
             Draw.Rect(safeBounds.Left, safeBounds.Top, safeBounds.Width, bounds.Top - safeBounds.Top, Color.Black);
             Draw.Rect(safeBounds.Left, bounds.Bottom, safeBounds.Width, safeBounds.Bottom - bounds.Bottom, Color.Black);
             Draw.Rect(safeBounds.Left, bounds.Top - safety, bounds.Left - safeBounds.Left, bounds.Height + 2 * safety, Color.Black);
@@ -455,13 +499,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
             var title = Dialog.Clean(lobby.SID);
             var colorAlpha = 1f;
 
-            // draw lobby title
+            // draw lobby title and arrows
             ActiveFont.DrawEdgeOutline(title, new Vector2(Celeste.TargetWidth / 2f, 80f), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.Gray * colorAlpha, 4f, Color.DarkSlateBlue * colorAlpha, 2f, Color.Black * colorAlpha);
-
             if (selectedLobbyIndex > 0) {
                 arrowTexture.DrawCentered(new Vector2(960f - ActiveFont.Measure(title).X - 100f, 80f), Color.White * colorAlpha);
             }
-
             if (selectedLobbyIndex < lobbySelections.Count - 1) {
                 arrowTexture.DrawCentered(new Vector2(960f + ActiveFont.Measure(title).X + 100f, 80f), Color.White * colorAlpha, 1f, (float) Math.PI);
             }
@@ -514,13 +556,19 @@ namespace Celeste.Mod.CollabUtils2.UI {
             ButtonUI.Render(buttonPosition, zoomLabel, Input.MenuJournal, buttonScale, 1f, zoomWiggler.Value * wiggleAmount);
         }
 
+        /// <summary>
+        /// Draws the render target to the screen.
+        /// </summary>
         private void drawMap() {
             if (renderTarget?.IsDisposed != false) return;
             Draw.SpriteBatch.Draw(renderTarget, new Vector2(bounds.Left, bounds.Top), Color.White);
         }
 
+        /// <summary>
+        /// Ensures feature representations have the right position and scale.
+        /// </summary>
         private void updateFeatures() {
-            // for now we assume features are all Images because reasons
+            // for now we assume features are all Images
             var scale = finalScale;
             var actualWidth = mapTexture.Width * scale;
             var actualHeight = mapTexture.Height * scale;
@@ -528,14 +576,16 @@ namespace Celeste.Mod.CollabUtils2.UI {
             var imageScale = scaleOffset <= 0 ? 1f : Calc.LerpClamp(1f, 0.75f, scaleOffset / (lobbyMapInfo.ZoomLevels[1] - lobbyMapInfo.ZoomLevels[0]));
             var reveal = CollabModule.Instance.SaveData.RevealMap;
 
+            // move and scale features
             foreach (FeatureImage image in featureComponents) {
                 var origin = originForPosition(image.Info.Position);
                 var originOffset = origin - actualOrigin;
                 image.Position = new Vector2(bounds.Center.X + originOffset.X * actualWidth, bounds.Center.Y + originOffset.Y * actualHeight);
                 image.Scale = new Vector2(imageScale);
-                image.Visible = reveal || IsVisited(image.Info.Position);
+                image.Visible = reveal || isVisited(image.Info.Position);
             }
 
+            // move the player icon to the currently selected warp
             if (playerIcon != null) {
                 var selectedOriginOffset = selectedOrigin - actualOrigin;
                 playerIcon.Position = playerIconHair.Position = new Vector2(bounds.Center.X + selectedOriginOffset.X * actualWidth, bounds.Center.Y + selectedOriginOffset.Y * actualHeight);
@@ -546,6 +596,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         #region Lifetime
 
+        /// <summary>
+        /// Opens the screen with PauseLock.
+        /// </summary>
         private void openScreen() {
             if (Scene is Level level) {
                 level.PauseLock = true;
@@ -562,6 +615,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
         }
 
+        /// <summary>
+        /// Closes the screen and resets PauseLock.
+        /// </summary>
         private void closeScreen() {
             Audio.Play(SFX.ui_game_unpause);
             Add(new Coroutine(transitionRoutine(onFadeOut: () => {
@@ -584,6 +640,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         #region Routines
 
+        /// <summary>
+        /// Tweens the current scale and origin to expected values.
+        /// </summary>
         private IEnumerator mapFocusRoutine() {
             float scaleFrom = actualScale;
             Vector2 translateFrom = actualOrigin;
@@ -610,6 +669,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
         }
 
+        /// <summary>
+        /// Transitions the screen in and out with a fade wipe.
+        /// </summary>
         private IEnumerator transitionRoutine(float duration = 0.5f, Action onFadeOut = null, Action onFadeIn = null) {
             duration = Math.Max(0f, duration);
 
@@ -632,8 +694,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         #region Static Helper Methods
 
-        private static ByteArray2D GenerateVisitedTiles(LobbyMapController.ControllerInfo config, LobbyVisitManager visitManager) {
-            var circle = CreateCircleData(config.ExplorationRadius - 1, config.ExplorationRadius + 1);
+        /// <summary>
+        /// Generates a 2d array of bytes representing all visited tiles in the map.
+        /// </summary>
+        private static ByteArray2D generateVisitedTiles(LobbyMapController.ControllerInfo config, LobbyVisitManager visitManager) {
+            var circle = createCircleData(config.ExplorationRadius - 1, config.ExplorationRadius + 1);
 
             var visitedTiles = new ByteArray2D(config.RoomWidth, config.RoomHeight);
 
@@ -664,7 +729,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         /// <summary>
         /// Generates a 2D array of bytes containing an antialiased circle.
         /// </summary>
-        private static ByteArray2D CreateCircleData(int hardRadius, int softRadius) {
+        private static ByteArray2D createCircleData(int hardRadius, int softRadius) {
             var diameter = 2 * softRadius;
             var array = new ByteArray2D(diameter, diameter);
 
@@ -682,6 +747,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
             return array;
         }
 
+        /// <summary>
+        /// Teleports to the selected warp within the current map.
+        /// </summary>
         private void teleportToWarp(LobbyMapController.FeatureInfo warp, string wipeType, float wipeDuration) {
             if (Scene is Level level && level.Tracker.GetEntity<Player>() is Player player) {
                 if (warp.SID == level.Session.Area.SID) {
@@ -701,6 +769,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
         }
 
+        /// <summary>
+        /// Teleports to the selected chapter with room and position.
+        /// </summary>
         private static void teleportToChapter(int areaId, string room, Vector2 position) {
             var levelData = AreaData.Get(new AreaKey(areaId)).Mode[0].MapData.Get(room);
             var session = new Session(new AreaKey(areaId)) {
@@ -711,12 +782,18 @@ namespace Celeste.Mod.CollabUtils2.UI {
             LevelEnter.Go(session, fromSaveData: false);
         }
 
+        /// <summary>
+        /// Calculates the width of a double button.
+        /// </summary>
         public static float measureDoubleButton(string label, VirtualButton button1, VirtualButton button2) {
             MTexture mTexture1 = Input.GuiButton(button1, "controls/keyboard/oemquestion");
             MTexture mTexture2 = Input.GuiButton(button2, "controls/keyboard/oemquestion");
             return ActiveFont.Measure(label).X + 8f + mTexture1.Width + mTexture2.Width;
         }
 
+        /// <summary>
+        /// Draws a double button.
+        /// </summary>
         public static void renderDoubleButton(Vector2 position, string label, VirtualButton button1, VirtualButton button2, float scale, bool displayButton1, bool displayButton2, float justifyX = 0.5f, float wiggle = 0f, float alpha = 1f) {
             MTexture mTexture1 = Input.GuiButton(button1, "controls/keyboard/oemquestion");
             MTexture mTexture2 = Input.GuiButton(button2, "controls/keyboard/oemquestion");
@@ -737,18 +814,29 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
         }
 
+        /// <summary>
+        /// Draws text for a double button in the specified position.
+        /// </summary>
         private static void drawText(string text, Vector2 position, float justify, float scale, float alpha) {
             float x = ActiveFont.Measure(text).X;
             ActiveFont.DrawOutline(text, position, new Vector2(justify / x, 0.5f), Vector2.One * scale, Color.White * alpha, 2f, Color.Black * alpha);
         }
         
+        /// <summary>
+        /// Find the first entity in the level data with the specified name.
+        /// </summary>
+        private static EntityData findEntityData(LevelData levelData, string entityName) =>
+            levelData.Entities.FirstOrDefault(e => e.Name == entityName);
+        
         #endregion
 
-        private EntityData findEntityData(LevelData levelData, string entityName) =>
-            levelData.Entities.FirstOrDefault(e => e.Name == entityName);
+        #region Nested Classes
 
-        public class FeatureImage : Image {
-            public LobbyMapController.FeatureInfo Info;
+        /// <summary>
+        /// Represents a map feature as an image.
+        /// </summary>
+        private class FeatureImage : Image {
+            public readonly LobbyMapController.FeatureInfo Info;
 
             public FeatureImage(LobbyMapController.FeatureInfo info) : base(null) {
                 Info = info;
@@ -768,11 +856,15 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
         }
 
+        /// <summary>
+        /// Aggregates information about the selected lobby.
+        /// </summary>
         private class LobbySelection {
-            public LobbyMapController.ControllerInfo Info;
-            public EntityData Data;
-            public string SID;
-            public string Room;
+            public readonly LobbyMapController.ControllerInfo Info;
+            public readonly EntityData Data;
+            public readonly string SID;
+            public readonly string Room;
+            public LobbyMapController.FeatureInfo[] Features;
 
             public LobbySelection(EntityData data, MapData map) {
                 Info = new LobbyMapController.ControllerInfo(data);
@@ -781,5 +873,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 Room = data.Level.Name;
             }
         }
+        
+        #endregion
     }
 }
