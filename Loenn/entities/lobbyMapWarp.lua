@@ -6,13 +6,13 @@ lobbyMapWarp.placements = {
         name = "default",
         data = {
             warpId = "",
+            icon = "",
             dialogKey = "",
-            sprite = "",
-            spriteAnimation = "",
-            activateSpriteName = "",
-            flipX = false,
+            activateSpritePath = "",
+            activateSpriteOriginX = 0.5,
+            activateSpriteOriginY = 1.0,
+            activateSpriteFlipX = false,
             playerFacing = 1,
-            depth = 2000,
             interactOffsetY = -16,
         }
     }
