@@ -47,6 +47,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private readonly Wiggler zoomWiggler;
 
         // current view
+        private readonly float[] zoomLevels = { 1f, 2f, 3f };
+        private const int defaultZoomLevel = 1;
         private int zoomLevel = -1;
         private float actualScale;
         private Vector2 actualOrigin;
@@ -160,14 +162,14 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     zoomWiggler.Start();
                     zoomLevel--;
                     if (zoomLevel < 0) {
-                        zoomLevel = lobbyMapInfo.ZoomLevels.Length - 1;
+                        zoomLevel = zoomLevels.Length - 1;
                     }
 
-                    targetScale = lobbyMapInfo.ZoomLevels[zoomLevel];
+                    targetScale = zoomLevels[zoomLevel];
                     scaleTimeRemaining = scale_time_seconds;
                     shouldCentreOrigin = zoomLevel == 0;
 
-                    if (shouldCentreOrigin || zoomLevel == lobbyMapInfo.ZoomLevels.Length - 1) {
+                    if (shouldCentreOrigin || zoomLevel == zoomLevels.Length - 1) {
                         targetOrigin = shouldCentreOrigin ? new Vector2(0.5f) : selectedOrigin;
                         translateTimeRemaining = translate_time_seconds;
                     }
@@ -260,7 +262,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             lobbySelections.Clear();
             foreach (var key in visitedLobbySIDs) {
                 var mapData = AreaData.Get(key)?.Mode.FirstOrDefault()?.MapData;
-                var entityData = mapData?.Levels.Select(l => findEntityData(l, LobbyMapController.ENTITY_NAME)).FirstOrDefault();
+                var entityData = mapData?.Levels.Select(l => findEntityData(l, "CollabUtils2/LobbyMapController")).FirstOrDefault();
 
                 if (entityData != null) {
                     var selection = new LobbySelection(entityData, mapData);
@@ -302,7 +304,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             // find warps
             allWarps.Clear();
             activeWarps.Clear();
-            allWarps.AddRange(features.Where(f => f.CanWarpTo));
+            allWarps.AddRange(features.Where(f => f.Type == LobbyMapController.FeatureType.Warp));
             activeWarps.AddRange(openedWithRevealMap ? allWarps : allWarps.Where(w => isVisited(w.Position)));
 
             // regenerate feature components
@@ -337,10 +339,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             // set view
             if (zoomLevel < 0) {
-                zoomLevel = lobbyMapInfo.DefaultZoomLevel;
+                zoomLevel = defaultZoomLevel;
             }
-            zoomLevel = Calc.Clamp(zoomLevel, 0, lobbyMapInfo.ZoomLevels.Length);
-            actualScale = lobbyMapInfo.ZoomLevels[zoomLevel];
+            zoomLevel = Calc.Clamp(zoomLevel, 0, zoomLevels.Length);
+            actualScale = zoomLevels[zoomLevel];
             shouldCentreOrigin = zoomLevel == 0;
             selectedOrigin = warpIndex >= 0 && warpIndex < activeWarps.Count ? originForPosition(activeWarps[warpIndex].Position) : new Vector2(0.5f);
             actualOrigin = shouldCentreOrigin ? new Vector2(0.5f) : selectedOrigin;
@@ -582,8 +584,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
             var scale = finalScale;
             var actualWidth = mapTexture.Width * scale;
             var actualHeight = mapTexture.Height * scale;
-            var scaleOffset = lobbyMapInfo.ZoomLevels[1] - actualScale;
-            var imageScale = scaleOffset <= 0 ? 1f : Calc.LerpClamp(1f, 0.75f, scaleOffset / (lobbyMapInfo.ZoomLevels[1] - lobbyMapInfo.ZoomLevels[0]));
+            var scaleOffset = zoomLevels[1] - actualScale;
+            var imageScale = scaleOffset <= 0 ? 1f : Calc.LerpClamp(1f, 0.75f, scaleOffset / (zoomLevels[1] - zoomLevels[0]));
             var reveal = CollabModule.Instance.SaveData.RevealMap;
 
             // move and scale features
@@ -708,7 +710,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         /// Generates a 2d array of bytes representing all visited tiles in the map.
         /// </summary>
         private static ByteArray2D generateVisitedTiles(LobbyMapController.ControllerInfo config, LobbyVisitManager visitManager) {
-            var circle = createCircleData(config.ExplorationRadius - 1, config.ExplorationRadius + 1);
+            var circle = createCircleData(LobbyVisitManager.EXPLORATION_RADIUS - 1, LobbyVisitManager.EXPLORATION_RADIUS + 1);
 
             var visitedTiles = new ByteArray2D(config.RoomWidth, config.RoomHeight);
 

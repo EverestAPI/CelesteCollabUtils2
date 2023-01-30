@@ -70,6 +70,21 @@ namespace Celeste.Mod.CollabUtils2 {
             return null;
         }
 
+        public static int GetLobbyIndex(string sid) {
+            if (!IsCollabLobby(sid)) return -1;
+
+            const string lobbies = "/0-Lobbies/";
+            var index = sid.IndexOf(lobbies, StringComparison.Ordinal);
+            if (index < 0) return -1;
+
+            sid = sid.Substring(index + lobbies.Length);
+
+            index = sid.IndexOf('-');
+            if (index < 0) return -1;
+
+            return int.TryParse(sid.Substring(0, index), out var value) ? value : -1;
+        }
+        
         /// <summary>
         /// Returns true if the given level set is a hidden level set from a collab.
         /// </summary>

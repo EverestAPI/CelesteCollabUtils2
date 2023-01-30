@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Monocle;
 using System.Collections;
-using System.Collections.Generic;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
     [CustomEntity(ENTITY_NAME)]

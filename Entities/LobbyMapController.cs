@@ -1,4 +1,3 @@
-using Celeste.Mod.CollabUtils2.Triggers;
 using Celeste.Mod.CollabUtils2.UI;
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
@@ -6,13 +5,12 @@ using Monocle;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
     [Tracked]
-    [CustomEntity(ENTITY_NAME)]
+    [CustomEntity("CollabUtils2/LobbyMapController")]
     public class LobbyMapController : Entity {
-        public const string ENTITY_NAME = "CollabUtils2/LobbyMapController";
-        
         public readonly ControllerInfo Info;
         public LobbyVisitManager VisitManager;
 
@@ -42,7 +40,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 if (!level.Paused && !level.Transitioning) {
                     var playerPosition = new Vector2(Math.Min((float) Math.Floor((player.Center.X - level.Bounds.X) / 8f), (float) Math.Round(level.Bounds.Width / 8f, MidpointRounding.AwayFromZero) - 1),
                         Math.Min((float) Math.Floor((player.Center.Y - level.Bounds.Y) / 8f), (float) Math.Round(level.Bounds.Height / 8f, MidpointRounding.AwayFromZero) + 1));
-                    VisitManager?.VisitPoint(playerPosition, Info.ExplorationRadius);
+                    VisitManager?.VisitPoint(playerPosition);
                 }
             }
         }
@@ -59,15 +57,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         public class ControllerInfo {
             private static readonly char[] semicolonSeparator = {';'};
             
-            /// <summary>
-            /// An array of map scales to be used as zoom levels. Should be in increasing order.
-            /// </summary>
-            public float[] ZoomLevels;
-            
-            /// <summary>
-            /// Zero-based index into <see cref="ZoomLevels"/>, defaults to half the number of zoom levels, rounded down.
-            /// </summary>
-            public int DefaultZoomLevel;
+            #region EntityData Fields
             
             /// <summary>
             /// The map background texture to read from <see cref="GFX.Gui"/>.
@@ -79,12 +69,12 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             /// The level set that this lobby belongs to.
             /// Example: StrawberryJam2021/1-Beginner
             /// </summary>
-            public string LevelSet;
+            // public string LevelSet;
             
             /// <summary>
             /// The index of the lobby within its level set.
             /// </summary>
-            public int LobbyIndex;
+            // public int LobbyIndex;
             
             /// <summary>
             /// The total number of maps in the lobby, used to display the miniheart tally.
@@ -94,7 +84,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             /// <summary>
             /// The radius in tiles that should be revealed per visited point.
             /// </summary>
-            public int ExplorationRadius;
+            // public int ExplorationRadius;
             
             /// <summary>
             /// An array of custom entity names that should be considered map features.
@@ -102,16 +92,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             /// </summary>
             public CustomFeatureEntityInfo[] CustomFeatures;
             
-            /// <summary>
-            /// The width of the room in tiles.
-            /// </summary>
-            public int RoomWidth;
-            
-            /// <summary>
-            /// The height of the room in tiles.
-            /// </summary>
-            public int RoomHeight;
-
             public string WarpIcon;
             public string RainbowBerryIcon;
             public string HeartDoorIcon;
@@ -125,18 +105,23 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             public bool ShowGyms;
             public bool ShowMaps;
             public bool ShowJournals;
-
             public bool ShowHeartCount;
+            
+            #endregion
+            
+            public int RoomWidth;
+            public int RoomHeight;
+            public string LevelSet;
+            public int LobbyIndex;
             
             public ControllerInfo(EntityData data, MapData mapData = null) {
                 MapTexture = data.Attr("mapTexture");
-                LevelSet = data.Attr("levelSet");
-                LobbyIndex = data.Int("lobbyIndex");
+                // LevelSet = data.Attr("levelSet");
+                // LobbyIndex = data.Int("lobbyIndex");
                 TotalMaps = data.Int("totalMaps");
-                ExplorationRadius = data.Int("explorationRadius", 20);
-                RoomWidth = data.Int("roomWidth");
-                RoomHeight = data.Int("roomHeight");
-                ShowHeartCount = data.Bool("showHeartCount", true);
+                // ExplorationRadius = data.Int("explorationRadius", 20);
+                // RoomWidth = data.Int("roomWidth");
+                // RoomHeight = data.Int("roomHeight");
 
                 WarpIcon = data.Attr("warpIcon", "CollabUtils2/lobbies/warp");
                 RainbowBerryIcon = data.Attr("rainbowBerryIcon", "CollabUtils2/lobbies/rainbowBerry");
@@ -151,6 +136,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 ShowGyms = data.Bool("showGyms", true);
                 ShowMaps = data.Bool("showMaps", true);
                 ShowJournals = data.Bool("showJournals", true);
+                ShowHeartCount = data.Bool("showHeartCount", true);
 
                 var customFeatures = data.Attr("customFeatures");
                 if (!string.IsNullOrWhiteSpace(customFeatures)) {
@@ -166,29 +152,33 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     CustomFeatures = default;
                 }
                 
-                var zoomLevels = data.Attr("zoomLevels", string.Empty)
-                    .Split(',')
-                    .Select(s => float.TryParse(s, out var value) ? value : -1)
-                    .Where(f => f > 0)
-                    .ToArray();
+                // var zoomLevels = data.Attr("zoomLevels", string.Empty)
+                //     .Split(',')
+                //     .Select(s => float.TryParse(s, out var value) ? value : -1)
+                //     .Where(f => f > 0)
+                //     .ToArray();
 
-                if (zoomLevels.Any()) {
-                    ZoomLevels = zoomLevels;
-                } else {
-                    ZoomLevels = new[] {
-                        1f, 2f, 3f,
-                    };
-                }
+                // if (zoomLevels.Any()) {
+                //     ZoomLevels = zoomLevels;
+                // } else {
+                //     ZoomLevels = new[] {
+                //         1f, 2f, 3f,
+                //     };
+                // }
 
-                DefaultZoomLevel = data.Int("defaultZoomLevel", ZoomLevels.Length / 2);
+                // DefaultZoomLevel = data.Int("defaultZoomLevel", ZoomLevels.Length / 2);
 
-                if (string.IsNullOrWhiteSpace(LevelSet)) {
-                    var sid = mapData?.Area.SID ?? AreaData.Get(Engine.Scene)?.SID;
-                    LevelSet = string.IsNullOrWhiteSpace(sid) ? string.Empty : LobbyHelper.GetLobbyLevelSet(sid);
-                }
+                // if (string.IsNullOrWhiteSpace(LevelSet)) {
+                //     var sid = mapData?.Area.SID ?? AreaData.Get(Engine.Scene)?.SID;
+                //     LevelSet = string.IsNullOrWhiteSpace(sid) ? string.Empty : LobbyHelper.GetLobbyLevelSet(sid);
+                // }
                 
                 if (RoomWidth <= 0) RoomWidth = data.Level.TileBounds.Width;
                 if (RoomHeight <= 0) RoomHeight = data.Level.TileBounds.Height;
+                if (mapData != null) {
+                    LevelSet = LobbyHelper.GetLobbyLevelSet(mapData.Area.SID);
+                    LobbyIndex = LobbyHelper.GetLobbyIndex(mapData.Area.SID);
+                }
             }
 
             public bool ShouldShowFeature(FeatureInfo feature) {
@@ -204,10 +194,12 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 }
             }
 
-            public bool TryCreateCustom(EntityData data, ref FeatureInfo value) {
+            public bool TryCreateCustom(EntityData data, out FeatureInfo value) {
+                value = default;
+                
                 if (CustomFeatures != null) {
                     foreach (var custom in CustomFeatures) {
-                        if (custom.TryCreate(data, ref value)) {
+                        if (custom.TryCreate(data, out value)) {
                             return true;
                         }
                     }
@@ -217,50 +209,52 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             }
         }
         
-        public struct CustomFeatureEntityInfo {
+        public class CustomFeatureEntityInfo {
             private static readonly char[] commaSeparator = {','};
             private static readonly char[] equalsSeparator = {'='};
             
             public string Name;
             public FeatureType Type;
-            public string FeatureIdAttribute;
-            public string MapAttribute;
+            public readonly Dictionary<string, string> AttributeMap = new Dictionary<string, string>();
 
             public static bool TryParse(string str, out CustomFeatureEntityInfo value) {
-                value = default;
+                value = null;
 
                 var tokens = str.Split(commaSeparator, StringSplitOptions.RemoveEmptyEntries);
                 if (tokens.Length < 2) return false;
                 
-                value.Name = tokens[0];
-                if (!Enum.TryParse(tokens[1], true, out value.Type)) return false;
+                var name = tokens[0];
+                if (!Enum.TryParse(tokens[1], true, out FeatureType type)) return false;
 
+                value = new CustomFeatureEntityInfo {
+                    Name = name, Type = type,
+                };
+                
                 for (int i = 2; i < tokens.Length; i++) {
                     var subtokens = tokens[i].Split(equalsSeparator, StringSplitOptions.RemoveEmptyEntries);
-                    if (subtokens.Length != 2) return false;
-                    if (subtokens[0].Equals("featureId", StringComparison.InvariantCultureIgnoreCase)) {
-                        value.FeatureIdAttribute = subtokens[1];
-                    } else if (subtokens[0].Equals("map", StringComparison.InvariantCultureIgnoreCase)) {
-                        value.MapAttribute = subtokens[1];
-                    } else {
-                        return false;
-                    }
+                    if (subtokens.Length != 2 || string.IsNullOrWhiteSpace(subtokens[0]) || string.IsNullOrWhiteSpace(subtokens[1])) return false;
+                    value.AttributeMap[subtokens[0]] = subtokens[1];
                 }
                 
                 return true;
             }
 
-            public bool TryCreate(EntityData data, ref FeatureInfo value) {
+            public bool TryCreate(EntityData data, out FeatureInfo value) {
+                value = default;
+                
                 if (data.Name != Name) return false;
                 
                 value.Type = Type;
 
-                if (!string.IsNullOrWhiteSpace(FeatureIdAttribute) && data.Has(FeatureIdAttribute)) {
-                    value.FeatureId = data.Attr(FeatureIdAttribute);
-                }
-                
-                if (!string.IsNullOrWhiteSpace(MapAttribute) && data.Has(MapAttribute)) {
-                    value.Map = data.Attr(MapAttribute);
+                var infoType = value.GetType();
+                foreach (var pair in AttributeMap) {
+                    if (infoType.GetField(pair.Key, BindingFlags.Instance | BindingFlags.Public) is FieldInfo fi) {
+                        if (!pair.Value.StartsWith("$")) {
+                            fi.SetValue(value, pair.Value);
+                        } else if (pair.Value.Length > 1 && data.Has(pair.Value.Substring(1))) {
+                            fi.SetValue(value, data.Attr(pair.Value.Substring(1)));
+                        }
+                    }
                 }
 
                 return true;
@@ -268,60 +262,103 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         }
         
         public struct FeatureInfo {
+            /// <summary>
+            /// The icon in the Gui atlas.
+            /// </summary>
             public string Icon;
+            
+            /// <summary>
+            /// A key into Dialog.Clean for features that include a title.
+            /// </summary>
             public string DialogKey;
-            public bool CanWarpTo;
+            
+            /// <summary>
+            /// A unique id for this feature. Also used to identify warps.
+            /// </summary>
             public string FeatureId;
+            
+            /// <summary>
+            /// The type of feature. This allows for filtering in the controller.
+            /// </summary>
             public FeatureType Type;
+            
+            /// <summary>
+            /// The position of the feature on the map.
+            /// </summary>
             public Vector2 Position;
+            
+            /// <summary>
+            /// The SID for the lobby map.
+            /// </summary>
             public string SID;
+            
+            /// <summary>
+            /// The room within the map that this feature belongs to.
+            /// </summary>
             public string Room;
+            
+            /// <summary>
+            /// The name of the map to load when using a feature type of <see cref="FeatureType.Map"/>.
+            /// </summary>
             public string Map;
+            
+            /// <summary>
+            /// Extracted data about the referenced map if it exists.
+            /// </summary>
             public MapInfo MapInfo;
-            public bool Custom;
 
             public static bool TryParse(EntityData data, ControllerInfo controllerInfo, out FeatureInfo value) {
                 value = default;
                 
+                // CU2 warp entity
                 if (data.Name == "CollabUtils2/LobbyMapWarp") {
                     value.Type = FeatureType.Warp;
                     value.DialogKey = data.Attr("dialogKey");
                     value.FeatureId = data.Attr("warpId");
                     value.Icon = data.Attr("icon");
-                } else if (data.Name == "CollabUtils2/RainbowBerry") {
+                }
+                // CU2 rainbow berry
+                else if (data.Name == "CollabUtils2/RainbowBerry") {
                     value.Type = FeatureType.RainbowBerry;
-                } else if (data.Name == "CollabUtils2/MiniHeartDoor") {
+                }
+                // CU2 heart door
+                else if (data.Name == "CollabUtils2/MiniHeartDoor") {
                     value.Type = FeatureType.HeartDoor;
-                } else if (data.Name == "CollabUtils2/JournalTrigger") {
+                }
+                // CU2 journal trigger
+                else if (data.Name == "CollabUtils2/JournalTrigger") {
                     value.Type = FeatureType.Journal;
-                } else if (data.Name == "CollabUtils2/ChapterPanelTrigger") {
+                }
+                // CU2 map trigger
+                else if (data.Name == "CollabUtils2/ChapterPanelTrigger") {
                     value.Map = data.Attr("map");
                     value.Type = value.Map.Contains("0-Gyms") ? FeatureType.Gym : FeatureType.Map;
-                } else if (data.Name == "XaphanHelper/WarpStation" && controllerInfo != null) {
+                }
+                // XaphanHelper warp station (can only be warped to, not from)
+                else if (data.Name == "XaphanHelper/WarpStation" && controllerInfo != null) {
                     value.Type = FeatureType.Warp;
-                    value.CanWarpTo = true;
                     value.FeatureId = data.Int("index").ToString();
                     value.DialogKey = $"{LobbyHelper.GetCollabNameForLevelSet(controllerInfo.LevelSet)}_0_Lobbies_Warp_Ch{controllerInfo.LobbyIndex}_{data.Level.Name}_{value.FeatureId}";
-                } else if (data.Has("cu2map_type")) {
-                    value.Custom = true;
-                    value.Type = data.Enum("cu2map_type", FeatureType.Custom);
-                    value.Icon = data.Attr("cu2map_icon");
-                    value.DialogKey = data.Attr("cu2map_dialogKey");
-                    value.Map = data.Attr("cu2map_map");
-                    value.CanWarpTo = data.Bool("cu2map_canWarpTo", value.Type == FeatureType.Warp);
-                    value.FeatureId = data.Attr("cu2map_id");
-                } else if (controllerInfo != null && controllerInfo.TryCreateCustom(data, ref value)) {
-                    // using a custom entity, so we'll continue
-                } else {
+                }
+                // something from the CustomFeatures property
+                else if (controllerInfo != null && controllerInfo.TryCreateCustom(data, out value)) {
+                    // do nothing
+                }
+                // not a valid map feature, skip
+                else {
                     return false;
                 }
                 
+                // grab the entity's position
                 value.Position = data.Position;
 
+                // if we haven't explictly set a feature id, default to the type and entity id
                 if (string.IsNullOrWhiteSpace(value.FeatureId)) {
                     value.FeatureId = $"{value.Type}_{data.ID}";
                 }
 
+                // if we haven't explicitly set an icon, use the one defined in the controller for the given type
+                // or fall back to some defaults
                 if (string.IsNullOrWhiteSpace(value.Icon)) {
                     switch (value.Type) {
                         case FeatureType.Warp:
@@ -345,10 +382,12 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     }
                 }
 
+                // if this feature represents an enterable map, try to read the data for that map
                 if (value.Type == FeatureType.Map && !string.IsNullOrWhiteSpace(value.Map)) {
                     value.MapInfo = new MapInfo(value.Map);
                 }
 
+                // successfully parsed the entity
                 return true;
             }
         }

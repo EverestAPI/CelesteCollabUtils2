@@ -13,6 +13,8 @@ namespace Celeste.Mod.CollabUtils2 {
 
         private VisitedPoint lastVisitedPoint = new VisitedPoint(Vector2.Zero);
 
+        public const int EXPLORATION_RADIUS = 20;
+        
         public string SID { get; }
         public string Room { get; }
 
@@ -68,11 +70,11 @@ namespace Celeste.Mod.CollabUtils2 {
             return Convert.ToBase64String(bytes);
         }
 
-        public void VisitPoint(Vector2 point, int explorationRadius, bool shouldSave = true) {
+        public void VisitPoint(Vector2 point, bool shouldSave = true) {
             const int nearby_point_count = 50;
 
-            float generate_distance = explorationRadius / 2f;
-            float sort_threshold = explorationRadius;
+            float generate_distance = EXPLORATION_RADIUS / 2f;
+            float sort_threshold = EXPLORATION_RADIUS;
             var lenSq = lastVisitedPoint == null ? float.MaxValue : (point - lastVisitedPoint.Point).LengthSquared();
             var shouldGenerate = !VisitedPoints.Any();
             if (!shouldGenerate && lenSq > generate_distance * generate_distance) {
