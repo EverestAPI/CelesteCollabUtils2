@@ -68,6 +68,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private bool focused;
 
+        private bool openedWithRevealMap;
+
         #endregion
 
         public LobbyMapUI() {
@@ -94,6 +96,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
         public override void Added(Scene scene) {
             base.Added(scene);
 
+            openedWithRevealMap = CollabModule.Instance.SaveData.RevealMap;
+            
             if (!(scene is Level level)) return;
 
             getLobbyControllers(level);
@@ -247,14 +251,14 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private void getLobbyControllers(Level level) {
             // we can only return lobbies that have at least one warp unlocked, or this one
             var collabName = level.Session.Area.SID.Substring(0, level.Session.Area.SID.IndexOf("/", StringComparison.Ordinal) + 1);
-            var activeWarpLobbyKeys = CollabModule.Instance.SaveData.ActivatedLobbyWarps.Keys.Where(k => k.StartsWith(collabName)).ToList();
-            if (!activeWarpLobbyKeys.Contains(level.Session.Area.SID)) {
-                activeWarpLobbyKeys.Add(level.Session.Area.SID);
+            var visitedLobbySIDs = CollabModule.Instance.SaveData.VisitedLobbyPositions.Keys.Where(k => k.StartsWith(collabName)).ToList();
+            if (!visitedLobbySIDs.Contains(level.Session.Area.SID)) {
+                visitedLobbySIDs.Add(level.Session.Area.SID);
             }
             
-            // parse all the features in all the lobbies that have active warps
+            // parse all the features in all the lobbies that have been visited
             lobbySelections.Clear();
-            foreach (var key in activeWarpLobbyKeys) {
+            foreach (var key in visitedLobbySIDs) {
                 var mapData = AreaData.Get(key)?.Mode.FirstOrDefault()?.MapData;
                 var entityData = mapData?.Levels.Select(l => findEntityData(l, LobbyMapController.ENTITY_NAME)).FirstOrDefault();
 
@@ -289,16 +293,18 @@ namespace Celeste.Mod.CollabUtils2.UI {
             var features = lobbySelections[selectedLobbyIndex].Features;
             lobbyMapInfo = selection.Info;
 
+            // get or create a visit manager
+            visitManager = new LobbyVisitManager(selection.SID, selection.Room);
+
+            // generate the 2d array of visited tiles
+            visitedTiles = generateVisitedTiles(lobbyMapInfo, visitManager);
+            
             // find warps
             allWarps.Clear();
             activeWarps.Clear();
             allWarps.AddRange(features.Where(f => f.CanWarpTo));
-            if (CollabModule.Instance.SaveData.RevealMap) {
-                activeWarps.AddRange(allWarps);
-            } else if (CollabModule.Instance.SaveData.ActivatedLobbyWarps.TryGetValue(selection.SID, out var warpNames)) {
-                activeWarps.AddRange(allWarps.Where(w => warpNames.Contains(w.FeatureId)));
-            }
-            
+            activeWarps.AddRange(openedWithRevealMap ? allWarps : allWarps.Where(w => isVisited(w.Position)));
+
             // regenerate feature components
             featureComponents.ForEach(c => c.RemoveSelf());
             featureComponents.Clear();
@@ -321,12 +327,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             var warpIndex = selectedWarpIndexes[selectedLobbyIndex];
             
-            // get or create a visit manager
-            visitManager = new LobbyVisitManager(selection.SID, selection.Room);
-
-            // generate the 2d array of visited tiles
-            visitedTiles = generateVisitedTiles(lobbyMapInfo, visitManager);
-
             // get the map texture
             mapTexture = GFX.Gui[lobbyMapInfo.MapTexture].Texture.Texture;
 
@@ -396,16 +396,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         /// Creates a component that represents the passed feature. Currently only supports an Image subclass.
         /// </summary>
         private Component createFeatureComponent(LobbyMapController.FeatureInfo featureInfo) {
-            // create an image
-            var image = new FeatureImage(featureInfo);
-            // if the warp isn't active, make it faded
-            if (!CollabModule.Instance.SaveData.RevealMap &&
-                featureInfo.CanWarpTo &&
-                CollabModule.Instance.SaveData.ActivatedLobbyWarps.TryGetValue(featureInfo.MapInfo.SID, out var warps) &&
-                !warps.Contains(featureInfo.FeatureId)) {
-                image.Color *= 0.3f;
-            }
-            return image;
+            return new FeatureImage(featureInfo);
         }
 
         /// <summary>

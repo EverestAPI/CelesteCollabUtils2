@@ -26,9 +26,6 @@ namespace Celeste.Mod.CollabUtils2 {
         // maps lobby SIDs against a base64 encoded list of visited points, managed by LobbyVisitManager
         public Dictionary<string, string> VisitedLobbyPositions = new Dictionary<string, string>();
 
-        // maps lobby SIDs against a list of warp feature IDs
-        public Dictionary<string, List<string>> ActivatedLobbyWarps = new Dictionary<string, List<string>>();
-        
         // whether the map should be forced visible, regardless of exploration
         public bool RevealMap { get; set; }
     }

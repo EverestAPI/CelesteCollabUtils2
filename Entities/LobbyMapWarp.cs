@@ -42,14 +42,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         private void onTalk(Player player) {
             if (player.Scene is Level level) {
-                if (!CollabModule.Instance.SaveData.ActivatedLobbyWarps.TryGetValue(level.Session.Area.SID, out List<string> warps)) {
-                    CollabModule.Instance.SaveData.ActivatedLobbyWarps[level.Session.Area.SID] = warps = new List<string>();
-                }
-
-                if (!warps.Contains(info.FeatureId)) {
-                    warps.Add(info.FeatureId);
-                }
-
                 if (!string.IsNullOrWhiteSpace(activateSpritePath)) {
                     Add(new Coroutine(activateRoutine(player)));
                 } else {
