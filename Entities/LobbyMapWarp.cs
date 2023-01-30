@@ -6,26 +6,35 @@ using Monocle;
 using System.Collections;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
-    [CustomEntity(ENTITY_NAME)]
+    [CustomEntity("CollabUtils2/LobbyMapWarp")]
     public class LobbyMapWarp : Entity {
-        public const string ENTITY_NAME = "CollabUtils2/LobbyMapWarp";
-
+        private readonly string spritePath;
+        private readonly bool spriteFlipX;
         private readonly string activateSpritePath;
-        private readonly float activateSpriteOriginX;
-        private readonly float activateSpriteOriginY;
         private readonly bool activateSpriteFlipX;
         private readonly Facings playerFacing;
         
         private LobbyMapController.FeatureInfo info;
 
+        private Sprite sprite;
+
         public LobbyMapWarp(EntityData data, Vector2 offset) : base(data.Position + offset) {
-            activateSpriteFlipX = data.Bool("activateSpriteFlipX");
+            spritePath = data.Attr("spritePath", "CollabUtils2/lobbyMap/warpSprite");
+            spriteFlipX = data.Bool("spriteFlipX");
             activateSpritePath = data.Attr("activateSpritePath");
-            activateSpriteOriginX = data.Float("activateSpriteOriginX", 0.5f);
-            activateSpriteOriginY = data.Float("activateSpriteOriginY", 0.5f);
+            activateSpriteFlipX = data.Bool("activateSpriteFlipX");
             playerFacing = (Facings) data.Int("playerFacing", (int) Facings.Right);
+            Depth = data.Int("depth", Depths.Below);
 
             LobbyMapController.FeatureInfo.TryParse(data, null, out info);
+
+            if (!string.IsNullOrWhiteSpace(spritePath)) {
+                Add(sprite = new Sprite(GFX.Gui, spritePath));
+                sprite.Effects = spriteFlipX ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+                sprite.JustifyOrigin(0.5f, 1f);
+                sprite.Add("idle", string.Empty);
+                sprite.Play("idle");
+            }
             
             Add(new TalkComponent(new Rectangle(-16, -32, 32, 32), new Vector2(0, data.Float("interactOffsetY", -16f)), onTalk) {
                 PlayerMustBeFacing = false,
@@ -60,7 +69,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             
             var playerSprite = new Sprite(GFX.Game, activateSpritePath);
             playerSprite.Add("idle", "", 0.08f);
-            playerSprite.Justify = new Vector2(activateSpriteOriginX, activateSpriteOriginY);
+            playerSprite.JustifyOrigin(0.5f, 1f);
             playerSprite.Effects = activateSpriteFlipX ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
             Add(playerSprite);
             playerSprite.Play("idle");
@@ -69,7 +78,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             if (GFX.Game.Has(activateSpritePath + "Hair")) {
                 playerHairSprite = new Sprite(GFX.Game, activateSpritePath + "Hair");
                 playerHairSprite.Add("idle", "", 0.08f);
-                playerHairSprite.Justify = new Vector2(activateSpriteOriginX, activateSpriteOriginY);
+                playerHairSprite.JustifyOrigin(0.5f, 1f);
                 playerHairSprite.Color = player.Hair.Color;
                 playerHairSprite.Effects = activateSpriteFlipX ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
                 Add(playerHairSprite);
