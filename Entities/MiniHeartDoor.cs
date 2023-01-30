@@ -11,10 +11,8 @@ using System.Collections.Generic;
 using System.Reflection;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
-    [CustomEntity(ENTITY_NAME)]
+    [CustomEntity("CollabUtils2/MiniHeartDoor")]
     public class MiniHeartDoor : HeartGemDoor {
-        public const string ENTITY_NAME = "CollabUtils2/MiniHeartDoor";
-        
         private static Hook hookOnHeartCount;
         private static ILHook hookOnDoorRoutine;
 

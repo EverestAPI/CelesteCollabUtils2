@@ -283,19 +283,18 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             public static bool TryParse(EntityData data, ControllerInfo controllerInfo, out FeatureInfo value) {
                 value = default;
                 
-                if (data.Name == LobbyMapWarp.ENTITY_NAME) {
+                if (data.Name == "CollabUtils2/LobbyMapWarp") {
                     value.Type = FeatureType.Warp;
                     value.DialogKey = data.Attr("dialogKey");
                     value.FeatureId = data.Attr("warpId");
                     value.Icon = data.Attr("icon");
-                    value.CanWarpTo = true;
-                } else if (data.Name == RainbowBerry.ENTITY_NAME) {
+                } else if (data.Name == "CollabUtils2/RainbowBerry") {
                     value.Type = FeatureType.RainbowBerry;
-                } else if (data.Name == MiniHeartDoor.ENTITY_NAME) {
+                } else if (data.Name == "CollabUtils2/MiniHeartDoor") {
                     value.Type = FeatureType.HeartDoor;
-                } else if (data.Name == JournalTrigger.ENTITY_NAME) {
+                } else if (data.Name == "CollabUtils2/JournalTrigger") {
                     value.Type = FeatureType.Journal;
-                } else if (data.Name == ChapterPanelTrigger.CHAPTER_PANEL_TRIGGER_NAME) {
+                } else if (data.Name == "CollabUtils2/ChapterPanelTrigger") {
                     value.Map = data.Attr("map");
                     value.Type = value.Map.Contains("0-Gyms") ? FeatureType.Gym : FeatureType.Map;
                 } else if (data.Name == "XaphanHelper/WarpStation" && controllerInfo != null) {
