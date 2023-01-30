@@ -129,12 +129,14 @@ namespace Celeste.Mod.CollabUtils2.UI {
                             Audio.Play("event:/ui/main/rollover_up");
                             selectWarpWiggler.Start();
                             selectedWarpIndexes[selectedLobbyIndex]--;
+                            resetPlayerFlash();
                         }
                     } else if (Input.MenuDown.Pressed) {
                         if (selectedWarpIndexes[selectedLobbyIndex] < activeWarps.Count - 1) {
                             Audio.Play("event:/ui/main/rollover_down");
                             selectWarpWiggler.Start();
                             selectedWarpIndexes[selectedLobbyIndex]++;
+                            resetPlayerFlash();
                         }
                     }
                 }
@@ -146,6 +148,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         lastSelectedWarpIndex = -1;
                         selectedLobbyIndex--;
                         updateSelectedLobby();
+                        resetPlayerFlash();
                     }
                 } else if (Input.MenuRight.Pressed) {
                     if (selectedLobbyIndex < lobbySelections.Count - 1) {
@@ -154,6 +157,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         lastSelectedWarpIndex = -1;
                         selectedLobbyIndex++;
                         updateSelectedLobby();
+                        resetPlayerFlash();
                     }
                 }
 
@@ -173,6 +177,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         targetOrigin = shouldCentreOrigin ? new Vector2(0.5f) : selectedOrigin;
                         translateTimeRemaining = translate_time_seconds;
                     }
+                    resetPlayerFlash();
                 }
 
                 var close = false;
@@ -254,21 +259,35 @@ namespace Celeste.Mod.CollabUtils2.UI {
             // we can only return lobbies that have at least one warp unlocked, or this one
             var collabName = level.Session.Area.SID.Substring(0, level.Session.Area.SID.IndexOf("/", StringComparison.Ordinal) + 1);
             var visitedLobbySIDs = CollabModule.Instance.SaveData.VisitedLobbyPositions.Keys.Where(k => k.StartsWith(collabName)).ToList();
-            if (!visitedLobbySIDs.Contains(level.Session.Area.SID)) {
-                visitedLobbySIDs.Add(level.Session.Area.SID);
+            var thisLobbyKey = $"{level.Session.Area.SID}.{level.Session.Level}";
+            if (!visitedLobbySIDs.Contains(thisLobbyKey)) {
+                visitedLobbySIDs.Add(thisLobbyKey);
             }
             
             // parse all the features in all the lobbies that have been visited
             lobbySelections.Clear();
             foreach (var key in visitedLobbySIDs) {
-                var mapData = AreaData.Get(key)?.Mode.FirstOrDefault()?.MapData;
-                var entityData = mapData?.Levels.Select(l => findEntityData(l, "CollabUtils2/LobbyMapController")).FirstOrDefault();
+                var room = string.Empty;
+                var sid = key;
+                if (key.LastIndexOf('.') > key.LastIndexOf('/')) {
+                    room = key.Substring(key.LastIndexOf('.') + 1);
+                    sid = key.Substring(0, key.LastIndexOf('.'));
+                }
+                
+                var mapData = AreaData.Get(sid)?.Mode.FirstOrDefault()?.MapData;
+                if (mapData == null) continue;
+                
+                const string mapControllerName = "CollabUtils2/LobbyMapController";
+                var levelData = string.IsNullOrWhiteSpace(room) ? null : mapData.Get(room);
+                var entityData = levelData == null
+                    ? mapData.Levels.Select(l => findEntityData(l, mapControllerName)).FirstOrDefault()
+                    : findEntityData(levelData, mapControllerName);
 
                 if (entityData != null) {
                     var selection = new LobbySelection(entityData, mapData);
                     var features = new List<LobbyMapController.FeatureInfo>();
                     foreach (var data in selection.Data.Level.Entities.Concat(selection.Data.Level.Triggers)) {
-                        if (LobbyMapController.FeatureInfo.TryParse(data, lobbyMapInfo, out var value)) {
+                        if (LobbyMapController.FeatureInfo.TryParse(data, selection.Info, out var value)) {
                             value.SID = selection.SID;
                             value.Room = selection.Room;
                             features.Add(value);
@@ -304,7 +323,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             // find warps
             allWarps.Clear();
             activeWarps.Clear();
-            allWarps.AddRange(features.Where(f => f.Type == LobbyMapController.FeatureType.Warp));
+            allWarps.AddRange(features.Where(f => f.Type == LobbyMapController.FeatureType.Warp).OrderBy(f => f.FeatureId));
             activeWarps.AddRange(openedWithRevealMap ? allWarps : allWarps.Where(w => isVisited(w.Position)));
 
             // regenerate feature components
@@ -436,7 +455,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             Engine.Graphics.GraphicsDevice.Clear(Color.Transparent);
 
             // only draw the overlay if reveal map is not enabled
-            if (!CollabModule.Instance.SaveData.RevealMap) {
+            if (!openedWithRevealMap) {
                 // draw the exploration as a direct alpha channel
                 Draw.SpriteBatch.Begin(SpriteSortMode.Immediate, new BlendState {
                     AlphaSourceBlend = Blend.One,
@@ -586,7 +605,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
             var actualHeight = mapTexture.Height * scale;
             var scaleOffset = zoomLevels[1] - actualScale;
             var imageScale = scaleOffset <= 0 ? 1f : Calc.LerpClamp(1f, 0.75f, scaleOffset / (zoomLevels[1] - zoomLevels[0]));
-            var reveal = CollabModule.Instance.SaveData.RevealMap;
 
             // move and scale features
             foreach (FeatureImage image in featureComponents) {
@@ -594,7 +612,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 var originOffset = origin - actualOrigin;
                 image.Position = new Vector2(bounds.Center.X + originOffset.X * actualWidth, bounds.Center.Y + originOffset.Y * actualHeight);
                 image.Scale = new Vector2(imageScale);
-                image.Visible = reveal || isVisited(image.Info.Position);
+                image.Visible = openedWithRevealMap || isVisited(image.Info.Position);
             }
 
             // move the player icon to the currently selected warp
@@ -879,7 +897,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             public LobbyMapController.FeatureInfo[] Features;
 
             public LobbySelection(EntityData data, MapData map) {
-                Info = new LobbyMapController.ControllerInfo(data);
+                Info = new LobbyMapController.ControllerInfo(data, map);
                 Data = data;
                 SID = map.Area.SID;
                 Room = data.Level.Name;

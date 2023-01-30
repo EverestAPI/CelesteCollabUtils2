@@ -116,12 +116,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             
             public ControllerInfo(EntityData data, MapData mapData = null) {
                 MapTexture = data.Attr("mapTexture");
-                // LevelSet = data.Attr("levelSet");
-                // LobbyIndex = data.Int("lobbyIndex");
                 TotalMaps = data.Int("totalMaps");
-                // ExplorationRadius = data.Int("explorationRadius", 20);
-                // RoomWidth = data.Int("roomWidth");
-                // RoomHeight = data.Int("roomHeight");
 
                 WarpIcon = data.Attr("warpIcon", "CollabUtils2/lobbies/warp");
                 RainbowBerryIcon = data.Attr("rainbowBerryIcon", "CollabUtils2/lobbies/rainbowBerry");
@@ -151,28 +146,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 } else {
                     CustomFeatures = default;
                 }
-                
-                // var zoomLevels = data.Attr("zoomLevels", string.Empty)
-                //     .Split(',')
-                //     .Select(s => float.TryParse(s, out var value) ? value : -1)
-                //     .Where(f => f > 0)
-                //     .ToArray();
 
-                // if (zoomLevels.Any()) {
-                //     ZoomLevels = zoomLevels;
-                // } else {
-                //     ZoomLevels = new[] {
-                //         1f, 2f, 3f,
-                //     };
-                // }
-
-                // DefaultZoomLevel = data.Int("defaultZoomLevel", ZoomLevels.Length / 2);
-
-                // if (string.IsNullOrWhiteSpace(LevelSet)) {
-                //     var sid = mapData?.Area.SID ?? AreaData.Get(Engine.Scene)?.SID;
-                //     LevelSet = string.IsNullOrWhiteSpace(sid) ? string.Empty : LobbyHelper.GetLobbyLevelSet(sid);
-                // }
-                
                 if (RoomWidth <= 0) RoomWidth = data.Level.TileBounds.Width;
                 if (RoomHeight <= 0) RoomHeight = data.Level.TileBounds.Height;
                 if (mapData != null) {
@@ -235,7 +209,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     if (subtokens.Length != 2 || string.IsNullOrWhiteSpace(subtokens[0]) || string.IsNullOrWhiteSpace(subtokens[1])) return false;
                     value.AttributeMap[subtokens[0]] = subtokens[1];
                 }
-                
+
                 return true;
             }
 
@@ -246,14 +220,20 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 
                 value.Type = Type;
 
-                var infoType = value.GetType();
-                foreach (var pair in AttributeMap) {
-                    if (infoType.GetField(pair.Key, BindingFlags.Instance | BindingFlags.Public) is FieldInfo fi) {
-                        if (!pair.Value.StartsWith("$")) {
-                            fi.SetValue(value, pair.Value);
-                        } else if (pair.Value.Length > 1 && data.Has(pair.Value.Substring(1))) {
-                            fi.SetValue(value, data.Attr(pair.Value.Substring(1)));
-                        }
+                foreach (var key in AttributeMap.Keys) {
+                    var attrValue = AttributeMap[key];
+                    if (attrValue.StartsWith("$") && attrValue.Length > 1 && data.Has(attrValue.Substring(1))) {
+                        attrValue = data.Attr(attrValue.Substring(1));
+                    }
+
+                    if (key.Equals(nameof(FeatureInfo.FeatureId), StringComparison.InvariantCultureIgnoreCase)) {
+                        value.FeatureId = attrValue;
+                    } else if (key.Equals(nameof(FeatureInfo.Icon), StringComparison.InvariantCultureIgnoreCase)) {
+                        value.Icon = attrValue;
+                    } else if (key.Equals(nameof(FeatureInfo.Map), StringComparison.InvariantCultureIgnoreCase)) {
+                        value.Map = attrValue;
+                    } else if (key.Equals(nameof(FeatureInfo.DialogKey), StringComparison.InvariantCultureIgnoreCase)) {
+                        value.DialogKey = attrValue;
                     }
                 }
 
@@ -273,7 +253,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             public string DialogKey;
             
             /// <summary>
-            /// A unique id for this feature. Also used to identify warps.
+            /// A unique id for this feature. Also used to identify and sort warps.
             /// </summary>
             public string FeatureId;
             
