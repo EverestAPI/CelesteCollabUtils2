@@ -5,7 +5,6 @@ using Monocle;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
     [Tracked]
@@ -66,25 +65,9 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             public string MapTexture;
             
             /// <summary>
-            /// The level set that this lobby belongs to.
-            /// Example: StrawberryJam2021/1-Beginner
-            /// </summary>
-            // public string LevelSet;
-            
-            /// <summary>
-            /// The index of the lobby within its level set.
-            /// </summary>
-            // public int LobbyIndex;
-            
-            /// <summary>
             /// The total number of maps in the lobby, used to display the miniheart tally.
             /// </summary>
             public int TotalMaps;
-            
-            /// <summary>
-            /// The radius in tiles that should be revealed per visited point.
-            /// </summary>
-            // public int ExplorationRadius;
             
             /// <summary>
             /// An array of custom entity names that should be considered map features.
