@@ -632,7 +632,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private void openScreen() {
             if (Scene is Level level) {
                 level.PauseLock = true;
-                level.Session.SetFlag("CU2_Lobby_Map_Opened", true);
 
                 if (level.Tracker.GetEntity<Player>() is Player player) {
                     player.StateMachine.State = Player.StDummy;
@@ -655,7 +654,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }, onFadeIn: () => {
                 if (Scene is Level level) {
                     level.PauseLock = false;
-                    level.Session.SetFlag("CU2_Lobby_Map_Opened", false);
 
                     if (level.Tracker.GetEntity<Player>() is Player player) {
                         player.StateMachine.State = Player.StNormal;

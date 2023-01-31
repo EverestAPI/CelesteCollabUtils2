@@ -20,6 +20,6 @@ function Ahorn.selection(entity::GymMarker)
     return Ahorn.Rectangle(x - 12, y - 12, 24, 24)
 end
 
-Ahorn.render(ctx::Ahorn.Cairo.CairoContext, entity::GymMarker, room::Maple.Room) = Ahorn.drawSprite(ctx, "CollabUtils2/ahorn_gymmarker", 0, 0)
+Ahorn.render(ctx::Ahorn.Cairo.CairoContext, entity::GymMarker, room::Maple.Room) = Ahorn.drawSprite(ctx, "CollabUtils2/editor_gymmarker", 0, 0)
 
 end

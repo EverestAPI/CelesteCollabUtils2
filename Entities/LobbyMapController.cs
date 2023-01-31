@@ -103,7 +103,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
                 WarpIcon = data.Attr("warpIcon", "CollabUtils2/lobbies/warp");
                 RainbowBerryIcon = data.Attr("rainbowBerryIcon", "CollabUtils2/lobbies/rainbowBerry");
-                HeartDoorIcon = data.Attr("heartDoorIcon", "CollabUtils2/lobbies/heartDoorIcon");
+                HeartDoorIcon = data.Attr("heartDoorIcon", "CollabUtils2/lobbies/heartgate");
                 GymIcon = data.Attr("gymIcon", "CollabUtils2/lobbies/gym");
                 MapIcon = data.Attr("mapIcon", "CollabUtils2/lobbies/map");
                 JournalIcon = data.Attr("journalIcon", "CollabUtils2/lobbies/journal");

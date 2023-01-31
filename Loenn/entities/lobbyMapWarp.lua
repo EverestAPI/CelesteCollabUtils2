@@ -8,9 +8,9 @@ lobbyMapWarp.placements = {
             warpId = "",
             icon = "",
             dialogKey = "",
-            spritePath = "CollabUtils2/lobbyMap/warp",
+            spritePath = "decals/1-forsakencity/bench_concrete",
             spriteFlipX = false,
-            activateSpritePath = "",
+            activateSpritePath = "CollabUtils2/characters/benchSit",
             activateSpriteFlipX = false,
             playerFacing = 1,
             interactOffsetY = -16,
@@ -18,6 +18,6 @@ lobbyMapWarp.placements = {
     }
 }
 
-lobbyMapWarp.texture = "CollabUtils2/rainbowBerry/rberry0030"
+lobbyMapWarp.texture = "decals/1-forsakencity/bench_concrete"
 
 return lobbyMapWarp

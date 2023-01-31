@@ -5,8 +5,8 @@ lobbyMapController.placements = {
     {
         name = "default",
         data = {
-            mapTexture = "SJ2021/1-Beginner/beginnermap",
-            totalMaps = 21,
+            mapTexture = "",
+            totalMaps = 10,
             customFeatures = "",
             warpIcon = "CollabUtils2/lobbies/warp",
             rainbowBerryIcon = "CollabUtils2/lobbies/rainbowBerry",
@@ -25,6 +25,6 @@ lobbyMapController.placements = {
     }
 }
 
-lobbyMapController.texture = "CollabUtils2/rainbowBerry/rberry0030"
+lobbyMapController.texture = "CollabUtils2/editor_lobbymapmarker"
 
 return lobbyMapController
