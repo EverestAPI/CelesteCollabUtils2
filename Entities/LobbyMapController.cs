@@ -278,8 +278,14 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             public static bool TryParse(EntityData data, ControllerInfo controllerInfo, out MarkerInfo value) {
                 value = default;
                 
+                // CU2 simple marker entity
+                if (data.Name == "CollabUtils2/LobbyMapMarker") {
+                    value.Type = MarkerType.Custom;
+                    value.DialogKey = data.Attr("dialogKey");
+                    value.Icon = data.Attr("icon");
+                }
                 // CU2 warp entity
-                if (data.Name == "CollabUtils2/LobbyMapWarp") {
+                else if (data.Name == "CollabUtils2/LobbyMapWarp") {
                     value.Type = MarkerType.Warp;
                     value.DialogKey = data.Attr("dialogKey");
                     value.MarkerId = data.Attr("warpId");
@@ -307,10 +313,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     value.Type = MarkerType.Warp;
                     value.MarkerId = data.Int("index").ToString();
                     value.DialogKey = $"{LobbyHelper.GetCollabNameForLevelSet(controllerInfo.LevelSet)}_0_Lobbies_Warp_Ch{controllerInfo.LobbyIndex}_{data.Level.Name}_{value.MarkerId}";
-                }
-                // check the memorial entity
-                else if (controllerInfo != null && data.ID == controllerInfo.MemorialId) {
-                    value.Type = MarkerType.Memorial;
                 }
                 // something from the CustomMarkers property
                 else if (controllerInfo != null && controllerInfo.TryCreateCustom(data, out value)) {
@@ -350,9 +352,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                             break;
                         case MarkerType.Journal:
                             value.Icon = controllerInfo?.JournalIcon ?? "CollabUtils2/lobbies/journal";
-                            break;
-                        case MarkerType.Memorial:
-                            value.Icon = controllerInfo?.MemorialIcon ?? "CollabUtils2/lobbies/memorial";
                             break;
                     }
                 }
@@ -402,7 +401,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             Gym,
             Map,
             Journal,
-            Memorial,
         }
     }
 }

@@ -89,3 +89,4 @@ entities.CollabUtils2/CollabCrystalHeart.attributes.description.removeCameraTrig
 
 entities.CollabUtils2/LobbyMapController.placements.name.default=Lobby Map Controller
 entities.CollabUtils2/LobbyMapWarp.placements.name.default=Lobby Map Warp
+entities.CollabUtils2/LobbyMapMarker.placements.name.default=Lobby Map Marker
