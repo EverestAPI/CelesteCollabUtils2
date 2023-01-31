@@ -54,7 +54,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         /// without having to load the entire entity.
         /// </summary>
         public class ControllerInfo {
-            private static readonly char[] semicolonSeparator = {';'};
+            private static readonly char[] commaSeparator = {','};
             
             #region EntityData Fields
             
@@ -70,10 +70,10 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             public int TotalMaps;
             
             /// <summary>
-            /// An array of custom entity names that should be considered map markers.
-            /// This is not required for CU2 entities.
+            /// An array of custom entity names that should be considered <see cref="MarkerType.Map"/> markers.
+            /// These entities must have a "map" attribute containing the SID of the target map.
             /// </summary>
-            public CustomMarkerEntityInfo[] CustomMarkers;
+            public string[] CustomMarkers;
 
             public int MemorialId;
             
@@ -122,18 +122,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 ShowHeartCount = data.Bool("showHeartCount", true);
 
                 var customMarkers = data.Attr("customMarkers");
-                if (!string.IsNullOrWhiteSpace(customMarkers)) {
-                    var customMarkersList = new List<CustomMarkerEntityInfo>();
-                    var tokens = customMarkers.Split(semicolonSeparator, StringSplitOptions.None);
-                    foreach (var token in tokens) {
-                        if (CustomMarkerEntityInfo.TryParse(token, out var value)) {
-                            customMarkersList.Add(value);
-                        }
-                    }
-                    CustomMarkers = customMarkersList.ToArray();
-                } else {
-                    CustomMarkers = default;
-                }
+                CustomMarkers = !string.IsNullOrWhiteSpace(customMarkers) ? customMarkers.Split(commaSeparator, StringSplitOptions.RemoveEmptyEntries) : new string[0];
 
                 if (RoomWidth <= 0) RoomWidth = data.Level.TileBounds.Width;
                 if (RoomHeight <= 0) RoomHeight = data.Level.TileBounds.Height;
@@ -155,80 +144,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     default: return true;
                 }
             }
-
-            public bool TryCreateCustom(EntityData data, out MarkerInfo value) {
-                value = default;
-                
-                if (CustomMarkers != null) {
-                    foreach (var custom in CustomMarkers) {
-                        if (custom.TryCreate(data, out value)) {
-                            return true;
-                        }
-                    }
-                }
-
-                return false;
-            }
         }
-        
-        public class CustomMarkerEntityInfo {
-            private static readonly char[] commaSeparator = {','};
-            private static readonly char[] equalsSeparator = {'='};
-            
-            public string Name;
-            public MarkerType Type;
-            public readonly Dictionary<string, string> AttributeMap = new Dictionary<string, string>();
 
-            public static bool TryParse(string str, out CustomMarkerEntityInfo value) {
-                value = null;
-
-                var tokens = str.Split(commaSeparator, StringSplitOptions.RemoveEmptyEntries);
-                if (tokens.Length < 2) return false;
-                
-                var name = tokens[0];
-                if (!Enum.TryParse(tokens[1], true, out MarkerType type)) return false;
-
-                value = new CustomMarkerEntityInfo {
-                    Name = name, Type = type,
-                };
-                
-                for (int i = 2; i < tokens.Length; i++) {
-                    var subtokens = tokens[i].Split(equalsSeparator, StringSplitOptions.RemoveEmptyEntries);
-                    if (subtokens.Length != 2 || string.IsNullOrWhiteSpace(subtokens[0]) || string.IsNullOrWhiteSpace(subtokens[1])) return false;
-                    value.AttributeMap[subtokens[0]] = subtokens[1];
-                }
-
-                return true;
-            }
-
-            public bool TryCreate(EntityData data, out MarkerInfo value) {
-                value = default;
-                
-                if (data.Name != Name) return false;
-                
-                value.Type = Type;
-
-                foreach (var key in AttributeMap.Keys) {
-                    var attrValue = AttributeMap[key];
-                    if (attrValue.StartsWith("$") && attrValue.Length > 1 && data.Has(attrValue.Substring(1))) {
-                        attrValue = data.Attr(attrValue.Substring(1));
-                    }
-
-                    if (key.Equals(nameof(MarkerInfo.MarkerId), StringComparison.InvariantCultureIgnoreCase)) {
-                        value.MarkerId = attrValue;
-                    } else if (key.Equals(nameof(MarkerInfo.Icon), StringComparison.InvariantCultureIgnoreCase)) {
-                        value.Icon = attrValue;
-                    } else if (key.Equals(nameof(MarkerInfo.Map), StringComparison.InvariantCultureIgnoreCase)) {
-                        value.Map = attrValue;
-                    } else if (key.Equals(nameof(MarkerInfo.DialogKey), StringComparison.InvariantCultureIgnoreCase)) {
-                        value.DialogKey = attrValue;
-                    }
-                }
-
-                return true;
-            }
-        }
-        
         public struct MarkerInfo {
             /// <summary>
             /// The icon in the Gui atlas.
@@ -315,8 +232,9 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     value.DialogKey = $"{LobbyHelper.GetCollabNameForLevelSet(controllerInfo.LevelSet)}_0_Lobbies_Warp_Ch{controllerInfo.LobbyIndex}_{data.Level.Name}_{value.MarkerId}";
                 }
                 // something from the CustomMarkers property
-                else if (controllerInfo != null && controllerInfo.TryCreateCustom(data, out value)) {
-                    // do nothing
+                else if (controllerInfo != null && controllerInfo.CustomMarkers.Contains(data.Name)) {
+                    value.Type = MarkerType.Map;
+                    value.Map = data.Attr("map", "missing map attribute");
                 }
                 // not a valid map marker, skip
                 else {
