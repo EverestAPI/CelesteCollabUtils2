@@ -2,6 +2,17 @@ local drawableSprite = require("structs.drawable_sprite")
 
 local lobbyMapWarp = {}
 lobbyMapWarp.name = "CollabUtils2/LobbyMapWarp"
+lobbyMapWarp.fieldInformation = {
+    playerFacing = {
+        fieldType = "integer",
+        options = {
+            { "Left", -1 }, { "Right", 1 }
+        }
+    },
+    interactOffsetY = {
+        fieldType = "integer",
+    }
+}
 lobbyMapWarp.placements = {
     {
         name = "default",

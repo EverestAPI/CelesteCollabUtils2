@@ -220,8 +220,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 else if (data.Name == "CollabUtils2/JournalTrigger") {
                     value.Type = MarkerType.Journal;
                 }
-                // CU2 map trigger
-                else if (data.Name == "CollabUtils2/ChapterPanelTrigger") {
+                // CU2 map trigger or something from the CustomMarkers property
+                else if (data.Name == "CollabUtils2/ChapterPanelTrigger" || controllerInfo != null && controllerInfo.CustomMarkers.Contains(data.Name)) {
                     value.Map = data.Attr("map");
                     value.Type = value.Map.Contains("0-Gyms") ? MarkerType.Gym : MarkerType.Map;
                 }
@@ -230,11 +230,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     value.Type = MarkerType.Warp;
                     value.MarkerId = data.Int("index").ToString();
                     value.DialogKey = $"{LobbyHelper.GetCollabNameForLevelSet(controllerInfo.LevelSet)}_0_Lobbies_Warp_Ch{controllerInfo.LobbyIndex}_{data.Level.Name}_{value.MarkerId}";
-                }
-                // something from the CustomMarkers property
-                else if (controllerInfo != null && controllerInfo.CustomMarkers.Contains(data.Name)) {
-                    value.Type = MarkerType.Map;
-                    value.Map = data.Attr("map", "missing map attribute");
                 }
                 // not a valid map marker, skip
                 else {

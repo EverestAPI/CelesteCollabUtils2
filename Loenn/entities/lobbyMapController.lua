@@ -1,6 +1,11 @@
 local lobbyMapController = {}
 lobbyMapController.name = "CollabUtils2/LobbyMapController"
 lobbyMapController.depth = -100
+lobbyMapController.fieldInformation = {
+    totalMaps = {
+        fieldType = "integer",
+    }
+}
 lobbyMapController.placements = {
     {
         name = "default",

@@ -6,7 +6,6 @@ lobbyMapMarker.placements = {
         name = "default",
         data = {
             icon = "CollabUtils2/lobbies/memorial",
-            dialogKey = "",
         }
     }
 }
