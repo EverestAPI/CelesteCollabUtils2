@@ -38,8 +38,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private readonly List<Component> featureComponents = new List<Component>();
         private readonly MTexture arrowTexture = GFX.Gui["towerarrow"];
         private Sprite heartSprite;
-        private Image playerIcon;
-        private Image playerIconHair;
+        private Sprite maddyRunSprite;
         private readonly Wiggler selectWarpWiggler;
         private readonly Wiggler selectLobbyWiggler;
         private readonly Wiggler closeWiggler;
@@ -63,8 +62,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private int lastSelectedWarpIndex = -1;
         private float scaleMultiplier = 1f;
         private float finalScale => actualScale * scaleMultiplier;
-        private float playerVisibleForceTime;
-        private float playerVisibleIntervalOffset;
 
         private Rectangle bounds;
 
@@ -99,13 +96,21 @@ namespace Celeste.Mod.CollabUtils2.UI {
             base.Added(scene);
 
             openedWithRevealMap = CollabModule.Instance.SaveData.RevealMap;
-            
-            if (!(scene is Level level)) return;
 
-            getLobbyControllers(level);
-            updateSelectedLobby(true);
+            if (scene is Level level && level.Tracker.GetEntity<Player>() is Player player) {
+                var path = player.Inventory.Backpack ? "marker/runBackpack" : "marker/runNoBackpack";
+                Add(maddyRunSprite = new Sprite(MTN.Mountain, path));
+                maddyRunSprite.Justify = new Vector2(0.5f, 1f);
+                maddyRunSprite.Scale = new Vector2(0.3f);
+                maddyRunSprite.Visible = false;
+                maddyRunSprite.AddLoop("idle", "", 1 / 8f);
+                maddyRunSprite.Play("idle");
 
-            openScreen();
+                getLobbyControllers(level);
+                updateSelectedLobby(true);
+
+                openScreen();
+            }
         }
 
         public override void Removed(Scene scene) {
@@ -129,14 +134,12 @@ namespace Celeste.Mod.CollabUtils2.UI {
                             Audio.Play("event:/ui/main/rollover_up");
                             selectWarpWiggler.Start();
                             selectedWarpIndexes[selectedLobbyIndex]--;
-                            resetPlayerFlash();
                         }
                     } else if (Input.MenuDown.Pressed) {
                         if (selectedWarpIndexes[selectedLobbyIndex] < activeWarps.Count - 1) {
                             Audio.Play("event:/ui/main/rollover_down");
                             selectWarpWiggler.Start();
                             selectedWarpIndexes[selectedLobbyIndex]++;
-                            resetPlayerFlash();
                         }
                     }
                 }
@@ -148,7 +151,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         lastSelectedWarpIndex = -1;
                         selectedLobbyIndex--;
                         updateSelectedLobby();
-                        resetPlayerFlash();
                     }
                 } else if (Input.MenuRight.Pressed) {
                     if (selectedLobbyIndex < lobbySelections.Count - 1) {
@@ -157,7 +159,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         lastSelectedWarpIndex = -1;
                         selectedLobbyIndex++;
                         updateSelectedLobby();
-                        resetPlayerFlash();
                     }
                 }
 
@@ -177,7 +178,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         targetOrigin = shouldCentreOrigin ? new Vector2(0.5f) : selectedOrigin;
                         translateTimeRemaining = translate_time_seconds;
                     }
-                    resetPlayerFlash();
                 }
 
                 var close = false;
@@ -203,19 +203,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 }
             }
 
-            // update flashing player
-            if (Scene?.Tracker.GetEntity<Player>() is Player player && playerIcon != null) {
-                playerIconHair.Color = player.Hair.Color;
-                if (playerVisibleForceTime > 0) {
-                    playerVisibleForceTime -= Engine.RawDeltaTime;
-                    if (playerVisibleForceTime <= 0) {
-                        playerVisibleIntervalOffset = Scene.RawTimeActive;
-                    }
-                } else if (Scene.OnRawInterval(0.3f, playerVisibleIntervalOffset)) {
-                    playerIcon.Visible = playerIconHair.Visible = !playerIcon.Visible;
-                }
-            }
-            
             // update map position for warp selection
             if (activeWarps.Count > 0 && lastSelectedWarpIndex != selectedWarpIndexes[selectedLobbyIndex]) {
                 var warp = activeWarps[selectedWarpIndexes[selectedLobbyIndex]];
@@ -379,15 +366,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
             var boundsAspectRatio = (float) padded.Width / padded.Height;
             scaleMultiplier = mapAspectRatio > boundsAspectRatio ? (float) padded.Width / mapTexture.Width : (float) padded.Height / mapTexture.Height;
 
-            // add player icon
-            playerIcon?.RemoveSelf();
-            playerIconHair?.RemoveSelf();
-            Add(playerIcon = new Image(GFX.Gui["CollabUtils2/lobbyMap/player"]));
-            playerIcon.CenterOrigin();
-            Add(playerIconHair = new Image(GFX.Gui["CollabUtils2/lobbyMap/playerHair"]));
-            playerIconHair.CenterOrigin();
-            resetPlayerFlash();
-            
             // update feature positions
             updateFeatures();
             
@@ -422,14 +400,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
         /// </summary>
         private Component createFeatureComponent(LobbyMapController.FeatureInfo featureInfo) {
             return new FeatureImage(featureInfo);
-        }
-
-        /// <summary>
-        /// Forces the player icon to stop flashing for a short time.
-        /// </summary>
-        private void resetPlayerFlash() {
-            playerIcon.Visible = playerIconHair.Visible = true;
-            playerVisibleForceTime = 0.8f;
         }
 
         #endregion
@@ -498,6 +468,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             drawBackground();
             drawMap();
             base.Render();
+            maddyRunSprite?.Render();
             drawForeground();
         }
 
@@ -620,9 +591,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
 
             // move the player icon to the currently selected warp
-            if (playerIcon != null) {
+            if (maddyRunSprite != null) {
                 var selectedOriginOffset = selectedOrigin - actualOrigin;
-                playerIcon.Position = playerIconHair.Position = new Vector2(bounds.Center.X + selectedOriginOffset.X * actualWidth, bounds.Center.Y + selectedOriginOffset.Y * actualHeight);
+                maddyRunSprite.Position = new Vector2(bounds.Center.X + selectedOriginOffset.X * actualWidth, bounds.Center.Y + selectedOriginOffset.Y * actualHeight);
             }
         }
 

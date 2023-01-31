@@ -20,9 +20,9 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private Sprite sprite;
 
         public LobbyMapWarp(EntityData data, Vector2 offset) : base(data.Position + offset) {
-            spritePath = data.Attr("spritePath", "CollabUtils2/lobbyMap/warp");
+            spritePath = data.Attr("spritePath", "decals/1-forsakencity/bench_concrete");
             spriteFlipX = data.Bool("spriteFlipX");
-            activateSpritePath = data.Attr("activateSpritePath");
+            activateSpritePath = data.Attr("activateSpritePath", "CollabUtils2/characters/sitBench");
             activateSpriteFlipX = data.Bool("activateSpriteFlipX");
             playerFacing = (Facings) data.Int("playerFacing", (int) Facings.Right);
             Depth = data.Int("depth", Depths.Below);

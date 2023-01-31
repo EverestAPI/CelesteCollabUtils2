@@ -1,6 +1,7 @@
+local drawableSprite = require("structs.drawable_sprite")
+
 local lobbyMapWarp = {}
 lobbyMapWarp.name = "CollabUtils2/LobbyMapWarp"
-lobbyMapWarp.depth = -100
 lobbyMapWarp.placements = {
     {
         name = "default",
@@ -14,11 +15,21 @@ lobbyMapWarp.placements = {
             activateSpriteFlipX = false,
             playerFacing = 1,
             interactOffsetY = -16,
+            depth = 2000,
         }
     }
 }
 
-lobbyMapWarp.texture = "decals/1-forsakencity/bench_concrete"
-lobbyMapWarp.justification = {0.5, 1.0}
+function lobbyMapWarp.sprite(room, entity)
+    local spritePath = entity.spritePath or "decals/1-forsakencity/bench_concrete"
+    local sprite = drawableSprite.fromTexture(spritePath, entity)
+    sprite:setJustification(0.5, 1.0)
+    sprite:setScale(entity.spriteFlipX and -1 or 1, 1)
+    return sprite
+end
+
+function lobbyMapWarp.depth(room, entity)
+    return entity.depth
+end
 
 return lobbyMapWarp
