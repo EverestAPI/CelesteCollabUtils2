@@ -15,7 +15,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private readonly bool activateSpriteFlipX;
         private readonly Facings playerFacing;
         
-        private LobbyMapController.FeatureInfo info;
+        private LobbyMapController.MarkerInfo info;
 
         private Sprite sprite;
 
@@ -27,7 +27,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             playerFacing = (Facings) data.Int("playerFacing", (int) Facings.Right);
             Depth = data.Int("depth", Depths.Below);
 
-            LobbyMapController.FeatureInfo.TryParse(data, null, out info);
+            LobbyMapController.MarkerInfo.TryParse(data, null, out info);
 
             if (!string.IsNullOrWhiteSpace(spritePath)) {
                 Add(sprite = new Sprite(GFX.Game, spritePath));

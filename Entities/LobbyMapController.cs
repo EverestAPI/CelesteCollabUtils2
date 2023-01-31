@@ -70,10 +70,10 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             public int TotalMaps;
             
             /// <summary>
-            /// An array of custom entity names that should be considered map features.
+            /// An array of custom entity names that should be considered map markers.
             /// This is not required for CU2 entities.
             /// </summary>
-            public CustomFeatureEntityInfo[] CustomFeatures;
+            public CustomMarkerEntityInfo[] CustomMarkers;
 
             public int MemorialId;
             
@@ -121,18 +121,18 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 ShowJournals = data.Bool("showJournals", true);
                 ShowHeartCount = data.Bool("showHeartCount", true);
 
-                var customFeatures = data.Attr("customFeatures");
-                if (!string.IsNullOrWhiteSpace(customFeatures)) {
-                    var customFeaturesList = new List<CustomFeatureEntityInfo>();
-                    var tokens = customFeatures.Split(semicolonSeparator, StringSplitOptions.None);
+                var customMarkers = data.Attr("customMarkers");
+                if (!string.IsNullOrWhiteSpace(customMarkers)) {
+                    var customMarkersList = new List<CustomMarkerEntityInfo>();
+                    var tokens = customMarkers.Split(semicolonSeparator, StringSplitOptions.None);
                     foreach (var token in tokens) {
-                        if (CustomFeatureEntityInfo.TryParse(token, out var value)) {
-                            customFeaturesList.Add(value);
+                        if (CustomMarkerEntityInfo.TryParse(token, out var value)) {
+                            customMarkersList.Add(value);
                         }
                     }
-                    CustomFeatures = customFeaturesList.ToArray();
+                    CustomMarkers = customMarkersList.ToArray();
                 } else {
-                    CustomFeatures = default;
+                    CustomMarkers = default;
                 }
 
                 if (RoomWidth <= 0) RoomWidth = data.Level.TileBounds.Width;
@@ -143,24 +143,24 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 }
             }
 
-            public bool ShouldShowFeature(FeatureInfo feature) {
-                switch (feature.Type) {
-                    case FeatureType.Custom: return true;
-                    case FeatureType.Warp: return ShowWarps;
-                    case FeatureType.RainbowBerry: return ShowRainbowBerry;
-                    case FeatureType.HeartDoor: return ShowHeartDoor;
-                    case FeatureType.Gym: return ShowGyms;
-                    case FeatureType.Map: return ShowMaps;
-                    case FeatureType.Journal: return ShowJournals;
+            public bool ShouldShowMarker(MarkerInfo marker) {
+                switch (marker.Type) {
+                    case MarkerType.Custom: return true;
+                    case MarkerType.Warp: return ShowWarps;
+                    case MarkerType.RainbowBerry: return ShowRainbowBerry;
+                    case MarkerType.HeartDoor: return ShowHeartDoor;
+                    case MarkerType.Gym: return ShowGyms;
+                    case MarkerType.Map: return ShowMaps;
+                    case MarkerType.Journal: return ShowJournals;
                     default: return true;
                 }
             }
 
-            public bool TryCreateCustom(EntityData data, out FeatureInfo value) {
+            public bool TryCreateCustom(EntityData data, out MarkerInfo value) {
                 value = default;
                 
-                if (CustomFeatures != null) {
-                    foreach (var custom in CustomFeatures) {
+                if (CustomMarkers != null) {
+                    foreach (var custom in CustomMarkers) {
                         if (custom.TryCreate(data, out value)) {
                             return true;
                         }
@@ -171,24 +171,24 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             }
         }
         
-        public class CustomFeatureEntityInfo {
+        public class CustomMarkerEntityInfo {
             private static readonly char[] commaSeparator = {','};
             private static readonly char[] equalsSeparator = {'='};
             
             public string Name;
-            public FeatureType Type;
+            public MarkerType Type;
             public readonly Dictionary<string, string> AttributeMap = new Dictionary<string, string>();
 
-            public static bool TryParse(string str, out CustomFeatureEntityInfo value) {
+            public static bool TryParse(string str, out CustomMarkerEntityInfo value) {
                 value = null;
 
                 var tokens = str.Split(commaSeparator, StringSplitOptions.RemoveEmptyEntries);
                 if (tokens.Length < 2) return false;
                 
                 var name = tokens[0];
-                if (!Enum.TryParse(tokens[1], true, out FeatureType type)) return false;
+                if (!Enum.TryParse(tokens[1], true, out MarkerType type)) return false;
 
-                value = new CustomFeatureEntityInfo {
+                value = new CustomMarkerEntityInfo {
                     Name = name, Type = type,
                 };
                 
@@ -201,7 +201,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 return true;
             }
 
-            public bool TryCreate(EntityData data, out FeatureInfo value) {
+            public bool TryCreate(EntityData data, out MarkerInfo value) {
                 value = default;
                 
                 if (data.Name != Name) return false;
@@ -214,13 +214,13 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                         attrValue = data.Attr(attrValue.Substring(1));
                     }
 
-                    if (key.Equals(nameof(FeatureInfo.FeatureId), StringComparison.InvariantCultureIgnoreCase)) {
-                        value.FeatureId = attrValue;
-                    } else if (key.Equals(nameof(FeatureInfo.Icon), StringComparison.InvariantCultureIgnoreCase)) {
+                    if (key.Equals(nameof(MarkerInfo.MarkerId), StringComparison.InvariantCultureIgnoreCase)) {
+                        value.MarkerId = attrValue;
+                    } else if (key.Equals(nameof(MarkerInfo.Icon), StringComparison.InvariantCultureIgnoreCase)) {
                         value.Icon = attrValue;
-                    } else if (key.Equals(nameof(FeatureInfo.Map), StringComparison.InvariantCultureIgnoreCase)) {
+                    } else if (key.Equals(nameof(MarkerInfo.Map), StringComparison.InvariantCultureIgnoreCase)) {
                         value.Map = attrValue;
-                    } else if (key.Equals(nameof(FeatureInfo.DialogKey), StringComparison.InvariantCultureIgnoreCase)) {
+                    } else if (key.Equals(nameof(MarkerInfo.DialogKey), StringComparison.InvariantCultureIgnoreCase)) {
                         value.DialogKey = attrValue;
                     }
                 }
@@ -229,29 +229,29 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             }
         }
         
-        public struct FeatureInfo {
+        public struct MarkerInfo {
             /// <summary>
             /// The icon in the Gui atlas.
             /// </summary>
             public string Icon;
             
             /// <summary>
-            /// A key into Dialog.Clean for features that include a title.
+            /// A key into Dialog.Clean for markers that include a title.
             /// </summary>
             public string DialogKey;
             
             /// <summary>
-            /// A unique id for this feature. Also used to identify and sort warps.
+            /// A unique id for this marker. Also used to identify and sort warps.
             /// </summary>
-            public string FeatureId;
+            public string MarkerId;
             
             /// <summary>
-            /// The type of feature. This allows for filtering in the controller.
+            /// The type of marker. This allows for filtering in the controller.
             /// </summary>
-            public FeatureType Type;
+            public MarkerType Type;
             
             /// <summary>
-            /// The position of the feature on the map.
+            /// The position of the marker on the map.
             /// </summary>
             public Vector2 Position;
             
@@ -261,12 +261,12 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             public string SID;
             
             /// <summary>
-            /// The room within the map that this feature belongs to.
+            /// The room within the map that this marker belongs to.
             /// </summary>
             public string Room;
             
             /// <summary>
-            /// The name of the map to load when using a feature type of <see cref="FeatureType.Map"/>.
+            /// The name of the map to load when using a marker type of <see cref="MarkerType.Map"/>.
             /// </summary>
             public string Map;
             
@@ -275,48 +275,48 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             /// </summary>
             public MapInfo MapInfo;
 
-            public static bool TryParse(EntityData data, ControllerInfo controllerInfo, out FeatureInfo value) {
+            public static bool TryParse(EntityData data, ControllerInfo controllerInfo, out MarkerInfo value) {
                 value = default;
                 
                 // CU2 warp entity
                 if (data.Name == "CollabUtils2/LobbyMapWarp") {
-                    value.Type = FeatureType.Warp;
+                    value.Type = MarkerType.Warp;
                     value.DialogKey = data.Attr("dialogKey");
-                    value.FeatureId = data.Attr("warpId");
+                    value.MarkerId = data.Attr("warpId");
                     value.Icon = data.Attr("icon");
                 }
                 // CU2 rainbow berry
                 else if (data.Name == "CollabUtils2/RainbowBerry") {
-                    value.Type = FeatureType.RainbowBerry;
+                    value.Type = MarkerType.RainbowBerry;
                 }
                 // CU2 heart door
                 else if (data.Name == "CollabUtils2/MiniHeartDoor") {
-                    value.Type = FeatureType.HeartDoor;
+                    value.Type = MarkerType.HeartDoor;
                 }
                 // CU2 journal trigger
                 else if (data.Name == "CollabUtils2/JournalTrigger") {
-                    value.Type = FeatureType.Journal;
+                    value.Type = MarkerType.Journal;
                 }
                 // CU2 map trigger
                 else if (data.Name == "CollabUtils2/ChapterPanelTrigger") {
                     value.Map = data.Attr("map");
-                    value.Type = value.Map.Contains("0-Gyms") ? FeatureType.Gym : FeatureType.Map;
+                    value.Type = value.Map.Contains("0-Gyms") ? MarkerType.Gym : MarkerType.Map;
                 }
                 // XaphanHelper warp station (can only be warped to, not from)
                 else if (data.Name == "XaphanHelper/WarpStation" && controllerInfo != null) {
-                    value.Type = FeatureType.Warp;
-                    value.FeatureId = data.Int("index").ToString();
-                    value.DialogKey = $"{LobbyHelper.GetCollabNameForLevelSet(controllerInfo.LevelSet)}_0_Lobbies_Warp_Ch{controllerInfo.LobbyIndex}_{data.Level.Name}_{value.FeatureId}";
+                    value.Type = MarkerType.Warp;
+                    value.MarkerId = data.Int("index").ToString();
+                    value.DialogKey = $"{LobbyHelper.GetCollabNameForLevelSet(controllerInfo.LevelSet)}_0_Lobbies_Warp_Ch{controllerInfo.LobbyIndex}_{data.Level.Name}_{value.MarkerId}";
                 }
                 // check the memorial entity
                 else if (controllerInfo != null && data.ID == controllerInfo.MemorialId) {
-                    value.Type = FeatureType.Memorial;
+                    value.Type = MarkerType.Memorial;
                 }
-                // something from the CustomFeatures property
+                // something from the CustomMarkers property
                 else if (controllerInfo != null && controllerInfo.TryCreateCustom(data, out value)) {
                     // do nothing
                 }
-                // not a valid map feature, skip
+                // not a valid map marker, skip
                 else {
                     return false;
                 }
@@ -324,41 +324,41 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 // grab the entity's position
                 value.Position = data.Position;
 
-                // if we haven't explictly set a feature id, default to the type and entity id
-                if (string.IsNullOrWhiteSpace(value.FeatureId)) {
-                    value.FeatureId = $"{value.Type}_{data.ID}";
+                // if we haven't explictly set a marker id, default to the type and entity id
+                if (string.IsNullOrWhiteSpace(value.MarkerId)) {
+                    value.MarkerId = $"{value.Type}_{data.ID}";
                 }
 
                 // if we haven't explicitly set an icon, use the one defined in the controller for the given type
                 // or fall back to some defaults
                 if (string.IsNullOrWhiteSpace(value.Icon)) {
                     switch (value.Type) {
-                        case FeatureType.Warp:
+                        case MarkerType.Warp:
                             value.Icon = controllerInfo?.WarpIcon ?? "CollabUtils2/lobbies/warp";
                             break;
-                        case FeatureType.RainbowBerry:
+                        case MarkerType.RainbowBerry:
                             value.Icon = controllerInfo?.RainbowBerryIcon ?? "CollabUtils2/lobbies/rainbowBerry";
                             break;
-                        case FeatureType.HeartDoor:
+                        case MarkerType.HeartDoor:
                             value.Icon = controllerInfo?.HeartDoorIcon ?? "CollabUtils2/lobbies/heartgate";
                             break;
-                        case FeatureType.Gym:
+                        case MarkerType.Gym:
                             value.Icon = controllerInfo?.GymIcon ?? "CollabUtils2/lobbies/gym";
                             break;
-                        case FeatureType.Map:
+                        case MarkerType.Map:
                             value.Icon = controllerInfo?.MapIcon ?? "CollabUtils2/lobbies/map";
                             break;
-                        case FeatureType.Journal:
+                        case MarkerType.Journal:
                             value.Icon = controllerInfo?.JournalIcon ?? "CollabUtils2/lobbies/journal";
                             break;
-                        case FeatureType.Memorial:
+                        case MarkerType.Memorial:
                             value.Icon = controllerInfo?.MemorialIcon ?? "CollabUtils2/lobbies/memorial";
                             break;
                     }
                 }
 
-                // if this feature represents an enterable map, try to read the data for that map
-                if (value.Type == FeatureType.Map && !string.IsNullOrWhiteSpace(value.Map)) {
+                // if this marker represents an enterable map, try to read the data for that map
+                if (value.Type == MarkerType.Map && !string.IsNullOrWhiteSpace(value.Map)) {
                     value.MapInfo = new MapInfo(value.Map);
                 }
 
@@ -394,7 +394,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             }
         }
         
-        public enum FeatureType {
+        public enum MarkerType {
             Custom = 0,
             Warp,
             RainbowBerry,

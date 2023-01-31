@@ -20,8 +20,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private readonly List<LobbySelection> lobbySelections = new List<LobbySelection>();
 
         // all warps for the selected lobby
-        private readonly List<LobbyMapController.FeatureInfo> allWarps = new List<LobbyMapController.FeatureInfo>();
-        private readonly List<LobbyMapController.FeatureInfo> activeWarps = new List<LobbyMapController.FeatureInfo>();
+        private readonly List<LobbyMapController.MarkerInfo> allWarps = new List<LobbyMapController.MarkerInfo>();
+        private readonly List<LobbyMapController.MarkerInfo> activeWarps = new List<LobbyMapController.MarkerInfo>();
 
         // current lobby setup
         private int selectedLobbyIndex;
@@ -35,7 +35,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private Texture2D mapTexture;
         private Texture2D overlayTexture;
         private VirtualRenderTarget renderTarget;
-        private readonly List<Component> featureComponents = new List<Component>();
+        private readonly List<Component> markerComponents = new List<Component>();
         private readonly MTexture arrowTexture = GFX.Gui["towerarrow"];
         private Sprite heartSprite;
         private Sprite maddyRunSprite;
@@ -251,7 +251,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 visitedLobbySIDs.Add(thisLobbyKey);
             }
             
-            // parse all the features in all the lobbies that have been visited
+            // parse all the markers in all the lobbies that have been visited
             lobbySelections.Clear();
             foreach (var key in visitedLobbySIDs) {
                 // get the room and sid
@@ -273,18 +273,18 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     ? mapData.Levels.Select(l => findEntityData(l, mapControllerName)).FirstOrDefault()
                     : findEntityData(levelData, mapControllerName);
 
-                // parse the features in the room if a controller was found
+                // parse the markers in the room if a controller was found
                 if (entityData != null) {
                     var selection = new LobbySelection(entityData, mapData);
-                    var features = new List<LobbyMapController.FeatureInfo>();
+                    var markers = new List<LobbyMapController.MarkerInfo>();
                     foreach (var data in selection.Data.Level.Entities.Concat(selection.Data.Level.Triggers)) {
-                        if (LobbyMapController.FeatureInfo.TryParse(data, selection.Info, out var value)) {
+                        if (LobbyMapController.MarkerInfo.TryParse(data, selection.Info, out var value)) {
                             value.SID = selection.SID;
                             value.Room = selection.Room;
-                            features.Add(value);
+                            markers.Add(value);
                         }
                     }
-                    selection.Features = features.ToArray();
+                    selection.Markers = markers.ToArray();
                     lobbySelections.Add(selection);
                 }
             }
@@ -302,7 +302,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         /// </summary>
         public void updateSelectedLobby(bool first = false) {
             var selection = lobbySelections[selectedLobbyIndex];
-            var features = lobbySelections[selectedLobbyIndex].Features;
+            var markers = lobbySelections[selectedLobbyIndex].Markers;
             lobbyMapInfo = selection.Info;
 
             // get or create a visit manager
@@ -314,14 +314,14 @@ namespace Celeste.Mod.CollabUtils2.UI {
             // find warps
             allWarps.Clear();
             activeWarps.Clear();
-            allWarps.AddRange(features.Where(f => f.Type == LobbyMapController.FeatureType.Warp).OrderBy(f => f.FeatureId));
+            allWarps.AddRange(markers.Where(f => f.Type == LobbyMapController.MarkerType.Warp).OrderBy(f => f.MarkerId));
             activeWarps.AddRange(openedWithRevealMap ? allWarps : allWarps.Where(w => isVisited(w.Position)));
 
-            // regenerate feature components
-            featureComponents.ForEach(c => c.RemoveSelf());
-            featureComponents.Clear();
-            featureComponents.AddRange(features.Where(f => lobbyMapInfo.ShouldShowFeature(f)).Select(createFeatureComponent));
-            featureComponents.ForEach(Add);
+            // regenerate marker components
+            markerComponents.ForEach(c => c.RemoveSelf());
+            markerComponents.Clear();
+            markerComponents.AddRange(markers.Where(f => lobbyMapInfo.ShouldShowMarker(f)).Select(createMarkerComponent));
+            markerComponents.ForEach(Add);
             
             // if this is the first time we've selected a lobby, select the nearest warp
             if (first && Engine.Scene is Level level && level.Tracker.GetEntity<Player>() is Player player) {
@@ -366,8 +366,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
             var boundsAspectRatio = (float) padded.Width / padded.Height;
             scaleMultiplier = mapAspectRatio > boundsAspectRatio ? (float) padded.Width / mapTexture.Width : (float) padded.Height / mapTexture.Height;
 
-            // update feature positions
-            updateFeatures();
+            // update marker positions
+            updateMarkers();
             
             // add heart component
             if (heartSprite != null && !lobbyMapInfo.ShowHeartCount) {
@@ -396,10 +396,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         /// <summary>
-        /// Creates a component that represents the passed feature. Currently only supports an Image subclass.
+        /// Creates a component that represents the passed marker. Currently only supports an Image subclass.
         /// </summary>
-        private Component createFeatureComponent(LobbyMapController.FeatureInfo featureInfo) {
-            return new FeatureImage(featureInfo);
+        private Component createMarkerComponent(LobbyMapController.MarkerInfo markerInfo) {
+            return new MarkerImage(markerInfo);
         }
 
         #endregion
@@ -571,18 +571,18 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         /// <summary>
-        /// Ensures feature representations have the right position and scale.
+        /// Ensures marker representations have the right position and scale.
         /// </summary>
-        private void updateFeatures() {
-            // for now we assume features are all Images
+        private void updateMarkers() {
+            // for now we assume markers are all Images
             var scale = finalScale;
             var actualWidth = mapTexture.Width * scale;
             var actualHeight = mapTexture.Height * scale;
             var scaleOffset = zoomLevels[1] - actualScale;
             var imageScale = scaleOffset <= 0 ? 1f : Calc.LerpClamp(1f, 0.75f, scaleOffset / (zoomLevels[1] - zoomLevels[0]));
 
-            // move and scale features
-            foreach (FeatureImage image in featureComponents) {
+            // move and scale markers
+            foreach (MarkerImage image in markerComponents) {
                 var origin = originForPosition(image.Info.Position);
                 var originOffset = origin - actualOrigin;
                 image.Position = new Vector2(bounds.Center.X + originOffset.X * actualWidth, bounds.Center.Y + originOffset.Y * actualHeight);
@@ -666,7 +666,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     if (translateTimeRemaining <= 0) actualOrigin = targetOrigin;
                 }
 
-                updateFeatures();
+                updateMarkers();
 
                 yield return null;
             }
@@ -753,7 +753,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         /// <summary>
         /// Teleports to the selected warp within the current map.
         /// </summary>
-        private void teleportToWarp(LobbyMapController.FeatureInfo warp, string wipeType, float wipeDuration) {
+        private void teleportToWarp(LobbyMapController.MarkerInfo warp, string wipeType, float wipeDuration) {
             if (Scene is Level level && level.Tracker.GetEntity<Player>() is Player player) {
                 if (warp.SID == level.Session.Area.SID) {
                     level.Add(new TeleportCutscene(player, warp.Room, warp.Position, 0, 0, true, 0f, wipeType, wipeDuration));
@@ -836,16 +836,16 @@ namespace Celeste.Mod.CollabUtils2.UI {
         #region Nested Classes
 
         /// <summary>
-        /// Represents a map feature as an image.
+        /// Represents a map marker as an image.
         /// </summary>
-        private class FeatureImage : Image {
-            public readonly LobbyMapController.FeatureInfo Info;
+        private class MarkerImage : Image {
+            public readonly LobbyMapController.MarkerInfo Info;
 
-            public FeatureImage(LobbyMapController.FeatureInfo info) : base(null) {
+            public MarkerImage(LobbyMapController.MarkerInfo info) : base(null) {
                 Info = info;
 
                 var icon = info.Icon;
-                if (info.Type == LobbyMapController.FeatureType.Map) {
+                if (info.Type == LobbyMapController.MarkerType.Map) {
                     if (info.MapInfo.Difficulty >= 0 && GFX.Gui.Has(icon + info.MapInfo.Difficulty)) {
                         icon += info.MapInfo.Difficulty;
                     }
@@ -867,7 +867,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             public readonly EntityData Data;
             public readonly string SID;
             public readonly string Room;
-            public LobbyMapController.FeatureInfo[] Features;
+            public LobbyMapController.MarkerInfo[] Markers;
 
             public LobbySelection(EntityData data, MapData map) {
                 Info = new LobbyMapController.ControllerInfo(data, map);
