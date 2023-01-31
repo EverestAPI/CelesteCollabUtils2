@@ -10,7 +10,7 @@ lobbyMapWarp.placements = {
             dialogKey = "",
             spritePath = "decals/1-forsakencity/bench_concrete",
             spriteFlipX = false,
-            activateSpritePath = "CollabUtils2/characters/benchSit",
+            activateSpritePath = "CollabUtils2/characters/sitBench",
             activateSpriteFlipX = false,
             playerFacing = 1,
             interactOffsetY = -16,
@@ -19,5 +19,6 @@ lobbyMapWarp.placements = {
 }
 
 lobbyMapWarp.texture = "decals/1-forsakencity/bench_concrete"
+lobbyMapWarp.justification = {0.5, 1.0}
 
 return lobbyMapWarp

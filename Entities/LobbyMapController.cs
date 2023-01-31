@@ -308,6 +308,10 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     value.FeatureId = data.Int("index").ToString();
                     value.DialogKey = $"{LobbyHelper.GetCollabNameForLevelSet(controllerInfo.LevelSet)}_0_Lobbies_Warp_Ch{controllerInfo.LobbyIndex}_{data.Level.Name}_{value.FeatureId}";
                 }
+                // check the memorial entity
+                else if (controllerInfo != null && data.ID == controllerInfo.MemorialId) {
+                    value.Type = FeatureType.Memorial;
+                }
                 // something from the CustomFeatures property
                 else if (controllerInfo != null && controllerInfo.TryCreateCustom(data, out value)) {
                     // do nothing
@@ -346,6 +350,9 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                             break;
                         case FeatureType.Journal:
                             value.Icon = controllerInfo?.JournalIcon ?? "CollabUtils2/lobbies/journal";
+                            break;
+                        case FeatureType.Memorial:
+                            value.Icon = controllerInfo?.MemorialIcon ?? "CollabUtils2/lobbies/memorial";
                             break;
                     }
                 }
@@ -395,6 +402,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             Gym,
             Map,
             Journal,
+            Memorial,
         }
     }
 }
