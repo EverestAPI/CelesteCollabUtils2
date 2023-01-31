@@ -256,7 +256,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         /// Loads all LobbyMapController data from maps in this levelset, if at least one warp has been unlocked. 
         /// </summary>
         private void getLobbyControllers(Level level) {
-            // we can only return lobbies that have at least one warp unlocked, or this one
+            // we can only return lobbies that have at least one visited position, or this one
             var collabName = level.Session.Area.SID.Substring(0, level.Session.Area.SID.IndexOf("/", StringComparison.Ordinal) + 1);
             var visitedLobbySIDs = CollabModule.Instance.SaveData.VisitedLobbyPositions.Keys.Where(k => k.StartsWith(collabName)).ToList();
             var thisLobbyKey = $"{level.Session.Area.SID}.{level.Session.Level}";
@@ -267,6 +267,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             // parse all the features in all the lobbies that have been visited
             lobbySelections.Clear();
             foreach (var key in visitedLobbySIDs) {
+                // get the room and sid
                 var room = string.Empty;
                 var sid = key;
                 if (key.LastIndexOf('.') > key.LastIndexOf('/')) {
@@ -274,15 +275,18 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     sid = key.Substring(0, key.LastIndexOf('.'));
                 }
                 
+                // get the map data from the lobby sid
                 var mapData = AreaData.Get(sid)?.Mode.FirstOrDefault()?.MapData;
                 if (mapData == null) continue;
                 
+                // find the map controller in the specified room, or the first in the map if no room specified
                 const string mapControllerName = "CollabUtils2/LobbyMapController";
                 var levelData = string.IsNullOrWhiteSpace(room) ? null : mapData.Get(room);
                 var entityData = levelData == null
                     ? mapData.Levels.Select(l => findEntityData(l, mapControllerName)).FirstOrDefault()
                     : findEntityData(levelData, mapControllerName);
 
+                // parse the features in the room if a controller was found
                 if (entityData != null) {
                     var selection = new LobbySelection(entityData, mapData);
                     var features = new List<LobbyMapController.FeatureInfo>();

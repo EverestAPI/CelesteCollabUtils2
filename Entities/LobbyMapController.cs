@@ -74,6 +74,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             /// This is not required for CU2 entities.
             /// </summary>
             public CustomFeatureEntityInfo[] CustomFeatures;
+
+            public int MemorialId;
             
             public string WarpIcon;
             public string RainbowBerryIcon;
@@ -81,6 +83,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             public string GymIcon;
             public string MapIcon;
             public string JournalIcon;
+            public string MemorialIcon;
 
             public bool ShowWarps;
             public bool ShowRainbowBerry;
@@ -100,6 +103,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             public ControllerInfo(EntityData data, MapData mapData = null) {
                 MapTexture = data.Attr("mapTexture");
                 TotalMaps = data.Int("totalMaps");
+                MemorialId = data.Int("memorialId");
 
                 WarpIcon = data.Attr("warpIcon", "CollabUtils2/lobbies/warp");
                 RainbowBerryIcon = data.Attr("rainbowBerryIcon", "CollabUtils2/lobbies/rainbowBerry");
@@ -107,6 +111,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 GymIcon = data.Attr("gymIcon", "CollabUtils2/lobbies/gym");
                 MapIcon = data.Attr("mapIcon", "CollabUtils2/lobbies/map");
                 JournalIcon = data.Attr("journalIcon", "CollabUtils2/lobbies/journal");
+                MemorialIcon = data.Attr("memorialIcon", "CollabUtils2/lobbies/memorial");
 
                 ShowWarps = data.Bool("showWarps", true);
                 ShowRainbowBerry = data.Bool("showRainbowBerry", true);
