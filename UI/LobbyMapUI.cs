@@ -1,4 +1,3 @@
-using Celeste.Mod.CollabUtils2.Cutscenes;
 using Celeste.Mod.CollabUtils2.Entities;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -185,7 +184,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 if (Input.MenuConfirm.Pressed && warpIndex >= 0 && warpIndex < activeWarps.Count) {
                     var warp = activeWarps[warpIndex];
                     confirmWiggler.Start();
-                    teleportToWarp(warp, "Fade", 0.5f);
+                    teleportToWarp(warp);
                 } else if (Input.MenuCancel.Pressed) {
                     close = true;
                 } else if (Input.ESC.Pressed) {
@@ -753,36 +752,44 @@ namespace Celeste.Mod.CollabUtils2.UI {
         /// <summary>
         /// Teleports to the selected warp within the current map.
         /// </summary>
-        private void teleportToWarp(LobbyMapController.MarkerInfo warp, string wipeType, float wipeDuration) {
-            if (Scene is Level level && level.Tracker.GetEntity<Player>() is Player player) {
-                if (warp.SID == level.Session.Area.SID) {
-                    level.Add(new TeleportCutscene(player, warp.Room, warp.Position, 0, 0, true, 0f, wipeType, wipeDuration));
+        private void teleportToWarp(LobbyMapController.MarkerInfo warp) {
+            if (!(Scene is Level level)) return;
+
+            const float wipeDuration = 0.5f;
+            new MountainWipe(level, false, () => {
+                if (warp.SID != level.Session.Area.SID) {
+                    level.OnEndOfFrame += () => {
+                        var areaId = AreaData.Areas.FirstOrDefault(a => a.SID == warp.SID)?.ID ?? level.Session.Area.ID;
+                        var levelData = AreaData.Get(new AreaKey(areaId)).Mode[0].MapData.Get(warp.Room);
+                        var session = new Session(new AreaKey(areaId)) { Level = warp.Room, FirstLevel = false, RespawnPoint = levelData.Spawns.ClosestTo(levelData.Position + warp.Position), };
+                        LevelEnter.Go(session, fromSaveData: false);
+                    };
+                } else if (warp.Room != level.Session.Level) {
+                    level.OnEndOfFrame += () => {
+                        if (level.Tracker.GetEntity<Player>() is Player oldPlayer) {
+                            Leader.StoreStrawberries(oldPlayer.Leader);
+                            level.Remove(oldPlayer);
+                        }
+
+                        level.UnloadLevel();
+                        level.Session.Level = warp.Room;
+                        level.Session.FirstLevel = false;
+                        level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top) + warp.Position);
+                        level.LoadLevel(Player.IntroTypes.Respawn);
+                        level.Wipe?.Cancel();
+                        level.Camera.Position = level.Tracker.GetEntity<Player>()?.CameraTarget ?? Vector2.Zero;
+                        new MountainWipe(level, true) { Duration = wipeDuration };
+                    };
                 } else {
-                    var targetAreaId = AreaData.Areas.FirstOrDefault(a => a.SID == warp.SID)?.ID ?? level.Session.Area.ID;
-
-                    ScreenWipe wipe = null;
-                    if (typeof(Celeste).Assembly.GetType($"Celeste.{wipeType}Wipe") is Type type) {
-                        wipe = (ScreenWipe) Activator.CreateInstance(type, level, false, new Action(() => teleportToChapter(targetAreaId, warp.Room, warp.Position)));
-                    } else {
-                        wipe = new FadeWipe(level, false, () => teleportToChapter(targetAreaId, warp.Room, warp.Position));
-                    }
-
-                    wipe.Duration = Math.Min(1.35f, wipeDuration);
+                    level.OnEndOfFrame += () => {
+                        if (!(level.Tracker.GetEntity<Player>() is Player player)) return;
+                        player.Position = level.GetSpawnPoint(level.Session.LevelData.Position + warp.Position);
+                        level.Session.RespawnPoint = player.Position;
+                        level.Camera.Position = player.CameraTarget;
+                        new MountainWipe(level, true) { Duration = wipeDuration };
+                    };
                 }
-            }
-        }
-
-        /// <summary>
-        /// Teleports to the selected chapter with room and position.
-        /// </summary>
-        private static void teleportToChapter(int areaId, string room, Vector2 position) {
-            var levelData = AreaData.Get(new AreaKey(areaId)).Mode[0].MapData.Get(room);
-            var session = new Session(new AreaKey(areaId)) {
-                Level = room,
-                FirstLevel = false,
-                RespawnPoint = levelData.Spawns.ClosestTo(levelData.Position + position),
-            };
-            LevelEnter.Go(session, fromSaveData: false);
+            }) { Duration = wipeDuration };
         }
 
         /// <summary>
