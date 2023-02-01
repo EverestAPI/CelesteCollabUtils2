@@ -621,11 +621,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
         /// <summary>
         /// Closes the screen and resets PauseLock.
         /// </summary>
-        private void closeScreen() {
-            Audio.Play(SFX.ui_game_unpause);
-            Add(new Coroutine(transitionRoutine(onFadeOut: () => {
-                Visible = false;
-            }, onFadeIn: () => {
+        private void closeScreen(bool force = false) {
+            void DoClose() {
                 if (Scene is Level level) {
                     level.PauseLock = false;
 
@@ -635,7 +632,15 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 }
 
                 RemoveSelf();
-            })));
+            }
+            
+            if (!force) {
+                Audio.Play(SFX.ui_game_unpause);
+                Add(new Coroutine(transitionRoutine(onFadeOut: () => Visible = false, onFadeIn: DoClose)));
+            } else {
+                Visible = false;
+                DoClose();
+            }
         }
 
         #endregion
@@ -755,8 +760,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private void teleportToWarp(LobbyMapController.MarkerInfo warp) {
             if (!(Scene is Level level)) return;
 
+            focused = false;
             const float wipeDuration = 0.5f;
             new MountainWipe(level, false, () => {
+                closeScreen(true);
                 if (warp.SID != level.Session.Area.SID) {
                     level.OnEndOfFrame += () => {
                         var areaId = AreaData.Areas.FirstOrDefault(a => a.SID == warp.SID)?.ID ?? level.Session.Area.ID;
@@ -764,7 +771,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         var session = new Session(new AreaKey(areaId)) { Level = warp.Room, FirstLevel = false, RespawnPoint = levelData.Spawns.ClosestTo(levelData.Position + warp.Position), };
                         LevelEnter.Go(session, fromSaveData: false);
                     };
-                } else if (warp.Room != level.Session.Level) {
+                } else {
                     level.OnEndOfFrame += () => {
                         if (level.Tracker.GetEntity<Player>() is Player oldPlayer) {
                             Leader.StoreStrawberries(oldPlayer.Leader);
@@ -777,15 +784,12 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top) + warp.Position);
                         level.LoadLevel(Player.IntroTypes.Respawn);
                         level.Wipe?.Cancel();
-                        level.Camera.Position = level.Tracker.GetEntity<Player>()?.CameraTarget ?? Vector2.Zero;
-                        new MountainWipe(level, true) { Duration = wipeDuration };
-                    };
-                } else {
-                    level.OnEndOfFrame += () => {
-                        if (!(level.Tracker.GetEntity<Player>() is Player player)) return;
-                        player.Position = level.GetSpawnPoint(level.Session.LevelData.Position + warp.Position);
-                        level.Session.RespawnPoint = player.Position;
-                        level.Camera.Position = player.CameraTarget;
+
+                        if (level.Tracker.GetEntity<Player>() is Player newPlayer) {
+                            level.Camera.Position = newPlayer.CameraTarget;
+                            Leader.RestoreStrawberries(newPlayer.Leader);
+                        }
+                        
                         new MountainWipe(level, true) { Duration = wipeDuration };
                     };
                 }
