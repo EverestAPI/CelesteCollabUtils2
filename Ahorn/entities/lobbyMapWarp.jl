@@ -1,0 +1,43 @@
+module CollabUtils2LobbyMapWarp
+
+using ..Ahorn, Maple
+
+const default_sprite = "decals/1-forsakencity/bench_concrete"
+const default_activate_sprite = "CollabUtils2/characters/sitBench"
+
+@mapdef Entity "CollabUtils2/LobbyMapWarp" LobbyMapWarp(
+    x::Integer, y::Integer,
+    warpId::String="", icon::String="", dialogKey::String="",
+    spritePath::String=default_sprite, spriteFlipX::Bool=false,
+    activateSpritePath::String=default_activate_sprite, activateSpriteFlipX::Bool=false,
+    playerFacing::Integer=1, interactOffsetY::Integer=-16, depth::Integer=2000
+)
+
+const placements = Ahorn.PlacementDict(
+    "Lobby Map Warp (Collab Utils 2)" => Ahorn.EntityPlacement(
+        LobbyMapWarp
+    )
+)
+
+const facings = Dict{String, Integer}(
+    "Left" => -1,
+    "Right" => 1,
+)
+
+Ahorn.editingOptions(entity::LobbyMapWarp) = Dict{String, Any}( "playerFacing" => facings )
+
+function Ahorn.selection(entity::LobbyMapWarp)
+    x, y = Ahorn.position(entity)
+    sprite = get(entity.data, "spritePath", default_sprite)
+    flipX = get(entity.data, "spriteFlipX", false)
+    return Ahorn.getSpriteRectangle(sprite, x, y, jx=0.5, jy=1.0)
+end
+
+function Ahorn.render(ctx::Ahorn.Cairo.CairoContext, entity::LobbyMapWarp, room::Maple.Room)
+    x, y = Ahorn.position(entity)
+    sprite = get(entity.data, "spritePath", default_sprite)
+    flipX = get(entity.data, "spriteFlipX", false)
+    Ahorn.drawSprite(ctx, sprite, 0, 0, sx=flipX ? -1 : 1, jx=0.5, jy=1.0)
+end
+
+end

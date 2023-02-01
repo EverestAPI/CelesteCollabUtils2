@@ -1,6 +1,7 @@
 local lobbyMapMarker = {}
 lobbyMapMarker.name = "CollabUtils2/LobbyMapMarker"
 lobbyMapMarker.depth = -100
+lobbyMapMarker.texture = "CollabUtils2/editor_lobbymapmarker"
 lobbyMapMarker.placements = {
     {
         name = "default",
@@ -10,10 +11,4 @@ lobbyMapMarker.placements = {
     }
 }
 
-function lobbyMapMarker.texture(room, entity)
-    return entity.icon or "CollabUtils2/lobbies/memorial"
-end
-
 return lobbyMapMarker
-
-
