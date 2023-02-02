@@ -9,32 +9,30 @@ using System.Linq;
 namespace Celeste.Mod.CollabUtils2.Entities {
     [CustomEntity("CollabUtils2/LobbyMapWarp")]
     public class LobbyMapWarp : Entity {
-        private readonly string spritePath;
-        private readonly bool spriteFlipX;
-        private readonly string activateSpritePath;
+        private readonly string warpSpritePath;
+        private readonly bool warpSpriteFlipX;
+        private readonly bool playActivateSprite;
         private readonly bool activateSpriteFlipX;
         private readonly Facings playerFacing;
         
         private LobbyMapController.MarkerInfo info;
 
-        private Sprite sprite;
+        private Image image;
 
         public LobbyMapWarp(EntityData data, Vector2 offset) : base(data.Position + offset) {
-            spritePath = data.Attr("spritePath", "decals/1-forsakencity/bench_concrete");
-            spriteFlipX = data.Bool("spriteFlipX");
-            activateSpritePath = data.Attr("activateSpritePath", "CollabUtils2/characters/sitBench");
+            warpSpritePath = data.Attr("warpSpritePath", "decals/1-forsakencity/bench_concrete");
+            warpSpriteFlipX = data.Bool("warpSpriteFlipX");
+            playActivateSprite = data.Bool("playActivateSprite", true);
             activateSpriteFlipX = data.Bool("activateSpriteFlipX");
             playerFacing = (Facings) data.Int("playerFacing", (int) Facings.Right);
             Depth = data.Int("depth", Depths.Below);
 
             LobbyMapController.MarkerInfo.TryParse(data, null, out info);
 
-            if (!string.IsNullOrWhiteSpace(spritePath)) {
-                Add(sprite = new Sprite(GFX.Game, spritePath));
-                sprite.Effects = spriteFlipX ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-                sprite.Justify = new Vector2(0.5f, 1f);
-                sprite.Add("idle", string.Empty);
-                sprite.Play("idle");
+            if (!string.IsNullOrWhiteSpace(warpSpritePath)) {
+                Add(image = new Image(GFX.Game[warpSpritePath]));
+                image.Effects = warpSpriteFlipX ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+                image.JustifyOrigin(0.5f, 1f);
             }
             
             Add(new TalkComponent(new Rectangle(-16, -32, 32, 32), new Vector2(0, data.Float("interactOffsetY", -16f)), onTalk) {
@@ -51,7 +49,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         private void onTalk(Player player) {
             if (player.Scene is Level level) {
-                if (!string.IsNullOrWhiteSpace(activateSpritePath)) {
+                if (playActivateSprite) {
                     Add(new Coroutine(activateRoutine(player)));
                 } else {
                     level.Add(new LobbyMapUI());
@@ -67,25 +65,17 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             player.Facing = playerFacing;
 
             player.Sprite.Visible = player.Hair.Visible = false;
-            
-            var playerSprite = new Sprite(GFX.Game, activateSpritePath);
-            playerSprite.Add("idle", "", 0.08f);
-            playerSprite.Justify = new Vector2(0.5f, 1f);
+
+            var playerSprite = GFX.SpriteBank.Create("CollabUtils2_sitBench");
             playerSprite.Effects = activateSpriteFlipX ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
             Add(playerSprite);
-            playerSprite.Play("idle");
-
-            Sprite playerHairSprite = null;
-            var hairSpritePath = activateSpritePath + "Hair";
-            if (GFX.Game.Textures.Keys.Any(t => t.StartsWith(hairSpritePath))) {
-                playerHairSprite = new Sprite(GFX.Game, activateSpritePath + "Hair");
-                playerHairSprite.Add("idle", "", 0.08f);
-                playerHairSprite.Justify = new Vector2(0.5f, 1f);
-                playerHairSprite.Color = player.Hair.Color;
-                playerHairSprite.Effects = activateSpriteFlipX ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-                Add(playerHairSprite);
-                playerHairSprite.Play("idle");
-            }
+            playerSprite.Play("sit");
+            
+            var playerHairSprite = GFX.SpriteBank.Create("CollabUtils2_sitBench");
+            playerHairSprite.Effects = activateSpriteFlipX ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+            playerHairSprite.Color = player.Hair.Color;
+            Add(playerHairSprite);
+            playerHairSprite.Play("sitHair");
 
             while (playerSprite.Animating) {
                 yield return null;
@@ -96,7 +86,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             yield return 0.5f;
             
             playerSprite.RemoveSelf();
-            playerHairSprite?.RemoveSelf();
+            playerHairSprite.RemoveSelf();
 
             player.Sprite.Visible = player.Hair.Visible = true;
         }

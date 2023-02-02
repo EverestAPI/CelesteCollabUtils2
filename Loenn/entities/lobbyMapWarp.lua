@@ -20,9 +20,9 @@ lobbyMapWarp.placements = {
             warpId = "",
             icon = "",
             dialogKey = "",
-            spritePath = "decals/1-forsakencity/bench_concrete",
-            spriteFlipX = false,
-            activateSpritePath = "CollabUtils2/characters/sitBench",
+            warpSpritePath = "decals/1-forsakencity/bench_concrete",
+            warpSpriteFlipX = false,
+            playActivateSprite = true,
             activateSpriteFlipX = false,
             playerFacing = 1,
             interactOffsetY = -16,
@@ -32,7 +32,7 @@ lobbyMapWarp.placements = {
 }
 
 function lobbyMapWarp.sprite(room, entity)
-    local spritePath = entity.spritePath or "decals/1-forsakencity/bench_concrete"
+    local spritePath = entity.warpSpritePath or "decals/1-forsakencity/bench_concrete"
     local sprite = drawableSprite.fromTexture(spritePath, entity)
     sprite:setJustification(0.5, 1.0)
     sprite:setScale(entity.spriteFlipX and -1 or 1, 1)

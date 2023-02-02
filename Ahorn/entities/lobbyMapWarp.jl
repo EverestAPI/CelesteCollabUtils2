@@ -3,13 +3,12 @@ module CollabUtils2LobbyMapWarp
 using ..Ahorn, Maple
 
 const default_sprite = "decals/1-forsakencity/bench_concrete"
-const default_activate_sprite = "CollabUtils2/characters/sitBench"
 
 @mapdef Entity "CollabUtils2/LobbyMapWarp" LobbyMapWarp(
     x::Integer, y::Integer,
     warpId::String="", icon::String="", dialogKey::String="",
-    spritePath::String=default_sprite, spriteFlipX::Bool=false,
-    activateSpritePath::String=default_activate_sprite, activateSpriteFlipX::Bool=false,
+    warpSpritePath::String=default_sprite, warpSpriteFlipX::Bool=false,
+    playActivateSprite::Bool=false, activateSpriteFlipX::Bool=false,
     playerFacing::Integer=1, interactOffsetY::Integer=-16, depth::Integer=2000
 )
 

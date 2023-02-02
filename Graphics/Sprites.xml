@@ -73,4 +73,10 @@
     <Loop id="idle" path="tarnish" delay=".08" frames="0-5,0-5,0-5,0-5,0-7" />
     <Anim id="collect" path="tarnish" delay=".07" frames="7-11"/>
   </CollabUtils2_ghostSilverBerry>
+  
+  <CollabUtils2_sitBench path="CollabUtils2/characters/" start="sit">
+    <Justify x="0.5" y="1.0" />
+    <Anim id="sit" path="sitBench" delay=".08" frames="0-17"/>
+    <Anim id="sitHair" path="sitBenchHair" delay=".08" frames="0-17"/>
+  </CollabUtils2_sitBench>
 </Sprites>
