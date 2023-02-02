@@ -369,25 +369,33 @@ namespace Celeste.Mod.CollabUtils2.UI {
             updateMarkers();
             
             // add heart component
-            if (heartSprite != null && !lobbyMapInfo.ShowHeartCount) {
-                heartSprite?.RemoveSelf();
-                heartSprite = null;
-            }
-            else if (lobbyMapInfo.ShowHeartCount) {
-                var heartPath = lobbyMapInfo.LobbyIndex <= 3
-                    ? $"collectables/heartgem/{lobbyMapInfo.LobbyIndex - 1}/"
-                    : $"CollabUtils2/crystalHeart/{(lobbyMapInfo.LobbyIndex == 4 ? "expert" : "grandmaster")}/";
-                if (heartSprite == null || heartSprite.Path != heartPath) {
-                    var lastFrame = heartSprite?.CurrentAnimationFrame ?? 0;
-                    heartSprite?.RemoveSelf();
-                    Add(heartSprite = new Sprite(GFX.Gui, heartPath));
-                    heartSprite.CenterOrigin();
+            var heartFrame = heartSprite?.CurrentAnimationFrame ?? 0;
+            heartSprite?.RemoveSelf();
+            heartSprite = null;
+            
+            if (lobbyMapInfo.ShowHeartCount) {
+                // try to get a custom id
+                var id = InGameOverworldHelper.GetGuiHeartSpriteId(selection.SID, AreaMode.Normal);
+                Logger.Log(LogLevel.Warn, nameof(CollabModule), $"{selection.SID} : {id}");
+                
+                // if no custom sprite we need to make it ourselves
+                if (id == null) {
+                    var heartPath = lobbyMapInfo.LobbyIndex <= 3
+                        ? $"collectables/heartgem/{lobbyMapInfo.LobbyIndex - 1}/"
+                        : $"CollabUtils2/crystalHeart/{(lobbyMapInfo.LobbyIndex == 4 ? "expert" : "grandmaster")}/";
+                    heartSprite = new Sprite(GFX.Gui, heartPath);
                     heartSprite.AddLoop("spin", "spin", 0.1f, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
-                    heartSprite.Scale = Vector2.One / 2f;
-                    heartSprite.Play("spin");
-                    heartSprite.SetAnimationFrame(lastFrame);
-                    heartSprite.Position = new Vector2(bounds.Left + 10, bounds.Top + 10);
+                } else {
+                    heartSprite = InGameOverworldHelper.HeartSpriteBank.Create(id);
                 }
+                
+                heartSprite.Scale = Vector2.One / 2f;
+                heartSprite.Position = new Vector2(bounds.Left + 10, bounds.Top + 10);
+                heartSprite.Justify = Vector2.Zero;
+                heartSprite.Play("spin");
+                heartSprite.SetAnimationFrame(heartFrame);
+                heartSprite.JustifyOrigin(Vector2.Zero);
+                Add(heartSprite);
 
                 var levelSetStats = SaveData.Instance.GetLevelSets().FirstOrDefault(ls => ls.Name == lobbyMapInfo.LevelSet);
                 heartCount = levelSetStats?.TotalHeartGems ?? 0;
