@@ -1,13 +1,11 @@
 local drawableSprite = require("structs.drawable_sprite")
+local celesteEnums = require("consts.celeste_enums")
 
 local lobbyMapWarp = {}
 lobbyMapWarp.name = "CollabUtils2/LobbyMapWarp"
 lobbyMapWarp.fieldInformation = {
     playerFacing = {
-        fieldType = "integer",
-        options = {
-            { "Left", -1 }, { "Right", 1 }
-        }
+        options = celesteEnums.spawn_facing_trigger_facings,
     },
     interactOffsetY = {
         fieldType = "integer",
@@ -24,7 +22,7 @@ lobbyMapWarp.placements = {
             warpSpriteFlipX = false,
             playActivateSprite = true,
             activateSpriteFlipX = false,
-            playerFacing = 1,
+            playerFacing = "Right",
             interactOffsetY = -16,
             depth = 2000,
         }

@@ -9,7 +9,7 @@ const default_sprite = "decals/1-forsakencity/bench_concrete"
     warpId::String="", icon::String="", dialogKey::String="",
     warpSpritePath::String=default_sprite, warpSpriteFlipX::Bool=false,
     playActivateSprite::Bool=false, activateSpriteFlipX::Bool=false,
-    playerFacing::Integer=1, interactOffsetY::Integer=-16, depth::Integer=2000
+    playerFacing::String="Right", interactOffsetY::Integer=-16, depth::Integer=2000
 )
 
 const placements = Ahorn.PlacementDict(
@@ -18,12 +18,7 @@ const placements = Ahorn.PlacementDict(
     )
 )
 
-const facings = Dict{String, Integer}(
-    "Left" => -1,
-    "Right" => 1,
-)
-
-Ahorn.editingOptions(entity::LobbyMapWarp) = Dict{String, Any}( "playerFacing" => facings )
+Ahorn.editingOptions(entity::LobbyMapWarp) = Dict{String, Any}( "playerFacing" => sort(Maple.spawn_facing_trigger_facings) )
 
 function Ahorn.selection(entity::LobbyMapWarp)
     x, y = Ahorn.position(entity)

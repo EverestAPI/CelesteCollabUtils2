@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Monocle;
 using System.Collections;
-using System.Linq;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
     [CustomEntity("CollabUtils2/LobbyMapWarp")]
@@ -24,7 +23,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             warpSpriteFlipX = data.Bool("warpSpriteFlipX");
             playActivateSprite = data.Bool("playActivateSprite", true);
             activateSpriteFlipX = data.Bool("activateSpriteFlipX");
-            playerFacing = (Facings) data.Int("playerFacing", (int) Facings.Right);
+            playerFacing = data.Enum("playerFacing", Facings.Right);
             Depth = data.Int("depth", Depths.Below);
 
             LobbyMapController.MarkerInfo.TryParse(data, null, out info);
