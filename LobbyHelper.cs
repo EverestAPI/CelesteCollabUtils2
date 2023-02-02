@@ -72,17 +72,24 @@ namespace Celeste.Mod.CollabUtils2 {
 
         public static int GetLobbyIndex(string sid) {
             if (!IsCollabLobby(sid)) return -1;
+            
+            // get the stats for the levelset containing all lobbies
+            var slashIndex = sid.LastIndexOf('/');
+            if (slashIndex < 0) return 0;
+            var levelSet = sid.Substring(0, slashIndex);
+            var stats = SaveData.Instance.GetLevelSetStatsFor(levelSet);
+            if (stats == null) return 0;
+            
+            // find the index if possible
+            var index = stats.Areas.FindIndex(a => a.SID == sid);
+            if (index < 0) return 0;
+            
+            // bump the index up if we have no prologue
+            if (!stats.Areas[0].SID.EndsWith("Prologue")) {
+                index++;
+            }
 
-            const string lobbies = "/0-Lobbies/";
-            var index = sid.IndexOf(lobbies, StringComparison.Ordinal);
-            if (index < 0) return -1;
-
-            sid = sid.Substring(index + lobbies.Length);
-
-            index = sid.IndexOf('-');
-            if (index < 0) return -1;
-
-            return int.TryParse(sid.Substring(0, index), out var value) ? value : -1;
+            return index;
         }
         
         /// <summary>

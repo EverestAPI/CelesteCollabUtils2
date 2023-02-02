@@ -20,7 +20,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             base.Added(scene);
 
             if (scene is Level level) {
-                VisitManager = new LobbyVisitManager(level.Session.Area.SID, level.Session.LevelData.Name);
+                VisitManager = new LobbyVisitManager(level.Session.Area.SID, level.Session.Level);
             }
         }
 
