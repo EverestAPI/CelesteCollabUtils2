@@ -771,7 +771,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         var session = new Session(new AreaKey(areaId)) { Level = warp.Room, FirstLevel = false, RespawnPoint = levelData.Spawns.ClosestTo(levelData.Position + warp.Position), };
                         LevelEnter.Go(session, fromSaveData: false);
                     };
-                } else {
+                } else if (warp.Room != level.Session.Level) {
                     level.OnEndOfFrame += () => {
                         if (level.Tracker.GetEntity<Player>() is Player oldPlayer) {
                             Leader.StoreStrawberries(oldPlayer.Leader);
@@ -784,12 +784,18 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top) + warp.Position);
                         level.LoadLevel(Player.IntroTypes.Respawn);
                         level.Wipe?.Cancel();
-
-                        if (level.Tracker.GetEntity<Player>() is Player newPlayer) {
-                            level.Camera.Position = newPlayer.CameraTarget;
-                            Leader.RestoreStrawberries(newPlayer.Leader);
-                        }
-                        
+                        level.Camera.Position = level.Tracker.GetEntity<Player>()?.CameraTarget ?? Vector2.Zero;
+                        new MountainWipe(level, true) { Duration = wipeDuration };
+                    };
+                } else {
+                    level.OnEndOfFrame += () => {
+                        if (!(level.Tracker.GetEntity<Player>() is Player player)) return;
+                        var target = level.GetSpawnPoint(level.Session.LevelData.Position + warp.Position);
+                        player.CameraAnchorLerp = Vector2.Zero;
+                        var cameraTarget = level.GetFullCameraTargetAt(player, target);
+                        player.Position = target;
+                        level.Camera.Position = cameraTarget;
+                        level.Session.RespawnPoint = player.Position;
                         new MountainWipe(level, true) { Duration = wipeDuration };
                     };
                 }
