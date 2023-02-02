@@ -243,7 +243,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         /// </summary>
         private void getLobbyControllers(Level level) {
             // we can only return lobbies that have at least one visited position, or this one
-            var collabName = level.Session.Area.SID.Substring(0, level.Session.Area.SID.IndexOf("/", StringComparison.Ordinal) + 1);
+            var collabName = LobbyHelper.GetCollabNameForSID(level.Session.Area.SID);
             var visitedLobbySIDs = CollabModule.Instance.SaveData.VisitedLobbyPositions.Keys.Where(k => k.StartsWith(collabName)).ToList();
             var thisLobbyKey = $"{level.Session.Area.SID}.{level.Session.Level}";
             if (!visitedLobbySIDs.Contains(thisLobbyKey)) {
@@ -288,8 +288,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 }
             }
 
-            // sort lobbies by their index
-            lobbySelections.Sort((lhs, rhs) => lhs.Info.LobbyIndex - rhs.Info.LobbyIndex);
+            // sort lobbies by SID
+            lobbySelections.Sort((lhs, rhs) => string.Compare(lhs.SID, rhs.SID, StringComparison.Ordinal));
 
             // select the current lobby
             selectedLobbyIndex = lobbySelections.FindIndex(s => s.SID == level.Session.Area.SID);
@@ -376,15 +376,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (lobbyMapInfo.ShowHeartCount) {
                 // try to get a custom id
                 var id = InGameOverworldHelper.GetGuiHeartSpriteId(selection.SID, AreaMode.Normal);
-                Logger.Log(LogLevel.Warn, nameof(CollabModule), $"{selection.SID} : {id}");
                 
-                // if no custom sprite we need to make it ourselves
                 if (id == null) {
-                    var heartPath = lobbyMapInfo.LobbyIndex <= 3
-                        ? $"collectables/heartgem/{lobbyMapInfo.LobbyIndex - 1}/"
-                        : $"CollabUtils2/crystalHeart/{(lobbyMapInfo.LobbyIndex == 4 ? "expert" : "grandmaster")}/";
-                    heartSprite = new Sprite(GFX.Gui, heartPath);
-                    heartSprite.AddLoop("spin", "spin", 0.1f, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+                    heartSprite = GFX.SpriteBank.Create("heartgem0");
                 } else {
                     heartSprite = InGameOverworldHelper.HeartSpriteBank.Create(id);
                 }

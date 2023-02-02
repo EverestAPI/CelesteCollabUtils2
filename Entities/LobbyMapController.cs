@@ -74,15 +74,12 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             /// </summary>
             public string[] CustomMarkers;
 
-            public int MemorialId;
-            
             public string WarpIcon;
             public string RainbowBerryIcon;
             public string HeartDoorIcon;
             public string GymIcon;
             public string MapIcon;
             public string JournalIcon;
-            public string MemorialIcon;
 
             public bool ShowWarps;
             public bool ShowRainbowBerry;
@@ -97,12 +94,10 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             public int RoomWidth;
             public int RoomHeight;
             public string LevelSet;
-            public int LobbyIndex;
             
             public ControllerInfo(EntityData data, MapData mapData = null) {
                 MapTexture = data.Attr("mapTexture");
                 TotalMaps = data.Int("totalMaps");
-                MemorialId = data.Int("memorialId");
 
                 WarpIcon = data.Attr("warpIcon", "CollabUtils2/lobbies/warp");
                 RainbowBerryIcon = data.Attr("rainbowBerryIcon", "CollabUtils2/lobbies/rainbowBerry");
@@ -110,7 +105,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 GymIcon = data.Attr("gymIcon", "CollabUtils2/lobbies/gym");
                 MapIcon = data.Attr("mapIcon", "CollabUtils2/lobbies/map");
                 JournalIcon = data.Attr("journalIcon", "CollabUtils2/lobbies/journal");
-                MemorialIcon = data.Attr("memorialIcon", "CollabUtils2/lobbies/memorial");
 
                 ShowWarps = data.Bool("showWarps", true);
                 ShowRainbowBerry = data.Bool("showRainbowBerry", true);
@@ -127,7 +121,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 if (RoomHeight <= 0) RoomHeight = data.Level.TileBounds.Height;
                 if (mapData != null) {
                     LevelSet = LobbyHelper.GetLobbyLevelSet(mapData.Area.SID);
-                    LobbyIndex = LobbyHelper.GetLobbyIndex(mapData.Area.SID);
                 }
             }
 
