@@ -175,15 +175,6 @@ namespace Celeste.Mod.CollabUtils2 {
         }
 
         /// <summary>
-        /// Returns the name of the collab the levelset with the given name is part of.
-        /// </summary>
-        /// <param name="levelSet">The name of a LevelSet</param>
-        /// <returns>The name of the collab the levelset is part of, or null if it is a non-collab levelset</returns>
-        public static string GetCollabNameForLevelSet(string levelSet) {
-            return collabNames.FirstOrDefault(collabName => levelSet.StartsWith($"{collabName}/"));
-        }
-
-        /// <summary>
         /// Check if the given SID matches a collab heart side level.
         /// </summary>
         /// <param name="sid">The SID for a map</param>
@@ -780,9 +771,6 @@ namespace Celeste.Mod.CollabUtils2 {
             }
             public static string GetCollabNameForSID(string sid) {
                 return LobbyHelper.GetCollabNameForSID(sid);
-            }
-            public static string GetCollabNameForLevelSet(string levelSet) {
-                return LobbyHelper.GetCollabNameForLevelSet(levelSet);
             }
             public static bool IsHeartSide(string sid) {
                 return LobbyHelper.IsHeartSide(sid);

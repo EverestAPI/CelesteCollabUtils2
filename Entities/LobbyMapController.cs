@@ -3,7 +3,6 @@ using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
@@ -224,12 +223,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 else if (data.Name == "CollabUtils2/ChapterPanelTrigger" || controllerInfo != null && controllerInfo.CustomMarkers.Contains(data.Name)) {
                     value.Map = data.Attr("map");
                     value.Type = value.Map.Contains("0-Gyms") ? MarkerType.Gym : MarkerType.Map;
-                }
-                // XaphanHelper warp station (can only be warped to, not from)
-                else if (data.Name == "XaphanHelper/WarpStation" && controllerInfo != null) {
-                    value.Type = MarkerType.Warp;
-                    value.MarkerId = data.Int("index").ToString();
-                    value.DialogKey = $"{LobbyHelper.GetCollabNameForLevelSet(controllerInfo.LevelSet)}_0_Lobbies_Warp_Ch{controllerInfo.LobbyIndex}_{data.Level.Name}_{value.MarkerId}";
                 }
                 // not a valid map marker, skip
                 else {
