@@ -378,7 +378,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 var id = InGameOverworldHelper.GetGuiHeartSpriteId(selection.SID, AreaMode.Normal);
                 
                 if (id == null) {
-                    heartSprite = GFX.SpriteBank.Create("heartgem0");
+                    heartSprite = GFX.GuiSpriteBank.Create("heartgem0");
                 } else {
                     heartSprite = InGameOverworldHelper.HeartSpriteBank.Create(id);
                 }
