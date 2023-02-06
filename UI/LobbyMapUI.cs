@@ -319,7 +319,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
             // regenerate marker components
             markerComponents.ForEach(c => c.RemoveSelf());
             markerComponents.Clear();
-            markerComponents.AddRange(markers.Where(f => lobbyMapInfo.ShouldShowMarker(f)).Select(createMarkerComponent));
+            markerComponents.AddRange(markers
+                .Where(f => lobbyMapInfo.ShouldShowMarker(f))
+                .OrderByDescending(f => f.Type)
+                .Select(createMarkerComponent));
             markerComponents.ForEach(Add);
             
             // if this is the first time we've selected a lobby, select the nearest warp
