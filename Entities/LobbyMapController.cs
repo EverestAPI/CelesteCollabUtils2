@@ -76,17 +76,19 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
             public string WarpIcon;
             public string RainbowBerryIcon;
-            public string HeartDoorIcon;
+            public string HeartGateIcon;
             public string GymIcon;
             public string MapIcon;
             public string JournalIcon;
+            public string HeartSideIcon;
 
             public bool ShowWarps;
             public bool ShowRainbowBerry;
-            public bool ShowHeartDoor;
+            public bool ShowHeartGate;
             public bool ShowGyms;
             public bool ShowMaps;
             public bool ShowJournals;
+            public bool ShowHeartSide;
             public bool ShowHeartCount;
             
             #endregion
@@ -101,17 +103,19 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
                 WarpIcon = data.Attr("warpIcon", "CollabUtils2/lobbies/warp");
                 RainbowBerryIcon = data.Attr("rainbowBerryIcon", "CollabUtils2/lobbies/rainbowBerry");
-                HeartDoorIcon = data.Attr("heartDoorIcon", "CollabUtils2/lobbies/heartgate");
+                HeartGateIcon = data.Attr("heartGateIcon", "CollabUtils2/lobbies/heartgate");
                 GymIcon = data.Attr("gymIcon", "CollabUtils2/lobbies/gym");
                 MapIcon = data.Attr("mapIcon", "CollabUtils2/lobbies/map");
                 JournalIcon = data.Attr("journalIcon", "CollabUtils2/lobbies/journal");
+                HeartSideIcon = data.Attr("heartSideIcon", "CollabUtils2/lobbies/heartside");
 
                 ShowWarps = data.Bool("showWarps", true);
                 ShowRainbowBerry = data.Bool("showRainbowBerry", true);
-                ShowHeartDoor = data.Bool("showHeartDoor", true);
+                ShowHeartGate = data.Bool("showHeartGate", true);
                 ShowGyms = data.Bool("showGyms", true);
                 ShowMaps = data.Bool("showMaps", true);
                 ShowJournals = data.Bool("showJournals", true);
+                ShowHeartSide = data.Bool("showHeartSide", true);
                 ShowHeartCount = data.Bool("showHeartCount", true);
 
                 var customMarkers = data.Attr("customMarkers");
@@ -129,10 +133,11 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     case MarkerType.Custom: return true;
                     case MarkerType.Warp: return ShowWarps;
                     case MarkerType.RainbowBerry: return ShowRainbowBerry;
-                    case MarkerType.HeartDoor: return ShowHeartDoor;
+                    case MarkerType.HeartGate: return ShowHeartGate;
                     case MarkerType.Gym: return ShowGyms;
                     case MarkerType.Map: return ShowMaps;
                     case MarkerType.Journal: return ShowJournals;
+                    case MarkerType.HeartSide: return ShowHeartSide;
                     default: return true;
                 }
             }
@@ -206,7 +211,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 }
                 // CU2 heart door
                 else if (data.Name == "CollabUtils2/MiniHeartDoor") {
-                    value.Type = MarkerType.HeartDoor;
+                    value.Type = MarkerType.HeartGate;
                 }
                 // CU2 journal trigger
                 else if (data.Name == "CollabUtils2/JournalTrigger") {
@@ -215,7 +220,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 // CU2 map trigger or something from the CustomMarkers property
                 else if (data.Name == "CollabUtils2/ChapterPanelTrigger" || controllerInfo != null && controllerInfo.CustomMarkers.Contains(data.Name)) {
                     value.Map = data.Attr("map");
-                    value.Type = value.Map.Contains("0-Gyms") ? MarkerType.Gym : MarkerType.Map;
+                    value.Type = value.Map.Contains("0-Gyms") ? MarkerType.Gym : value.Map.Contains("/ZZ-") ? MarkerType.HeartSide : MarkerType.Map;
                 }
                 // not a valid map marker, skip
                 else {
@@ -240,14 +245,17 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                         case MarkerType.RainbowBerry:
                             value.Icon = controllerInfo?.RainbowBerryIcon ?? "CollabUtils2/lobbies/rainbowBerry";
                             break;
-                        case MarkerType.HeartDoor:
-                            value.Icon = controllerInfo?.HeartDoorIcon ?? "CollabUtils2/lobbies/heartgate";
+                        case MarkerType.HeartGate:
+                            value.Icon = controllerInfo?.HeartGateIcon ?? "CollabUtils2/lobbies/heartgate";
                             break;
                         case MarkerType.Gym:
                             value.Icon = controllerInfo?.GymIcon ?? "CollabUtils2/lobbies/gym";
                             break;
                         case MarkerType.Map:
                             value.Icon = controllerInfo?.MapIcon ?? "CollabUtils2/lobbies/map";
+                            break;
+                        case MarkerType.HeartSide:
+                            value.Icon = controllerInfo?.HeartSideIcon ?? "CollabUtils2/lobbies/heartside";
                             break;
                         case MarkerType.Journal:
                             value.Icon = controllerInfo?.JournalIcon ?? "CollabUtils2/lobbies/journal";
@@ -269,11 +277,13 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             public readonly string SID;
             public readonly bool Completed;
             public readonly int Difficulty;
+            public readonly bool HeartSide;
 
             public MapInfo(string mapName) {
                 SID = string.Empty;
                 Completed = false;
                 Difficulty = -1;
+                HeartSide = false;
                 
                 if (AreaData.Get(mapName) is AreaData areaData) {
                     SID = areaData.SID;
@@ -285,7 +295,11 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                         var iconFilename = mapDifficultyIconPath.Split('/').LastOrDefault() ?? string.Empty;
                         var firstToken = iconFilename.Split('-').FirstOrDefault() ?? string.Empty;
                         if (!string.IsNullOrWhiteSpace(firstToken)) {
-                            int.TryParse(firstToken, out Difficulty);
+                            if (firstToken.Equals("ZZ", StringComparison.InvariantCultureIgnoreCase)) {
+                                HeartSide = true;
+                            } else {
+                                int.TryParse(firstToken, out Difficulty);
+                            }
                         }
                     }
                 }
@@ -296,10 +310,11 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             Custom = 0,
             Warp,
             RainbowBerry,
-            HeartDoor,
+            HeartGate,
             Gym,
             Map,
             Journal,
+            HeartSide,
         }
     }
 }

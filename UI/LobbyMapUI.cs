@@ -858,8 +858,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 Info = info;
 
                 var icon = info.Icon;
-                if (info.Type == LobbyMapController.MarkerType.Map) {
-                    if (info.MapInfo.Difficulty >= 0 && GFX.Gui.Has(icon + info.MapInfo.Difficulty)) {
+                if (info.Type == LobbyMapController.MarkerType.Map || info.Type == LobbyMapController.MarkerType.HeartSide) {
+                    if (!info.MapInfo.HeartSide && info.MapInfo.Difficulty >= 0 && GFX.Gui.Has(icon + info.MapInfo.Difficulty)) {
                         icon += info.MapInfo.Difficulty;
                     }
                     if (info.MapInfo.Completed && GFX.Gui.Has(icon + "Completed")) {
