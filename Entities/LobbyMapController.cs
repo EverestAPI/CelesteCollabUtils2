@@ -189,6 +189,11 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             /// </summary>
             public MapInfo MapInfo;
 
+            /// <summary>
+            /// The wipe to use for warp markers.
+            /// </summary>
+            public string WipeType;
+
             public static bool TryParse(EntityData data, ControllerInfo controllerInfo, out MarkerInfo value) {
                 value = default;
                 
@@ -204,6 +209,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     value.DialogKey = data.Attr("dialogKey");
                     value.MarkerId = data.Attr("warpId");
                     value.Icon = data.Attr("icon");
+                    value.WipeType = data.Attr("wipeType", "Celeste.Mountain");
                 }
                 // CU2 rainbow berry
                 else if (data.Name == "CollabUtils2/RainbowBerry") {

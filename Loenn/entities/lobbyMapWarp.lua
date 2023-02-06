@@ -6,9 +6,13 @@ lobbyMapWarp.name = "CollabUtils2/LobbyMapWarp"
 lobbyMapWarp.fieldInformation = {
     playerFacing = {
         options = celesteEnums.spawn_facing_trigger_facings,
+        editable = false,
     },
     interactOffsetY = {
         fieldType = "integer",
+    },
+    wipeType = {
+        options = celesteEnums.wipe_names,
     }
 }
 lobbyMapWarp.placements = {
@@ -25,6 +29,7 @@ lobbyMapWarp.placements = {
             playerFacing = "Right",
             interactOffsetY = -16,
             depth = 2000,
+            wipeType = celesteEnums.wipe_names.Mountain,
         }
     }
 }

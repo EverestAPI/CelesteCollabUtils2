@@ -1,4 +1,5 @@
 using Celeste.Mod.CollabUtils2.Entities;
+using Celeste.Mod.Helpers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Monocle;
@@ -767,13 +768,18 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             focused = false;
             const float wipeDuration = 0.5f;
-            new MountainWipe(level, false, () => {
+
+            void onComplete() {
                 closeScreen(true);
                 if (warp.SID != level.Session.Area.SID) {
                     level.OnEndOfFrame += () => {
                         var areaId = AreaData.Areas.FirstOrDefault(a => a.SID == warp.SID)?.ID ?? level.Session.Area.ID;
                         var levelData = AreaData.Get(new AreaKey(areaId)).Mode[0].MapData.Get(warp.Room);
-                        var session = new Session(new AreaKey(areaId)) { Level = warp.Room, FirstLevel = false, RespawnPoint = levelData.Spawns.ClosestTo(levelData.Position + warp.Position), };
+                        var session = new Session(new AreaKey(areaId)) {
+                            Level = warp.Room,
+                            FirstLevel = false,
+                            RespawnPoint = levelData.Spawns.ClosestTo(levelData.Position + warp.Position),
+                        };
                         LevelEnter.Go(session, fromSaveData: false);
                     };
                 } else {
@@ -794,11 +800,24 @@ namespace Celeste.Mod.CollabUtils2.UI {
                             level.Camera.Position = newPlayer.CameraTarget;
                             Leader.RestoreStrawberries(newPlayer.Leader);
                         }
-                        
-                        new MountainWipe(level, true) { Duration = wipeDuration };
+
+                        createWipe(warp.WipeType, wipeDuration, level, true);
                     };
                 }
-            }) { Duration = wipeDuration };
+            }
+
+            createWipe(warp.WipeType, wipeDuration, level, false, onComplete);
+        }
+        
+        private static ScreenWipe createWipe(string wipeTypeName, float wipeDuration, Level level, bool wipeIn, Action onComplete = null) {
+            Type wipeType = FakeAssembly.GetFakeEntryAssembly().GetType(wipeTypeName);
+            if (wipeType == null) {
+                Logger.Log(LogLevel.Warn, "CollabUtils2/LobbyMapUI", $"Couldn't find wipe \"{wipeTypeName}\", falling back to Celeste.Mountain");
+                wipeType = typeof(MountainWipe);
+            }
+            var screenWipe = (ScreenWipe) Activator.CreateInstance(wipeType, level, wipeIn, onComplete);
+            if (screenWipe != null) screenWipe.Duration = wipeDuration;
+            return screenWipe;
         }
 
         /// <summary>
