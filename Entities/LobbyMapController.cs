@@ -226,7 +226,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 // CU2 map trigger or something from the CustomMarkers property
                 else if (data.Name == "CollabUtils2/ChapterPanelTrigger" || controllerInfo != null && controllerInfo.CustomMarkers.Contains(data.Name)) {
                     value.Map = data.Attr("map");
-                    value.Type = value.Map.Contains("0-Gyms") ? MarkerType.Gym : value.Map.Contains("/ZZ-") ? MarkerType.HeartSide : MarkerType.Map;
+                    value.Type = LobbyHelper.IsCollabGym(value.Map) ? MarkerType.Gym : LobbyHelper.IsHeartSide(value.Map) ? MarkerType.HeartSide : MarkerType.Map;
                 }
                 // not a valid map marker, skip
                 else {
@@ -283,13 +283,11 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             public readonly string SID;
             public readonly bool Completed;
             public readonly int Difficulty;
-            public readonly bool HeartSide;
 
             public MapInfo(string mapName) {
                 SID = string.Empty;
                 Completed = false;
                 Difficulty = -1;
-                HeartSide = false;
                 
                 if (AreaData.Get(mapName) is AreaData areaData) {
                     SID = areaData.SID;
@@ -301,11 +299,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                         var iconFilename = mapDifficultyIconPath.Split('/').LastOrDefault() ?? string.Empty;
                         var firstToken = iconFilename.Split('-').FirstOrDefault() ?? string.Empty;
                         if (!string.IsNullOrWhiteSpace(firstToken)) {
-                            if (firstToken.Equals("ZZ", StringComparison.InvariantCultureIgnoreCase)) {
-                                HeartSide = true;
-                            } else {
-                                int.TryParse(firstToken, out Difficulty);
-                            }
+                            int.TryParse(firstToken, out Difficulty);
                         }
                     }
                 }
