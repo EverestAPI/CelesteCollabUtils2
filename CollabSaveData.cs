@@ -22,7 +22,7 @@ namespace Celeste.Mod.CollabUtils2 {
         // - mod sessions for mods that support the save data async API (using DeserializeSession / SerializeSession)
         // in binary format, converted to base64 for more efficient saving (instead of a byte[] that gets serialized to a list of numbers)
         public Dictionary<string, Dictionary<string, string>> ModSessionsPerLevelBinary = new Dictionary<string, Dictionary<string, string>>();
-        
+
         // maps lobby SIDs against a base64 encoded list of visited points, managed by LobbyVisitManager
         public Dictionary<string, string> VisitedLobbyPositions = new Dictionary<string, string>();
 

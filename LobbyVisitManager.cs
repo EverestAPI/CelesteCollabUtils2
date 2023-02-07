@@ -14,12 +14,12 @@ namespace Celeste.Mod.CollabUtils2 {
         private VisitedPoint lastVisitedPoint = new VisitedPoint(Vector2.Zero);
 
         public const int EXPLORATION_RADIUS = 20;
-        
+
         public string SID { get; }
         public string Room { get; }
 
         public string Key => string.IsNullOrWhiteSpace(Room) ? SID : $"{SID}.{Room}";
-        
+
         public LobbyVisitManager(string sid, string room = null) {
             SID = sid;
             Room = room;
@@ -30,11 +30,11 @@ namespace Celeste.Mod.CollabUtils2 {
             VisitedPoints.Clear();
             lastVisitedPoint = new VisitedPoint(Vector2.Zero);
         }
-        
+
         public void Save() {
             CollabModule.Instance.SaveData.VisitedLobbyPositions[Key] = ToBase64(VisitedPoints);
         }
-        
+
         private static List<VisitedPoint> FromBase64(string str) {
             const int size = sizeof(short);
 
@@ -72,9 +72,9 @@ namespace Celeste.Mod.CollabUtils2 {
 
         public void VisitPoint(Vector2 point, bool shouldSave = true) {
             const int nearby_point_count = 50;
+            const float generate_distance = EXPLORATION_RADIUS / 2f;
+            const float sort_threshold = EXPLORATION_RADIUS;
 
-            float generate_distance = EXPLORATION_RADIUS / 2f;
-            float sort_threshold = EXPLORATION_RADIUS;
             var lenSq = lastVisitedPoint == null ? float.MaxValue : (point - lastVisitedPoint.Point).LengthSquared();
             var shouldGenerate = !VisitedPoints.Any();
             if (!shouldGenerate && lenSq > generate_distance * generate_distance) {
@@ -87,7 +87,7 @@ namespace Celeste.Mod.CollabUtils2 {
                     VisitedPoints.Sort((a, b) => Math.Sign(b.DistanceSquared - a.DistanceSquared));
                 }
 
-                // update last visited to closest of the first 20
+                // update last visited to closest of the first 50
                 lastVisitedPoint = VisitedPoints.Take(nearby_point_count).FirstOrDefault(v => (v.Point - point).LengthSquared() < generate_distance * generate_distance);
                 // generate if it still passes the threshold
                 shouldGenerate = lastVisitedPoint == null;

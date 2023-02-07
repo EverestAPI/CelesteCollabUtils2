@@ -220,9 +220,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         #endregion
-        
+
         #region Lobby Configuration
-        
+
         /// <summary>
         /// Returns true if the given position has been revealed in the current lobby.
         /// </summary>
@@ -238,9 +238,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
             var tileY = point.Y / 8f;
             return new Vector2(tileX / (overlayTexture?.Width ?? 1), tileY / (overlayTexture?.Height ?? 1));
         }
-        
+
         /// <summary>
-        /// Loads all LobbyMapController data from maps in this levelset, if at least one warp has been unlocked. 
+        /// Loads all LobbyMapController data from maps in this levelset, if at least one warp has been unlocked.
         /// </summary>
         private void getLobbyControllers(Level level) {
             // we can only return lobbies that have at least one visited position, or this one
@@ -250,7 +250,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (!visitedLobbySIDs.Contains(thisLobbyKey)) {
                 visitedLobbySIDs.Add(thisLobbyKey);
             }
-            
+
             // parse all the markers in all the lobbies that have been visited
             lobbySelections.Clear();
             foreach (var key in visitedLobbySIDs) {
@@ -261,11 +261,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     room = key.Substring(key.LastIndexOf('.') + 1);
                     sid = key.Substring(0, key.LastIndexOf('.'));
                 }
-                
+
                 // get the map data from the lobby sid
                 var mapData = AreaData.Get(sid)?.Mode.FirstOrDefault()?.MapData;
                 if (mapData == null) continue;
-                
+
                 // find the map controller in the specified room, or the first in the map if no room specified
                 const string mapControllerName = "CollabUtils2/LobbyMapController";
                 var levelData = string.IsNullOrWhiteSpace(room) ? null : mapData.Get(room);
@@ -310,7 +310,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             // generate the 2d array of visited tiles
             visitedTiles = generateVisitedTiles(lobbyMapInfo, visitManager);
-            
+
             // find warps
             allWarps.Clear();
             activeWarps.Clear();
@@ -325,7 +325,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 .OrderByDescending(f => f.Type)
                 .Select(createMarkerComponent));
             markerComponents.ForEach(Add);
-            
+
             // if this is the first time we've selected a lobby, select the nearest warp
             if (first && Engine.Scene is Level level && level.Tracker.GetEntity<Player>() is Player player) {
                 selectedWarpIndexes[selectedLobbyIndex] = 0;
@@ -341,7 +341,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
 
             var warpIndex = selectedWarpIndexes[selectedLobbyIndex];
-            
+
             // get the map texture
             mapTexture = GFX.Gui[lobbyMapInfo.MapTexture].Texture.Texture;
 
@@ -371,22 +371,22 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             // update marker positions
             updateMarkers();
-            
+
             // add heart component
             var heartFrame = heartSprite?.CurrentAnimationFrame ?? 0;
             heartSprite?.RemoveSelf();
             heartSprite = null;
-            
+
             if (lobbyMapInfo.ShowHeartCount) {
                 // try to get a custom id
                 var id = InGameOverworldHelper.GetGuiHeartSpriteId(selection.SID, AreaMode.Normal);
-                
+
                 if (id == null) {
                     heartSprite = GFX.GuiSpriteBank.Create("heartgem0");
                 } else {
                     heartSprite = InGameOverworldHelper.HeartSpriteBank.Create(id);
                 }
-                
+
                 heartSprite.Scale = Vector2.One / 2f;
                 heartSprite.Position = new Vector2(bounds.Left + 10, bounds.Top + 10);
                 heartSprite.Justify = Vector2.Zero;
@@ -524,7 +524,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 var heartCountColor = heartCount >= lobbyMapInfo.TotalMaps ? Color.Gold : Color.White;
                 var heartText = $"{heartCount} / {lobbyMapInfo.TotalMaps}";
                 var measured = ActiveFont.Measure(heartText);
-                var position = new Vector2(heartSprite.Position.X + heartSprite.Width / 2f + 10f + measured.X / 2f, heartSprite.Position.Y + heartSprite.Height / 4f); 
+                var position = new Vector2(heartSprite.Position.X + heartSprite.Width / 2f + 10f + measured.X / 2f, heartSprite.Position.Y + heartSprite.Height / 4f);
                 ActiveFont.DrawOutline(heartText, position, new Vector2(0.5f), Vector2.One, heartCountColor, 2f, Color.Black);
             }
 
@@ -543,9 +543,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
             const float buttonScale = 0.5f;
             const float xOffset = 32f, yOffset = 45f;
             const float wiggleAmount = 0.05f;
-            
+
             var buttonPosition = new Vector2(bounds.Left + xOffset, bounds.Bottom + yOffset);
-            
+
             if (activeWarps.Count > 1) {
                 renderDoubleButton(buttonPosition, changeDestinationLabel, Input.MenuUp, Input.MenuDown,
                     buttonScale, true, true, 0f, selectWarpWiggler.Value * wiggleAmount);
@@ -639,7 +639,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
                 RemoveSelf();
             }
-            
+
             if (!force) {
                 Audio.Play(SFX.ui_game_unpause);
                 Add(new Coroutine(transitionRoutine(onFadeOut: () => Visible = false, onFadeIn: DoClose)));
@@ -808,7 +808,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             createWipe(warp.WipeType, wipeDuration, level, false, onComplete);
         }
-        
+
         private static ScreenWipe createWipe(string wipeTypeName, float wipeDuration, Level level, bool wipeIn, Action onComplete = null) {
             Type wipeType = FakeAssembly.GetFakeEntryAssembly().GetType(wipeTypeName);
             if (wipeType == null) {
@@ -859,13 +859,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
             float x = ActiveFont.Measure(text).X;
             ActiveFont.DrawOutline(text, position, new Vector2(justify / x, 0.5f), Vector2.One * scale, Color.White * alpha, 2f, Color.Black * alpha);
         }
-        
+
         /// <summary>
         /// Find the first entity in the level data with the specified name.
         /// </summary>
         private static EntityData findEntityData(LevelData levelData, string entityName) =>
             levelData.Entities.FirstOrDefault(e => e.Name == entityName);
-        
+
         #endregion
 
         #region Nested Classes
@@ -911,7 +911,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 Room = data.Level.Name;
             }
         }
-        
+
         #endregion
     }
 }

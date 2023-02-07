@@ -26,11 +26,11 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         public override void Update() {
             base.Update();
-            
+
             if (Scene is Level level &&
                 level.Tracker.GetEntity<LobbyMapUI>() == null &&
                 level.Tracker.GetEntity<Player>() is Player player) {
-                
+
                 if (!level.OnInterval(0.2f) || player.StateMachine.State == Player.StDummy) {
                     return;
                 }
@@ -54,20 +54,20 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         /// </summary>
         public class ControllerInfo {
             private static readonly char[] commaSeparator = {','};
-            
+
             #region EntityData Fields
-            
+
             /// <summary>
             /// The map background texture to read from <see cref="GFX.Gui"/>.
             /// Example: SJ2021/1-Beginner/beginnermap
             /// </summary>
             public string MapTexture;
-            
+
             /// <summary>
             /// The total number of maps in the lobby, used to display the miniheart tally.
             /// </summary>
             public int TotalMaps;
-            
+
             /// <summary>
             /// An array of custom entity names that should be considered <see cref="MarkerType.Map"/> markers.
             /// These entities must have a "map" attribute containing the SID of the target map.
@@ -90,13 +90,13 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             public bool ShowJournals;
             public bool ShowHeartSide;
             public bool ShowHeartCount;
-            
+
             #endregion
-            
+
             public int RoomWidth;
             public int RoomHeight;
             public string LevelSet;
-            
+
             public ControllerInfo(EntityData data, MapData mapData = null) {
                 MapTexture = data.Attr("mapTexture");
                 TotalMaps = data.Int("totalMaps");
@@ -148,42 +148,42 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             /// The icon in the Gui atlas.
             /// </summary>
             public string Icon;
-            
+
             /// <summary>
             /// A key into Dialog.Clean for markers that include a title.
             /// </summary>
             public string DialogKey;
-            
+
             /// <summary>
             /// A unique id for this marker. Also used to identify and sort warps.
             /// </summary>
             public string MarkerId;
-            
+
             /// <summary>
             /// The type of marker. This allows for filtering in the controller.
             /// </summary>
             public MarkerType Type;
-            
+
             /// <summary>
             /// The position of the marker on the map.
             /// </summary>
             public Vector2 Position;
-            
+
             /// <summary>
             /// The SID for the lobby map.
             /// </summary>
             public string SID;
-            
+
             /// <summary>
             /// The room within the map that this marker belongs to.
             /// </summary>
             public string Room;
-            
+
             /// <summary>
             /// The name of the map to load when using a marker type of <see cref="MarkerType.Map"/>.
             /// </summary>
             public string Map;
-            
+
             /// <summary>
             /// Extracted data about the referenced map if it exists.
             /// </summary>
@@ -196,7 +196,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
             public static bool TryParse(EntityData data, ControllerInfo controllerInfo, out MarkerInfo value) {
                 value = default;
-                
+
                 // CU2 simple marker entity
                 if (data.Name == "CollabUtils2/LobbyMapMarker") {
                     value.Type = MarkerType.Custom;
@@ -232,7 +232,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 else {
                     return false;
                 }
-                
+
                 // grab the entity's position
                 value.Position = data.Position;
 
@@ -288,7 +288,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 SID = string.Empty;
                 Completed = false;
                 Difficulty = -1;
-                
+
                 if (AreaData.Get(mapName) is AreaData areaData) {
                     SID = areaData.SID;
                     AreaStats areaStatsFor = SaveData.Instance.GetAreaStatsFor(areaData.ToKey());
@@ -305,7 +305,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 }
             }
         }
-        
+
         public enum MarkerType {
             Custom = 0,
             Warp,

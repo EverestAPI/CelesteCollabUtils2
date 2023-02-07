@@ -13,7 +13,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private readonly bool playActivateSprite;
         private readonly bool activateSpriteFlipX;
         private readonly Facings playerFacing;
-        
+
         private LobbyMapController.MarkerInfo info;
 
         private Image image;
@@ -33,7 +33,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 image.Effects = warpSpriteFlipX ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
                 image.JustifyOrigin(0.5f, 1f);
             }
-            
+
             Add(new TalkComponent(new Rectangle(-16, -32, 32, 32), new Vector2(0, data.Float("interactOffsetY", -16f)), onTalk) {
                 PlayerMustBeFacing = false,
             });
@@ -69,7 +69,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             playerSprite.Effects = activateSpriteFlipX ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
             Add(playerSprite);
             playerSprite.Play("sit");
-            
+
             var playerHairSprite = GFX.SpriteBank.Create("CollabUtils2_sitBench");
             playerHairSprite.Effects = activateSpriteFlipX ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
             playerHairSprite.Color = player.Hair.Color;
@@ -79,11 +79,11 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             while (playerSprite.Animating) {
                 yield return null;
             }
-            
+
             player.Scene.Add(new LobbyMapUI());
 
             yield return 0.5f;
-            
+
             playerSprite.RemoveSelf();
             playerHairSprite.RemoveSelf();
 
