@@ -2,7 +2,7 @@ local gymMarker = {}
 
 gymMarker.name = "CollabUtils2/GymMarker"
 gymMarker.depth = 0
-gymMarker.texture = "CollabUtils2/ahorn_gymmarker"
+gymMarker.texture = "CollabUtils2/editor_gymmarker"
 gymMarker.placements = {
     name = "controller",
     data = {

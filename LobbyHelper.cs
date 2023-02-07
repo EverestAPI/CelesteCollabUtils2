@@ -1,5 +1,6 @@
 using Celeste.Mod.CelesteNet.Client.Components;
 using Celeste.Mod.CelesteNet.DataTypes;
+using Celeste.Mod.CollabUtils2.Entities;
 using Celeste.Mod.CollabUtils2.UI;
 using Celeste.Mod.UI;
 using Mono.Cecil;

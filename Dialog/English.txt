@@ -49,3 +49,9 @@ collabutils2_assist_skip= Open Heart Gate
 collabutils2_assist_skip_confirm= This will open the Heart Gate permanently.{n}Are you sure?
 collabutils2_assist_skip_confirm_yes= Yes
 collabutils2_assist_skip_confirm_no= No
+
+collabutils2_lobbymap_change_destination= Change Destination
+collabutils2_lobbymap_change_lobby= Change Lobby
+collabutils2_lobbymap_close= Close
+collabutils2_lobbymap_confirm= Confirm
+collabutils2_lobbymap_zoom= Zoom

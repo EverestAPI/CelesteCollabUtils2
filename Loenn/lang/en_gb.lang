@@ -86,3 +86,39 @@ entities.CollabUtils2/GymMarker.attributes.description.difficulty=The difficulty
 # Collab Crystal Heart
 entities.CollabUtils2/CollabCrystalHeart.placements.name.crystal_heart=Crystal Heart (Return to Lobby)
 entities.CollabUtils2/CollabCrystalHeart.attributes.description.removeCameraTriggers=Whether the heart should remove camera triggers once it's collected.
+
+# Lobby Map Controller
+entities.CollabUtils2/LobbyMapController.placements.name.default=Lobby Map Controller
+entities.CollabUtils2/LobbyMapController.attributes.description.mapTexture=The texture in the Gui atlas to use as the lobby map background.
+entities.CollabUtils2/LobbyMapController.attributes.description.totalMaps=The number of maps in this lobby. Used for the heart counter.
+entities.CollabUtils2/LobbyMapController.attributes.description.customMarkers=A comma separated list of entity names that should be considered map entry pedestals. The target entities must have a "map" attribute with the full SID of the map to load.
+entities.CollabUtils2/LobbyMapController.attributes.description.warpIcon=The default texture in the Gui atlas to use as an icon for a warp.
+entities.CollabUtils2/LobbyMapController.attributes.description.rainbowBerryIcon=The default texture in the Gui atlas to use as an icon for a rainbow berry.
+entities.CollabUtils2/LobbyMapController.attributes.description.heartDoorIcon=The default texture in the Gui atlas to use as an icon for a heart door.
+entities.CollabUtils2/LobbyMapController.attributes.description.gymIcon=The default texture in the Gui atlas to use as an icon for a gym.
+entities.CollabUtils2/LobbyMapController.attributes.description.mapIcon=The default texture in the Gui atlas to use as an icon for a map entry pedestal.
+entities.CollabUtils2/LobbyMapController.attributes.description.journalIcon=The default texture in the Gui atlas to use as an icon for a journal.
+entities.CollabUtils2/LobbyMapController.attributes.description.showWarps=Whether warps should be shown on the lobby map.
+entities.CollabUtils2/LobbyMapController.attributes.description.showRainbowBerry=Whether rainbow berries should be shown on the lobby map.
+entities.CollabUtils2/LobbyMapController.attributes.description.showHeartDoor=Whether heart doors should be shown on the lobby map.
+entities.CollabUtils2/LobbyMapController.attributes.description.showGyms=Whether gyms should be shown on the lobby map.
+entities.CollabUtils2/LobbyMapController.attributes.description.showMaps=Whether map entry pedestals should be shown on the lobby map.
+entities.CollabUtils2/LobbyMapController.attributes.description.showJournals=Whether journals should be shown on the lobby map.
+entities.CollabUtils2/LobbyMapController.attributes.description.showHeartCount=Whether the currently collected heart count should appear in the top left.
+
+# Lobby Map Warp
+entities.CollabUtils2/LobbyMapWarp.placements.name.default=Lobby Map Warp
+entities.CollabUtils2/LobbyMapWarp.attributes.description.warpId=A unique identifier to represent this warp point. It will be used to sort the warps when selecting.
+entities.CollabUtils2/LobbyMapWarp.attributes.description.icon=The icon to display for this warp. Leaving this empty will default to the icon defined in the controller.
+entities.CollabUtils2/LobbyMapWarp.attributes.description.dialogKey=The full key into the dialog definition for text to display as the warp title.
+entities.CollabUtils2/LobbyMapWarp.attributes.description.warpSpritePath=The texture in the Gameplay atlas to show in the world. This is justified at (0.5, 1.0). Defaults to the Forsaken City bench.
+entities.CollabUtils2/LobbyMapWarp.attributes.description.warpSpriteFlipX=Whether to flip the sprite horizontally. Defaults to false.
+entities.CollabUtils2/LobbyMapWarp.attributes.description.playActivateSprite=Whether to play the sitting animation before showing the map. Defaults to true.
+entities.CollabUtils2/LobbyMapWarp.attributes.description.activatespriteFlipX=Whether to flip the activation sprite horizontally. Defaults to false.
+entities.CollabUtils2/LobbyMapWarp.attributes.description.playerFacing=The direction Madeline will face before playing the activation animation.
+entities.CollabUtils2/LobbyMapWarp.attributes.description.interactOffsetY=The offset in pixels from the warp position at which to display the talk interaction bubble. Defaults to -16.
+entities.CollabUtils2/LobbyMapWarp.attributes.description.depth=The depth at which the warp will render. Defaults to 2000 (Depths.Below).
+
+# Lobby Map Marker
+entities.CollabUtils2/LobbyMapMarker.placements.name.default=Lobby Map Marker
+entities.CollabUtils2/LobbyMapMarker.attributes.description.icon=The icon to display for this simple map marker.
