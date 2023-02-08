@@ -38,7 +38,7 @@ function lobbyMapWarp.sprite(room, entity)
     local spritePath = entity.warpSpritePath or "decals/1-forsakencity/bench_concrete"
     local sprite = drawableSprite.fromTexture(spritePath, entity)
     sprite:setJustification(0.5, 1.0)
-    sprite:setScale(entity.spriteFlipX and -1 or 1, 1)
+    sprite:setScale(entity.warpSpriteFlipX and -1 or 1, 1)
     return sprite
 end
 
