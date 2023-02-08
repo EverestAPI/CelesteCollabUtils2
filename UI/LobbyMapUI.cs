@@ -20,7 +20,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private readonly List<LobbySelection> lobbySelections = new List<LobbySelection>();
 
         // all warps for the selected lobby
-        private readonly List<LobbyMapController.MarkerInfo> allWarps = new List<LobbyMapController.MarkerInfo>();
         private readonly List<LobbyMapController.MarkerInfo> activeWarps = new List<LobbyMapController.MarkerInfo>();
 
         // current lobby setup
@@ -106,10 +105,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 maddyRunSprite.AddLoop("idle", "", 1 / 8f);
                 maddyRunSprite.Play("idle");
 
+                // find all the lobby controllers for this collab
                 getLobbyControllers(level);
-                updateSelectedLobby(true);
 
-                openScreen();
+                // if we successfully selected a lobby to view, open the screen
+                if (updateSelectedLobby(true)) {
+                    openScreen();
+                }
             }
         }
 
@@ -291,16 +293,28 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             // sort lobbies by SID
             lobbySelections.Sort((lhs, rhs) => string.Compare(lhs.SID, rhs.SID, StringComparison.Ordinal));
+            selectedWarpIndexes = new int[lobbySelections.Count];
 
             // select the current lobby
             selectedLobbyIndex = lobbySelections.FindIndex(s => s.SID == level.Session.Area.SID);
-            selectedWarpIndexes = new int[lobbySelections.Count];
+
+            // verify selection
+            if (selectedLobbyIndex < 0) {
+                Logger.Log(LogLevel.Warn, "CollabUtils2/LobbyMapUI", $"getLobbyControllers: Couldn't find map for {level.Session.Area.SID}, defaulting to first");
+                selectedLobbyIndex = 0;
+            }
         }
 
         /// <summary>
         /// Configures the UI for the currently selected lobby.
         /// </summary>
-        public void updateSelectedLobby(bool first = false) {
+        public bool updateSelectedLobby(bool first = false) {
+            // validate lobby index
+            if (selectedLobbyIndex < 0 || selectedLobbyIndex >= lobbySelections.Count) {
+                Logger.Log(LogLevel.Warn, "CollabUtils2/LobbyMapUI", $"updateSelectedLobby: Invalid lobby selection {selectedLobbyIndex}");
+                return false;
+            }
+
             var selection = lobbySelections[selectedLobbyIndex];
             var markers = lobbySelections[selectedLobbyIndex].Markers;
             lobbyMapInfo = selection.Info;
@@ -398,6 +412,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 var levelSetStats = SaveData.Instance.GetLevelSets().FirstOrDefault(ls => ls.Name == lobbyMapInfo.LevelSet);
                 heartCount = levelSetStats?.TotalHeartGems ?? 0;
             }
+
+            return true;
         }
 
         /// <summary>
