@@ -233,8 +233,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     return false;
                 }
 
-                // grab the entity's position
-                value.Position = data.Position;
+                // grab the entity's centre
+                value.Position = new Vector2(data.Position.X + data.Width / 2f, data.Position.Y + data.Height / 2f);
 
                 // if we haven't explictly set a marker id, default to the type and entity id
                 if (string.IsNullOrWhiteSpace(value.MarkerId)) {
