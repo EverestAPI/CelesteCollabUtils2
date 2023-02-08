@@ -307,7 +307,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         }
 
         public enum MarkerType {
-            Custom = 0,
             Warp,
             RainbowBerry,
             HeartGate,
@@ -315,6 +314,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             Map,
             Journal,
             HeartSide,
+            Custom,
         }
     }
 }
