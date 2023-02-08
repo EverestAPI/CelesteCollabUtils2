@@ -131,18 +131,28 @@ namespace Celeste.Mod.CollabUtils2.UI {
             // handle input
             if (focused) {
                 if (activeWarps.Count > 0) {
+                    int moveDir = 0;
                     if (Input.MenuUp.Pressed) {
-                        if (selectedWarpIndexes[selectedLobbyIndex] > 0) {
-                            Audio.Play("event:/ui/main/rollover_up");
-                            selectWarpWiggler.Start();
+                        if (!Input.MenuUp.Repeating && selectedWarpIndexes[selectedLobbyIndex] == 0) {
+                            selectedWarpIndexes[selectedLobbyIndex] = activeWarps.Count - 1;
+                            moveDir = -1;
+                        } else if (selectedWarpIndexes[selectedLobbyIndex] > 0) {
                             selectedWarpIndexes[selectedLobbyIndex]--;
+                            moveDir = -1;
                         }
                     } else if (Input.MenuDown.Pressed) {
-                        if (selectedWarpIndexes[selectedLobbyIndex] < activeWarps.Count - 1) {
-                            Audio.Play("event:/ui/main/rollover_down");
-                            selectWarpWiggler.Start();
+                        if (!Input.MenuDown.Repeating && selectedWarpIndexes[selectedLobbyIndex] == activeWarps.Count - 1) {
+                            selectedWarpIndexes[selectedLobbyIndex] = 0;
+                            moveDir = 1;
+                        } else if (selectedWarpIndexes[selectedLobbyIndex] < activeWarps.Count - 1) {
                             selectedWarpIndexes[selectedLobbyIndex]++;
+                            moveDir = 1;
                         }
+                    }
+
+                    if (moveDir != 0) {
+                        Audio.Play(moveDir < 0 ? "event:/ui/main/rollover_up" : "event:/ui/main/rollover_down");
+                        selectWarpWiggler.Start();
                     }
                 }
 
@@ -165,11 +175,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 }
 
                 if (Input.MenuJournal.Pressed) {
-                    Audio.Play("event:/ui/main/rollover_down");
                     zoomWiggler.Start();
                     zoomLevel--;
                     if (zoomLevel < 0) {
                         zoomLevel = zoomLevels.Length - 1;
+                        Audio.Play("event:/ui/main/rollover_up");
+                    } else {
+                        Audio.Play("event:/ui/main/rollover_down");
                     }
 
                     targetScale = zoomLevels[zoomLevel];
