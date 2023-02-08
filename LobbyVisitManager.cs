@@ -9,7 +9,9 @@ namespace Celeste.Mod.CollabUtils2 {
         /// Each of the points the player has visited and thus generated circular snapshots.
         /// These points are in 8x8 pixel tile offsets from the top left of the map.
         /// </summary>
-        public List<VisitedPoint> VisitedPoints { get; }
+        public List<VisitedPoint> VisitedPoints { get; } = new List<VisitedPoint>();
+
+        public bool VisitedAll { get; private set; }
 
         private VisitedPoint lastVisitedPoint = new VisitedPoint(Vector2.Zero);
 
@@ -18,62 +20,88 @@ namespace Celeste.Mod.CollabUtils2 {
         public string SID { get; }
         public string Room { get; }
 
-        public string Key => string.IsNullOrWhiteSpace(Room) ? SID : $"{SID}.{Room}";
+        private static string GetKey(string sid, string room = null) =>
+            string.IsNullOrWhiteSpace(room) ? sid : $"{sid}.{room}";
+
+        public string Key => GetKey(SID, Room);
+
+        public bool MatchesKey(string sid, string room = null) => Key == GetKey(sid, room);
 
         public LobbyVisitManager(string sid, string room = null) {
             SID = sid;
             Room = room;
-            VisitedPoints = CollabModule.Instance.SaveData.VisitedLobbyPositions.TryGetValue(Key, out var value) ? FromBase64(value) : new List<VisitedPoint>();
+            Load();
         }
 
-        public void Reset() {
+        public void VisitAll(bool shouldSave = true) {
+            VisitedPoints.Clear();
+            VisitedAll = true;
+            if (shouldSave) {
+                Save();
+            }
+        }
+
+        public void Reset(bool shouldSave = true) {
             VisitedPoints.Clear();
             lastVisitedPoint = new VisitedPoint(Vector2.Zero);
+            VisitedAll = false;
+            if (shouldSave) {
+                Save();
+            }
         }
 
         public void Save() {
-            CollabModule.Instance.SaveData.VisitedLobbyPositions[Key] = ToBase64(VisitedPoints);
-        }
+            byte[] bytes;
+            // if we've visited everything, save a single 0xFF byte
+            if (VisitedAll) {
+                bytes = new[] { byte.MaxValue };
+            } else {
+                const int size = sizeof(short);
+                bytes = new byte[VisitedPoints.Count * size * 2];
+                int offset = 0;
 
-        private static List<VisitedPoint> FromBase64(string str) {
-            const int size = sizeof(short);
-
-            var bytes = Convert.FromBase64String(str);
-            if (bytes.Length % size * 2 != 0) return new List<VisitedPoint>();
-
-            var list = new List<VisitedPoint>();
-            for (int offset = 0; offset < bytes.Length; offset += size * 2) {
-                var x = BitConverter.ToInt16(bytes, offset);
-                var y = BitConverter.ToInt16(bytes, offset + size);
-                list.Add(new VisitedPoint(new Vector2(x, y)));
+                for (int i = 0; i < VisitedPoints.Count; i++) {
+                    var v = VisitedPoints[i];
+                    var b = BitConverter.GetBytes((short) v.Point.X);
+                    bytes[offset++] = b[0];
+                    bytes[offset++] = b[1];
+                    b = BitConverter.GetBytes((short) v.Point.Y);
+                    bytes[offset++] = b[0];
+                    bytes[offset++] = b[1];
+                }
             }
 
-            return list;
+            CollabModule.Instance.SaveData.VisitedLobbyPositions[Key] = Convert.ToBase64String(bytes);
         }
 
-        private static string ToBase64(List<VisitedPoint> list) {
-            const int size = sizeof(short);
+        private void Load() {
+            VisitedPoints.Clear();
+            VisitedAll = false;
 
-            var bytes = new byte[list.Count * size * 2];
-            int offset = 0;
-
-            for (int i = 0; i < list.Count; i++) {
-                var v = list[i];
-                var b = BitConverter.GetBytes((short) v.Point.X);
-                bytes[offset++] = b[0];
-                bytes[offset++] = b[1];
-                b = BitConverter.GetBytes((short) v.Point.Y);
-                bytes[offset++] = b[0];
-                bytes[offset++] = b[1];
+            if (!CollabModule.Instance.SaveData.VisitedLobbyPositions.TryGetValue(Key, out var value)) {
+                return;
             }
 
-            return Convert.ToBase64String(bytes);
+            const int size = sizeof(short);
+            var bytes = Convert.FromBase64String(value);
+            if (bytes.Length == 1 && bytes[0] == byte.MaxValue) {
+                VisitedAll = true;
+            } else if (bytes.Length % size * 2 == 0) {
+                for (int offset = 0; offset < bytes.Length; offset += size * 2) {
+                    var x = BitConverter.ToInt16(bytes, offset);
+                    var y = BitConverter.ToInt16(bytes, offset + size);
+                    VisitedPoints.Add(new VisitedPoint(new Vector2(x, y)));
+                }
+            }
         }
 
         public void VisitPoint(Vector2 point, bool shouldSave = true) {
             const int nearby_point_count = 50;
             const float generate_distance = EXPLORATION_RADIUS / 2f;
             const float sort_threshold = EXPLORATION_RADIUS;
+
+            // don't need to do anything if we've visited everywhere
+            if (VisitedAll) return;
 
             var lenSq = lastVisitedPoint == null ? float.MaxValue : (point - lastVisitedPoint.Point).LengthSquared();
             var shouldGenerate = !VisitedPoints.Any();

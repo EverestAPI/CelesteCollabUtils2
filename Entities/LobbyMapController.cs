@@ -35,7 +35,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     return;
                 }
 
-                if (!level.Paused && !level.Transitioning) {
+                if (!level.Paused && !level.Transitioning && VisitManager?.VisitedAll == false) {
                     var playerPosition = new Vector2(Math.Min((float) Math.Floor((player.Center.X - level.Bounds.X) / 8f), (float) Math.Round(level.Bounds.Width / 8f, MidpointRounding.AwayFromZero) - 1),
                         Math.Min((float) Math.Floor((player.Center.Y - level.Bounds.Y) / 8f), (float) Math.Round(level.Bounds.Height / 8f, MidpointRounding.AwayFromZero) + 1));
                     VisitManager?.VisitPoint(playerPosition);

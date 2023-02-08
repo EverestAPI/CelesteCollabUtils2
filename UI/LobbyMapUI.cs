@@ -238,7 +238,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private Vector2 originForPosition(Vector2 point) {
             var tileX = point.X / 8f;
             var tileY = point.Y / 8f;
-            return new Vector2(tileX / (overlayTexture?.Width ?? 1), tileY / (overlayTexture?.Height ?? 1));
+            return new Vector2(tileX / (lobbyMapInfo?.RoomWidth ?? 1), tileY / (lobbyMapInfo?.RoomHeight ?? 1));
         }
 
         /// <summary>
@@ -320,16 +320,28 @@ namespace Celeste.Mod.CollabUtils2.UI {
             lobbyMapInfo = selection.Info;
 
             // get or create a visit manager
-            visitManager = new LobbyVisitManager(selection.SID, selection.Room);
+            if (Scene.Tracker.GetEntity<LobbyMapController>() is LobbyMapController lmc &&
+                (lmc.VisitManager?.MatchesKey(selection.SID, selection.Room) ?? false)) {
+                visitManager = lmc.VisitManager;
+            } else {
+                visitManager = new LobbyVisitManager(selection.SID, selection.Room);
+            }
 
             // generate the 2d array of visited tiles
-            visitedTiles = generateVisitedTiles(lobbyMapInfo, visitManager);
+            if (openedWithRevealMap || visitManager.VisitedAll) {
+                visitedTiles = new ByteArray2D(0, 0);
+            } else {
+                visitedTiles = generateVisitedTiles(lobbyMapInfo, visitManager);
+                var visibleMarkers = markers.Where(m => isVisited(m.Position)).ToArray();
+                if (visibleMarkers.Length == markers.Length) {
+                    visitManager.VisitAll();
+                }
+                markers = visibleMarkers;
+            }
 
             // find warps
-            allWarps.Clear();
             activeWarps.Clear();
-            allWarps.AddRange(markers.Where(f => f.Type == LobbyMapController.MarkerType.Warp).OrderBy(f => f.MarkerId));
-            activeWarps.AddRange(openedWithRevealMap ? allWarps : allWarps.Where(w => isVisited(w.Position)));
+            activeWarps.AddRange(markers.Where(f => f.Type == LobbyMapController.MarkerType.Warp).OrderBy(f => f.MarkerId));
 
             // regenerate marker components
             markerComponents.ForEach(c => c.RemoveSelf());
@@ -359,10 +371,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
             // get the map texture
             mapTexture = GFX.Gui[lobbyMapInfo.MapTexture].Texture.Texture;
 
-            // generate the overlay texture
+            // generate the overlay texture if we should
             overlayTexture?.Dispose();
-            overlayTexture = new Texture2D(Engine.Instance.GraphicsDevice, lobbyMapInfo.RoomWidth, lobbyMapInfo.RoomHeight, false, SurfaceFormat.Alpha8);
-            overlayTexture.SetData(visitedTiles.Data);
+            overlayTexture = null;
+            if (!openedWithRevealMap && !visitManager.VisitedAll) {
+                overlayTexture = new Texture2D(Engine.Instance.GraphicsDevice, lobbyMapInfo.RoomWidth, lobbyMapInfo.RoomHeight, false, SurfaceFormat.Alpha8);
+                overlayTexture.SetData(visitedTiles.Data);
+            }
 
             // set view
             if (zoomLevel < 0) {
@@ -433,7 +448,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         /// </summary>
         private void beforeRender() {
             // bail if there's nothing to draw
-            if (renderTarget?.IsDisposed != false || overlayTexture?.IsDisposed != false || mapTexture?.IsDisposed != false) {
+            if (renderTarget?.IsDisposed != false || mapTexture?.IsDisposed != false) {
                 return;
             }
 
@@ -450,7 +465,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             Engine.Graphics.GraphicsDevice.Clear(Color.Transparent);
 
             // only draw the overlay if reveal map is not enabled
-            if (!openedWithRevealMap) {
+            if (!openedWithRevealMap && !visitManager.VisitedAll && overlayTexture?.IsDisposed == false) {
                 // draw the exploration as a direct alpha channel
                 Draw.SpriteBatch.Begin(SpriteSortMode.Immediate, new BlendState {
                     AlphaSourceBlend = Blend.One,
@@ -608,7 +623,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 var originOffset = origin - actualOrigin;
                 image.Position = new Vector2(bounds.Center.X + originOffset.X * actualWidth, bounds.Center.Y + originOffset.Y * actualHeight);
                 image.Scale = new Vector2(imageScale);
-                image.Visible = openedWithRevealMap || isVisited(image.Info.Position);
             }
 
             // move the player icon to the currently selected warp
