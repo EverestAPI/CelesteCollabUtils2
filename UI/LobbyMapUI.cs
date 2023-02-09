@@ -345,7 +345,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             } else {
                 visitedTiles = generateVisitedTiles(lobbyMapInfo, visitManager);
                 var visibleMarkers = markers.Where(m => isVisited(m.Position)).ToArray();
-                if (visibleMarkers.Length == markers.Length) {
+                if (visibleMarkers.Length == markers.Length && lobbyMapInfo.RevealWhenAllMarkersFound) {
                     visitManager.VisitAll();
                 }
                 markers = visibleMarkers;

@@ -91,6 +91,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             public bool ShowHeartSide;
             public bool ShowHeartCount;
 
+            public bool RevealWhenAllMarkersFound;
+
             #endregion
 
             public int RoomWidth;
@@ -117,6 +119,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 ShowJournals = data.Bool("showJournals", true);
                 ShowHeartSide = data.Bool("showHeartSide", true);
                 ShowHeartCount = data.Bool("showHeartCount", true);
+
+                RevealWhenAllMarkersFound = data.Bool("revealWhenAllMarkersFound");
 
                 var customMarkers = data.Attr("customMarkers");
                 CustomMarkers = !string.IsNullOrWhiteSpace(customMarkers) ? customMarkers.Split(commaSeparator, StringSplitOptions.RemoveEmptyEntries) : new string[0];

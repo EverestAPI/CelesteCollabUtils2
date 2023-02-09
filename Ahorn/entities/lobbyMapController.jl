@@ -10,7 +10,8 @@ using ..Ahorn, Maple
     mapIcon::String="CollabUtils2/lobbies/map", journalIcon::String="CollabUtils2/lobbies/journal",
     heartSideIcon::String="CollabUtils2/lobbies/heartside",
     showWarps::Bool=true, showRainbowBerry::Bool=true, showHeartGate::Bool=true, showGyms::Bool=true,
-    showMaps::Bool=true, showJournals::Bool=true, showHeartSide::Bool=true, showHeartCount::Bool=true
+    showMaps::Bool=true, showJournals::Bool=true, showHeartSide::Bool=true, showHeartCount::Bool=true,
+    revealWhenAllMarkersFound::Bool=false
 )
 
 const placements = Ahorn.PlacementDict(

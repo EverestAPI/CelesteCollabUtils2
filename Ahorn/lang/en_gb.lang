@@ -78,6 +78,7 @@ placements.entities.CollabUtils2/LobbyMapController.tooltips.showGyms=Whether gy
 placements.entities.CollabUtils2/LobbyMapController.tooltips.showMaps=Whether map entry pedestals should be shown on the lobby map.
 placements.entities.CollabUtils2/LobbyMapController.tooltips.showJournals=Whether journals should be shown on the lobby map.
 placements.entities.CollabUtils2/LobbyMapController.tooltips.showHeartCount=Whether the currently collected heart count should appear in the top left.
+placements.entities.CollabUtils2/LobbyMapController.tooltips.revealWhenAllMarkersFound=Whether the entire map should be revealed once every marker has been uncovered.
 
 # Lobby Map Warp
 placements.entities.CollabUtils2/LobbyMapWarp.tooltips.warpId=A unique identifier to represent this warp point. It will be used to sort the warps when selecting.

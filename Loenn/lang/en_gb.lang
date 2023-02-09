@@ -105,6 +105,7 @@ entities.CollabUtils2/LobbyMapController.attributes.description.showGyms=Whether
 entities.CollabUtils2/LobbyMapController.attributes.description.showMaps=Whether map entry pedestals should be shown on the lobby map.
 entities.CollabUtils2/LobbyMapController.attributes.description.showJournals=Whether journals should be shown on the lobby map.
 entities.CollabUtils2/LobbyMapController.attributes.description.showHeartCount=Whether the currently collected heart count should appear in the top left.
+entities.CollabUtils2/LobbyMapController.attributes.description.revealWhenAllMarkersFound=Whether the entire map should be revealed once every marker has been uncovered.
 
 # Lobby Map Warp
 entities.CollabUtils2/LobbyMapWarp.placements.name.default=Lobby Map Warp
