@@ -353,13 +353,16 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             // find warps
             activeWarps.Clear();
-            activeWarps.AddRange(markers.Where(f => f.Type == LobbyMapController.MarkerType.Warp).OrderBy(f => f.MarkerId));
+            activeWarps.AddRange(markers
+                .Where(f => f.Type == LobbyMapController.MarkerType.Warp && (!f.WarpRequiresActivation || visitManager.ActivatedWarps.Contains(f.MarkerId)))
+                .OrderBy(f => f.MarkerId));
 
             // regenerate marker components
             markerComponents.ForEach(c => c.RemoveSelf());
             markerComponents.Clear();
             markerComponents.AddRange(markers
                 .Where(f => lobbyMapInfo.ShouldShowMarker(f))
+                .Where(f => f.Type != LobbyMapController.MarkerType.Warp || !f.WarpRequiresActivation || visitManager.ActivatedWarps.Contains(f.MarkerId))
                 .OrderByDescending(f => f.Type)
                 .Select(createMarkerComponent));
             markerComponents.ForEach(Add);

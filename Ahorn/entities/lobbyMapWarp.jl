@@ -10,7 +10,7 @@ const default_sprite = "decals/1-forsakencity/bench_concrete"
     warpSpritePath::String=default_sprite, warpSpriteFlipX::Bool=false,
     playActivateSprite::Bool=true, activateSpriteFlipX::Bool=false,
     playerFacing::String="Right", interactOffsetY::Integer=-16, depth::Integer=2000,
-    wipeType::String="Mountain"
+    wipeType::String="Mountain", warpRequiresActivation::Bool=false
 )
 
 const placements = Ahorn.PlacementDict(

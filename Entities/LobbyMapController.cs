@@ -198,6 +198,12 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             /// </summary>
             public string WipeType;
 
+            /// <summary>
+            /// If this marker is a warp, this defines whether the player must interact with it before it
+            /// becomes visible on the map.
+            /// </summary>
+            public bool WarpRequiresActivation;
+
             public static bool TryParse(EntityData data, ControllerInfo controllerInfo, out MarkerInfo value) {
                 value = default;
 
@@ -214,6 +220,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     value.MarkerId = data.Attr("warpId");
                     value.Icon = data.Attr("icon");
                     value.WipeType = data.Attr("wipeType", "Celeste.Mountain");
+                    value.WarpRequiresActivation = data.Bool("warpRequiresActivation");
                 }
                 // CU2 rainbow berry
                 else if (data.Name == "CollabUtils2/RainbowBerry") {

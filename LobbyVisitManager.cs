@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Celeste.Mod.CollabUtils2 {
@@ -10,6 +11,8 @@ namespace Celeste.Mod.CollabUtils2 {
         /// These points are in 8x8 pixel tile offsets from the top left of the map.
         /// </summary>
         public List<VisitedPoint> VisitedPoints { get; } = new List<VisitedPoint>();
+
+        public List<string> ActivatedWarps { get; } = new List<string>();
 
         public bool VisitedAll { get; private set; }
 
@@ -43,55 +46,92 @@ namespace Celeste.Mod.CollabUtils2 {
 
         public void Reset(bool shouldSave = true) {
             VisitedPoints.Clear();
-            lastVisitedPoint = new VisitedPoint(Vector2.Zero);
+            ActivatedWarps.Clear();
             VisitedAll = false;
+
+            lastVisitedPoint = new VisitedPoint(Vector2.Zero);
+
             if (shouldSave) {
                 Save();
             }
         }
 
         public void Save() {
-            byte[] bytes;
-            // if we've visited everything, save a single 0xFF byte
-            if (VisitedAll) {
-                bytes = new[] { byte.MaxValue };
-            } else {
-                const int size = sizeof(short);
-                bytes = new byte[VisitedPoints.Count * size * 2];
-                int offset = 0;
+            try {
+                using (var stream = new MemoryStream())
+                using (var writer = new BinaryWriter(stream)) {
+                    // write whether we've visited everything
+                    writer.Write(VisitedAll);
 
-                for (int i = 0; i < VisitedPoints.Count; i++) {
-                    var v = VisitedPoints[i];
-                    var b = BitConverter.GetBytes((short) v.Point.X);
-                    bytes[offset++] = b[0];
-                    bytes[offset++] = b[1];
-                    b = BitConverter.GetBytes((short) v.Point.Y);
-                    bytes[offset++] = b[0];
-                    bytes[offset++] = b[1];
+                    // write points if we haven't visited them all
+                    if (!VisitedAll) {
+                        writer.Write((uint) VisitedPoints.Count);
+                        foreach (var v in VisitedPoints) {
+                            writer.Write((short) v.Point.X);
+                            writer.Write((short) v.Point.Y);
+                        }
+                    }
+
+                    // write activated warps
+                    writer.Write((uint) ActivatedWarps.Count);
+                    foreach (var w in ActivatedWarps) {
+                        writer.Write(w);
+                    }
+
+                    // store it
+                    CollabModule.Instance.SaveData.VisitedLobbyPositions[Key] = Convert.ToBase64String(stream.ToArray());
                 }
+            } catch (Exception) {
+                Logger.Log(LogLevel.Error, "CollabUtils2/LobbyVisitManager", "Save: Error trying to serialise visited points.");
             }
-
-            CollabModule.Instance.SaveData.VisitedLobbyPositions[Key] = Convert.ToBase64String(bytes);
         }
 
         private void Load() {
             VisitedPoints.Clear();
+            ActivatedWarps.Clear();
             VisitedAll = false;
 
             if (!CollabModule.Instance.SaveData.VisitedLobbyPositions.TryGetValue(Key, out var value)) {
                 return;
             }
 
-            const int size = sizeof(short);
-            var bytes = Convert.FromBase64String(value);
-            if (bytes.Length == 1 && bytes[0] == byte.MaxValue) {
-                VisitedAll = true;
-            } else if (bytes.Length % size * 2 == 0) {
-                for (int offset = 0; offset < bytes.Length; offset += size * 2) {
-                    var x = BitConverter.ToInt16(bytes, offset);
-                    var y = BitConverter.ToInt16(bytes, offset + size);
-                    VisitedPoints.Add(new VisitedPoint(new Vector2(x, y)));
+            try {
+                var bytes = Convert.FromBase64String(value);
+                using (var stream = new MemoryStream(bytes))
+                using (var reader = new BinaryReader(stream)) {
+                    // read whether we've visited everything
+                    VisitedAll = reader.ReadBoolean();
+
+                    // if we haven't visited everything, read all the points
+                    if (!VisitedAll) {
+                        var visitedCount = reader.ReadUInt32();
+                        for (int i = 0; i < visitedCount; i++) {
+                            var x = reader.ReadInt16();
+                            var y = reader.ReadInt16();
+                            VisitedPoints.Add(new VisitedPoint(new Vector2(x, y)));
+                        }
+                    }
+
+                    // read all the activated warps
+                    var activatedCount = reader.ReadUInt32();
+                    for (int i = 0; i < activatedCount; i++) {
+                        var warpId = reader.ReadString();
+                        ActivatedWarps.Add(warpId);
+                    }
                 }
+            } catch (Exception) {
+                Logger.Log(LogLevel.Error, "CollabUtils2/LobbyVisitManager", "Load: Error trying to deserialise visited points, clearing stored data instead.");
+                CollabModule.Instance.SaveData.VisitedLobbyPositions.Remove(Key);
+            }
+        }
+
+        public void ActivateWarp(string id, bool shouldSave = true) {
+            if (ActivatedWarps.Contains(id)) return;
+
+            ActivatedWarps.Add(id);
+
+            if (shouldSave) {
+                Save();
             }
         }
 

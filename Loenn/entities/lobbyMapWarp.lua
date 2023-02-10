@@ -30,6 +30,7 @@ lobbyMapWarp.placements = {
             interactOffsetY = -16,
             depth = 2000,
             wipeType = celesteEnums.wipe_names.Mountain,
+            warpRequiresActivation = false,
         }
     }
 }

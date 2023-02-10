@@ -91,6 +91,7 @@ placements.entities.CollabUtils2/LobbyMapWarp.tooltips.activateSpriteFlipX=Wheth
 placements.entities.CollabUtils2/LobbyMapWarp.tooltips.playerFacing=The direction Madeline will face before playing the activation animation.
 placements.entities.CollabUtils2/LobbyMapWarp.tooltips.interactOffsetY=The offset in pixels from the warp position at which to display the talk interaction bubble. Defaults to -16.
 placements.entities.CollabUtils2/LobbyMapWarp.tooltips.depth=The depth at which the warp will render. Defaults to 2000 (Depths.Below).
+placements.entities.CollabUtils2/LobbyMapWarp.tooltips.warpRequiresActivation=If true, this warp must be activated before it will appear on the map.
 
 # Lobby Map Marker
 placements.entities.CollabUtils2/LobbyMapMarker.tooltips.icon=The icon to display for this simple map marker.
