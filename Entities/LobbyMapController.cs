@@ -35,7 +35,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     return;
                 }
 
-                if (!level.Paused && !level.Transitioning) {
+                if (!level.Paused && !level.Transitioning && VisitManager?.VisitedAll == false) {
                     var playerPosition = new Vector2(Math.Min((float) Math.Floor((player.Center.X - level.Bounds.X) / 8f), (float) Math.Round(level.Bounds.Width / 8f, MidpointRounding.AwayFromZero) - 1),
                         Math.Min((float) Math.Floor((player.Center.Y - level.Bounds.Y) / 8f), (float) Math.Round(level.Bounds.Height / 8f, MidpointRounding.AwayFromZero) + 1));
                     VisitManager?.VisitPoint(playerPosition);
@@ -91,6 +91,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             public bool ShowHeartSide;
             public bool ShowHeartCount;
 
+            public bool RevealWhenAllMarkersFound;
+
             #endregion
 
             public int RoomWidth;
@@ -117,6 +119,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 ShowJournals = data.Bool("showJournals", true);
                 ShowHeartSide = data.Bool("showHeartSide", true);
                 ShowHeartCount = data.Bool("showHeartCount", true);
+
+                RevealWhenAllMarkersFound = data.Bool("revealWhenAllMarkersFound");
 
                 var customMarkers = data.Attr("customMarkers");
                 CustomMarkers = !string.IsNullOrWhiteSpace(customMarkers) ? customMarkers.Split(commaSeparator, StringSplitOptions.RemoveEmptyEntries) : new string[0];
@@ -194,6 +198,12 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             /// </summary>
             public string WipeType;
 
+            /// <summary>
+            /// If this marker is a warp, this defines whether the player must interact with it before it
+            /// becomes visible on the map.
+            /// </summary>
+            public bool WarpRequiresActivation;
+
             public static bool TryParse(EntityData data, ControllerInfo controllerInfo, out MarkerInfo value) {
                 value = default;
 
@@ -210,6 +220,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     value.MarkerId = data.Attr("warpId");
                     value.Icon = data.Attr("icon");
                     value.WipeType = data.Attr("wipeType", "Celeste.Mountain");
+                    value.WarpRequiresActivation = data.Bool("warpRequiresActivation");
                 }
                 // CU2 rainbow berry
                 else if (data.Name == "CollabUtils2/RainbowBerry") {
@@ -233,8 +244,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     return false;
                 }
 
-                // grab the entity's position
-                value.Position = data.Position;
+                // grab the entity's centre
+                value.Position = new Vector2(data.Position.X + data.Width / 2f, data.Position.Y + data.Height / 2f);
 
                 // if we haven't explictly set a marker id, default to the type and entity id
                 if (string.IsNullOrWhiteSpace(value.MarkerId)) {
@@ -307,7 +318,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         }
 
         public enum MarkerType {
-            Custom = 0,
             Warp,
             RainbowBerry,
             HeartGate,
@@ -315,6 +325,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             Map,
             Journal,
             HeartSide,
+            Custom,
         }
     }
 }

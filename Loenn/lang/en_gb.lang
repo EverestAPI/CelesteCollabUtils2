@@ -105,6 +105,7 @@ entities.CollabUtils2/LobbyMapController.attributes.description.showGyms=Whether
 entities.CollabUtils2/LobbyMapController.attributes.description.showMaps=Whether map entry pedestals should be shown on the lobby map.
 entities.CollabUtils2/LobbyMapController.attributes.description.showJournals=Whether journals should be shown on the lobby map.
 entities.CollabUtils2/LobbyMapController.attributes.description.showHeartCount=Whether the currently collected heart count should appear in the top left.
+entities.CollabUtils2/LobbyMapController.attributes.description.revealWhenAllMarkersFound=Whether the entire map should be revealed once every marker has been uncovered.
 
 # Lobby Map Warp
 entities.CollabUtils2/LobbyMapWarp.placements.name.default=Lobby Map Warp
@@ -114,10 +115,11 @@ entities.CollabUtils2/LobbyMapWarp.attributes.description.dialogKey=The full key
 entities.CollabUtils2/LobbyMapWarp.attributes.description.warpSpritePath=The texture in the Gameplay atlas to show in the world. This is justified at (0.5, 1.0). Defaults to the Forsaken City bench.
 entities.CollabUtils2/LobbyMapWarp.attributes.description.warpSpriteFlipX=Whether to flip the sprite horizontally. Defaults to false.
 entities.CollabUtils2/LobbyMapWarp.attributes.description.playActivateSprite=Whether to play the sitting animation before showing the map. Defaults to true.
-entities.CollabUtils2/LobbyMapWarp.attributes.description.activatespriteFlipX=Whether to flip the activation sprite horizontally. Defaults to false.
+entities.CollabUtils2/LobbyMapWarp.attributes.description.activateSpriteFlipX=Whether to flip the activation sprite horizontally. Defaults to false.
 entities.CollabUtils2/LobbyMapWarp.attributes.description.playerFacing=The direction Madeline will face before playing the activation animation.
 entities.CollabUtils2/LobbyMapWarp.attributes.description.interactOffsetY=The offset in pixels from the warp position at which to display the talk interaction bubble. Defaults to -16.
 entities.CollabUtils2/LobbyMapWarp.attributes.description.depth=The depth at which the warp will render. Defaults to 2000 (Depths.Below).
+entities.CollabUtils2/LobbyMapWarp.attributes.description.warpRequiresActivation=If true, this warp must be activated before it will appear on the map.
 
 # Lobby Map Marker
 entities.CollabUtils2/LobbyMapMarker.placements.name.default=Lobby Map Marker

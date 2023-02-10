@@ -48,6 +48,9 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         private void onTalk(Player player) {
             if (player.Scene is Level level) {
+                if (level.Tracker.GetEntity<LobbyMapController>() is LobbyMapController lmc) {
+                    lmc.VisitManager?.ActivateWarp(info.MarkerId);
+                }
                 if (playActivateSprite) {
                     Add(new Coroutine(activateRoutine(player)));
                 } else {

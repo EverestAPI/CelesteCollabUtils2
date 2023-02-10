@@ -28,6 +28,7 @@ lobbyMapController.placements = {
             showHeartSide = true,
             showJournals = true,
             showHeartCount = true,
+            revealWhenAllMarkersFound = false,
         }
     }
 }

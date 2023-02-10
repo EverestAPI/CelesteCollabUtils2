@@ -20,7 +20,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private readonly List<LobbySelection> lobbySelections = new List<LobbySelection>();
 
         // all warps for the selected lobby
-        private readonly List<LobbyMapController.MarkerInfo> allWarps = new List<LobbyMapController.MarkerInfo>();
         private readonly List<LobbyMapController.MarkerInfo> activeWarps = new List<LobbyMapController.MarkerInfo>();
 
         // current lobby setup
@@ -106,10 +105,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 maddyRunSprite.AddLoop("idle", "", 1 / 8f);
                 maddyRunSprite.Play("idle");
 
+                // find all the lobby controllers for this collab
                 getLobbyControllers(level);
-                updateSelectedLobby(true);
 
-                openScreen();
+                // if we successfully selected a lobby to view, open the screen
+                if (updateSelectedLobby(true)) {
+                    openScreen();
+                }
             }
         }
 
@@ -129,18 +131,28 @@ namespace Celeste.Mod.CollabUtils2.UI {
             // handle input
             if (focused) {
                 if (activeWarps.Count > 0) {
+                    int moveDir = 0;
                     if (Input.MenuUp.Pressed) {
-                        if (selectedWarpIndexes[selectedLobbyIndex] > 0) {
-                            Audio.Play("event:/ui/main/rollover_up");
-                            selectWarpWiggler.Start();
+                        if (!Input.MenuUp.Repeating && selectedWarpIndexes[selectedLobbyIndex] == 0) {
+                            selectedWarpIndexes[selectedLobbyIndex] = activeWarps.Count - 1;
+                            moveDir = -1;
+                        } else if (selectedWarpIndexes[selectedLobbyIndex] > 0) {
                             selectedWarpIndexes[selectedLobbyIndex]--;
+                            moveDir = -1;
                         }
                     } else if (Input.MenuDown.Pressed) {
-                        if (selectedWarpIndexes[selectedLobbyIndex] < activeWarps.Count - 1) {
-                            Audio.Play("event:/ui/main/rollover_down");
-                            selectWarpWiggler.Start();
+                        if (!Input.MenuDown.Repeating && selectedWarpIndexes[selectedLobbyIndex] == activeWarps.Count - 1) {
+                            selectedWarpIndexes[selectedLobbyIndex] = 0;
+                            moveDir = 1;
+                        } else if (selectedWarpIndexes[selectedLobbyIndex] < activeWarps.Count - 1) {
                             selectedWarpIndexes[selectedLobbyIndex]++;
+                            moveDir = 1;
                         }
+                    }
+
+                    if (moveDir != 0) {
+                        Audio.Play(moveDir < 0 ? "event:/ui/main/rollover_up" : "event:/ui/main/rollover_down");
+                        selectWarpWiggler.Start();
                     }
                 }
 
@@ -163,11 +175,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 }
 
                 if (Input.MenuJournal.Pressed) {
-                    Audio.Play("event:/ui/main/rollover_down");
                     zoomWiggler.Start();
                     zoomLevel--;
                     if (zoomLevel < 0) {
                         zoomLevel = zoomLevels.Length - 1;
+                        Audio.Play("event:/ui/main/rollover_up");
+                    } else {
+                        Audio.Play("event:/ui/main/rollover_down");
                     }
 
                     targetScale = zoomLevels[zoomLevel];
@@ -236,7 +250,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private Vector2 originForPosition(Vector2 point) {
             var tileX = point.X / 8f;
             var tileY = point.Y / 8f;
-            return new Vector2(tileX / (overlayTexture?.Width ?? 1), tileY / (overlayTexture?.Height ?? 1));
+            return new Vector2(tileX / (lobbyMapInfo?.RoomWidth ?? 1), tileY / (lobbyMapInfo?.RoomHeight ?? 1));
         }
 
         /// <summary>
@@ -291,37 +305,64 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             // sort lobbies by SID
             lobbySelections.Sort((lhs, rhs) => string.Compare(lhs.SID, rhs.SID, StringComparison.Ordinal));
+            selectedWarpIndexes = new int[lobbySelections.Count];
 
             // select the current lobby
             selectedLobbyIndex = lobbySelections.FindIndex(s => s.SID == level.Session.Area.SID);
-            selectedWarpIndexes = new int[lobbySelections.Count];
+
+            // verify selection
+            if (selectedLobbyIndex < 0) {
+                Logger.Log(LogLevel.Warn, "CollabUtils2/LobbyMapUI", $"getLobbyControllers: Couldn't find map for {level.Session.Area.SID}, defaulting to first");
+                selectedLobbyIndex = 0;
+            }
         }
 
         /// <summary>
         /// Configures the UI for the currently selected lobby.
         /// </summary>
-        public void updateSelectedLobby(bool first = false) {
+        public bool updateSelectedLobby(bool first = false) {
+            // validate lobby index
+            if (selectedLobbyIndex < 0 || selectedLobbyIndex >= lobbySelections.Count) {
+                Logger.Log(LogLevel.Warn, "CollabUtils2/LobbyMapUI", $"updateSelectedLobby: Invalid lobby selection {selectedLobbyIndex}");
+                return false;
+            }
+
             var selection = lobbySelections[selectedLobbyIndex];
             var markers = lobbySelections[selectedLobbyIndex].Markers;
             lobbyMapInfo = selection.Info;
 
             // get or create a visit manager
-            visitManager = new LobbyVisitManager(selection.SID, selection.Room);
+            if (Scene.Tracker.GetEntity<LobbyMapController>() is LobbyMapController lmc &&
+                (lmc.VisitManager?.MatchesKey(selection.SID, selection.Room) ?? false)) {
+                visitManager = lmc.VisitManager;
+            } else {
+                visitManager = new LobbyVisitManager(selection.SID, selection.Room);
+            }
 
             // generate the 2d array of visited tiles
-            visitedTiles = generateVisitedTiles(lobbyMapInfo, visitManager);
+            if (openedWithRevealMap || visitManager.VisitedAll) {
+                visitedTiles = new ByteArray2D(0, 0);
+            } else {
+                visitedTiles = generateVisitedTiles(lobbyMapInfo, visitManager);
+                var visibleMarkers = markers.Where(m => isVisited(m.Position)).ToArray();
+                if (visibleMarkers.Length == markers.Length && lobbyMapInfo.RevealWhenAllMarkersFound) {
+                    visitManager.VisitAll();
+                }
+                markers = visibleMarkers;
+            }
 
             // find warps
-            allWarps.Clear();
             activeWarps.Clear();
-            allWarps.AddRange(markers.Where(f => f.Type == LobbyMapController.MarkerType.Warp).OrderBy(f => f.MarkerId));
-            activeWarps.AddRange(openedWithRevealMap ? allWarps : allWarps.Where(w => isVisited(w.Position)));
+            activeWarps.AddRange(markers
+                .Where(f => f.Type == LobbyMapController.MarkerType.Warp && (!f.WarpRequiresActivation || visitManager.ActivatedWarps.Contains(f.MarkerId)))
+                .OrderBy(f => f.MarkerId));
 
             // regenerate marker components
             markerComponents.ForEach(c => c.RemoveSelf());
             markerComponents.Clear();
             markerComponents.AddRange(markers
                 .Where(f => lobbyMapInfo.ShouldShowMarker(f))
+                .Where(f => f.Type != LobbyMapController.MarkerType.Warp || !f.WarpRequiresActivation || visitManager.ActivatedWarps.Contains(f.MarkerId))
                 .OrderByDescending(f => f.Type)
                 .Select(createMarkerComponent));
             markerComponents.ForEach(Add);
@@ -345,10 +386,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
             // get the map texture
             mapTexture = GFX.Gui[lobbyMapInfo.MapTexture].Texture.Texture;
 
-            // generate the overlay texture
+            // generate the overlay texture if we should
             overlayTexture?.Dispose();
-            overlayTexture = new Texture2D(Engine.Instance.GraphicsDevice, lobbyMapInfo.RoomWidth, lobbyMapInfo.RoomHeight, false, SurfaceFormat.Alpha8);
-            overlayTexture.SetData(visitedTiles.Data);
+            overlayTexture = null;
+            if (!openedWithRevealMap && !visitManager.VisitedAll) {
+                overlayTexture = new Texture2D(Engine.Instance.GraphicsDevice, lobbyMapInfo.RoomWidth, lobbyMapInfo.RoomHeight, false, SurfaceFormat.Alpha8);
+                overlayTexture.SetData(visitedTiles.Data);
+            }
 
             // set view
             if (zoomLevel < 0) {
@@ -398,6 +442,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 var levelSetStats = SaveData.Instance.GetLevelSets().FirstOrDefault(ls => ls.Name == lobbyMapInfo.LevelSet);
                 heartCount = levelSetStats?.TotalHeartGems ?? 0;
             }
+
+            return true;
         }
 
         /// <summary>
@@ -417,7 +463,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         /// </summary>
         private void beforeRender() {
             // bail if there's nothing to draw
-            if (renderTarget?.IsDisposed != false || overlayTexture?.IsDisposed != false || mapTexture?.IsDisposed != false) {
+            if (renderTarget?.IsDisposed != false || mapTexture?.IsDisposed != false) {
                 return;
             }
 
@@ -434,7 +480,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             Engine.Graphics.GraphicsDevice.Clear(Color.Transparent);
 
             // only draw the overlay if reveal map is not enabled
-            if (!openedWithRevealMap) {
+            if (!openedWithRevealMap && !visitManager.VisitedAll && overlayTexture?.IsDisposed == false) {
                 // draw the exploration as a direct alpha channel
                 Draw.SpriteBatch.Begin(SpriteSortMode.Immediate, new BlendState {
                     AlphaSourceBlend = Blend.One,
@@ -592,7 +638,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 var originOffset = origin - actualOrigin;
                 image.Position = new Vector2(bounds.Center.X + originOffset.X * actualWidth, bounds.Center.Y + originOffset.Y * actualHeight);
                 image.Scale = new Vector2(imageScale);
-                image.Visible = openedWithRevealMap || isVisited(image.Info.Position);
             }
 
             // move the player icon to the currently selected warp
