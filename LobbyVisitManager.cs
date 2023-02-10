@@ -19,6 +19,7 @@ namespace Celeste.Mod.CollabUtils2 {
         private VisitedPoint lastVisitedPoint = new VisitedPoint(Vector2.Zero);
 
         public const int EXPLORATION_RADIUS = 20;
+        private const ushort currentVersion = 1;
 
         public string SID { get; }
         public string Room { get; }
@@ -60,6 +61,9 @@ namespace Celeste.Mod.CollabUtils2 {
             try {
                 using (var stream = new MemoryStream())
                 using (var writer = new BinaryWriter(stream)) {
+                    // write version number
+                    writer.Write(currentVersion);
+
                     // write whether we've visited everything
                     writer.Write(VisitedAll);
 
@@ -96,19 +100,31 @@ namespace Celeste.Mod.CollabUtils2 {
             }
 
             try {
+                var visitedAll = false;
+                var visitedPoints = new List<VisitedPoint>();
+                var activatedWarps = new List<string>();
                 var bytes = Convert.FromBase64String(value);
+
                 using (var stream = new MemoryStream(bytes))
                 using (var reader = new BinaryReader(stream)) {
+                    // check a version number so we can clear out bad data later
+                    var version = reader.ReadUInt16();
+                    if (version != currentVersion) {
+                        Logger.Log(LogLevel.Warn, "CollabUtils2/LobbyVisitManager", "Load: Wrong version found, clearing stored data instead.");
+                        CollabModule.Instance.SaveData.VisitedLobbyPositions.Remove(Key);
+                        return;
+                    }
+
                     // read whether we've visited everything
-                    VisitedAll = reader.ReadBoolean();
+                    visitedAll = reader.ReadBoolean();
 
                     // if we haven't visited everything, read all the points
-                    if (!VisitedAll) {
+                    if (!visitedAll) {
                         var visitedCount = reader.ReadUInt32();
                         for (int i = 0; i < visitedCount; i++) {
                             var x = reader.ReadInt16();
                             var y = reader.ReadInt16();
-                            VisitedPoints.Add(new VisitedPoint(new Vector2(x, y)));
+                            visitedPoints.Add(new VisitedPoint(new Vector2(x, y)));
                         }
                     }
 
@@ -116,9 +132,13 @@ namespace Celeste.Mod.CollabUtils2 {
                     var activatedCount = reader.ReadUInt32();
                     for (int i = 0; i < activatedCount; i++) {
                         var warpId = reader.ReadString();
-                        ActivatedWarps.Add(warpId);
+                        activatedWarps.Add(warpId);
                     }
                 }
+
+                VisitedAll = visitedAll;
+                VisitedPoints.AddRange(visitedPoints);
+                ActivatedWarps.AddRange(activatedWarps);
             } catch (Exception) {
                 Logger.Log(LogLevel.Error, "CollabUtils2/LobbyVisitManager", "Load: Error trying to deserialise visited points, clearing stored data instead.");
                 CollabModule.Instance.SaveData.VisitedLobbyPositions.Remove(Key);
