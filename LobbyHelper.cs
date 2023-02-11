@@ -184,6 +184,7 @@ namespace Celeste.Mod.CollabUtils2 {
             On.Celeste.SaveData.RegisterPoemEntry += onRegisterPoemEntry;
             On.Celeste.SaveData.RegisterCompletion += onRegisterCompletion;
             On.Celeste.SaveData.AfterInitialize += onSaveDataAfterInitialize;
+            On.Celeste.OuiChapterSelectIcon.Show += onChapterSelectIconShow;
             On.Celeste.OuiChapterSelectIcon.AssistModeUnlockRoutine += onAssistUnlockRoutine;
             Everest.Events.Journal.OnEnter += onJournalEnter;
             On.Celeste.OuiFileSelectSlot.Show += onOuiFileSelectSlotShow;
@@ -217,6 +218,7 @@ namespace Celeste.Mod.CollabUtils2 {
             On.Celeste.SaveData.RegisterPoemEntry -= onRegisterPoemEntry;
             On.Celeste.SaveData.RegisterCompletion -= onRegisterCompletion;
             On.Celeste.SaveData.AfterInitialize -= onSaveDataAfterInitialize;
+            On.Celeste.OuiChapterSelectIcon.Show -= onChapterSelectIconShow;
             On.Celeste.OuiChapterSelectIcon.AssistModeUnlockRoutine -= onAssistUnlockRoutine;
             Everest.Events.Journal.OnEnter -= onJournalEnter;
             On.Celeste.OuiFileSelectSlot.Show -= onOuiFileSelectSlotShow;
@@ -480,6 +482,15 @@ namespace Celeste.Mod.CollabUtils2 {
                     // we are! we should change the selected level to the matching lobby instead.
                     self.LastArea_Safe = AreaData.Get(lobby).ToKey();
                 }
+            }
+        }
+
+        private static void onChapterSelectIconShow(On.Celeste.OuiChapterSelectIcon.orig_Show orig, OuiChapterSelectIcon self) {
+            orig(self);
+
+            // hide the (!) icon on collab lobbies.
+            if (self.New && IsCollabLobby(AreaData.Areas[self.Area].GetSID())) {
+                self.New = false;
             }
         }
 
