@@ -62,7 +62,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private float scaleMultiplier = 1f;
         private float finalScale => actualScale * scaleMultiplier;
 
-        private Rectangle bounds;
+        private Rectangle windowBounds;
+        private Rectangle mapBounds;
 
         private bool focused;
 
@@ -75,10 +76,12 @@ namespace Celeste.Mod.CollabUtils2.UI {
             Depth = Depths.FGTerrain - 2;
             Visible = false;
 
-            const int top = 182, bottom = 80, left = 100, right = 100;
-            bounds = new Rectangle(left, top, Engine.Width - left - right, Engine.Height - top - bottom);
+            const int top = 140, bottom = 80, left = 100, right = 100;
+            const int topPadding = 10, bottomPadding = 40, leftPadding = 10, rightPadding = 10;
+            windowBounds = new Rectangle(left, top, Engine.Width - left - right, Engine.Height - top - bottom);
+            mapBounds = new Rectangle(windowBounds.Left + leftPadding, windowBounds.Top + topPadding, windowBounds.Width - leftPadding - rightPadding, windowBounds.Height - topPadding - bottomPadding);
 
-            renderTarget = VirtualContent.CreateRenderTarget("CU2_LobbyMapUI", bounds.Width, bounds.Height);
+            renderTarget = VirtualContent.CreateRenderTarget("CU2_LobbyMapUI", windowBounds.Width, windowBounds.Height);
             Add(selectWarpWiggler = Wiggler.Create(0.4f, 4f));
             Add(selectLobbyWiggler = Wiggler.Create(0.4f, 4f));
             Add(closeWiggler = Wiggler.Create(0.4f, 4f));
@@ -354,8 +357,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
             // find warps
             activeWarps.Clear();
             activeWarps.AddRange(markers
-                .Where(f => f.Type == LobbyMapController.MarkerType.Warp && (!f.WarpRequiresActivation || visitManager.ActivatedWarps.Contains(f.MarkerId)))
-                .OrderBy(f => f.MarkerId));
+                .Where(f => f.Type == LobbyMapController.MarkerType.Warp && (!f.WarpRequiresActivation || visitManager.ActivatedWarps.Contains(f.MarkerId))));
+
+            // sort by marker id, comparing ints if possible
+            activeWarps.Sort((lhs, rhs) =>
+                int.TryParse(lhs.MarkerId.Trim(), out var lhsInt) && int.TryParse(rhs.MarkerId.Trim(), out var rhsInt)
+                    ? Math.Sign(lhsInt - rhsInt)
+                    : string.CompareOrdinal(lhs.MarkerId, rhs.MarkerId));
 
             // regenerate marker components
             markerComponents.ForEach(c => c.RemoveSelf());
@@ -407,8 +415,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             scaleTimeRemaining = 0f;
 
             // calculate multiplier by aspect ratios
-            var padded = bounds;
-            padded.Inflate(-10, -10);
+            var padded = mapBounds;
             var mapAspectRatio = (float) mapTexture.Width / mapTexture.Height;
             var boundsAspectRatio = (float) padded.Width / padded.Height;
             scaleMultiplier = mapAspectRatio > boundsAspectRatio ? (float) padded.Width / mapTexture.Width : (float) padded.Height / mapTexture.Height;
@@ -432,7 +439,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 }
 
                 heartSprite.Scale = Vector2.One / 2f;
-                heartSprite.Position = new Vector2(bounds.Left + 10, bounds.Top + 10);
+                heartSprite.Position = new Vector2(windowBounds.Left + 10, windowBounds.Top + 10);
                 heartSprite.Justify = Vector2.Zero;
                 heartSprite.Play("spin");
                 heartSprite.SetAnimationFrame(heartFrame);
@@ -467,7 +474,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 return;
             }
 
-            var position = new Vector2(bounds.Width / 2f, bounds.Height / 2f);
+            var position = new Vector2(mapBounds.Center.X - windowBounds.Left, mapBounds.Center.Y - windowBounds.Top);
             var scale = finalScale;
             var destWidth = mapTexture.Width * scale;
             var destHeight = mapTexture.Height * scale;
@@ -538,14 +545,14 @@ namespace Celeste.Mod.CollabUtils2.UI {
             const int thickness = 8;
             const int safety = 10;
             var safeBounds = new Rectangle(-safety, -safety, Engine.Width + 2 * safety, Engine.Height + 2 * safety);
-            var border = bounds;
+            var border = windowBounds;
             border.Inflate(margin + thickness, margin + thickness);
 
             // draw borders
-            Draw.Rect(safeBounds.Left, safeBounds.Top, safeBounds.Width, bounds.Top - safeBounds.Top, Color.Black);
-            Draw.Rect(safeBounds.Left, bounds.Bottom, safeBounds.Width, safeBounds.Bottom - bounds.Bottom, Color.Black);
-            Draw.Rect(safeBounds.Left, bounds.Top - safety, bounds.Left - safeBounds.Left, bounds.Height + 2 * safety, Color.Black);
-            Draw.Rect(bounds.Right, bounds.Top - safety, safeBounds.Right - bounds.Right, bounds.Height + 2 * safety, Color.Black);
+            Draw.Rect(safeBounds.Left, safeBounds.Top, safeBounds.Width, windowBounds.Top - safeBounds.Top, Color.Black);
+            Draw.Rect(safeBounds.Left, windowBounds.Bottom, safeBounds.Width, safeBounds.Bottom - windowBounds.Bottom, Color.Black);
+            Draw.Rect(safeBounds.Left, windowBounds.Top - safety, windowBounds.Left - safeBounds.Left, windowBounds.Height + 2 * safety, Color.Black);
+            Draw.Rect(windowBounds.Right, windowBounds.Top - safety, safeBounds.Right - windowBounds.Right, windowBounds.Height + 2 * safety, Color.Black);
             Draw.Rect(border.Left, border.Top, border.Width, thickness, Color.White);
             Draw.Rect(border.Left, border.Bottom - thickness, border.Width, thickness, Color.White);
             Draw.Rect(border.Left, border.Top, thickness, border.Height, Color.White);
@@ -557,12 +564,17 @@ namespace Celeste.Mod.CollabUtils2.UI {
             var colorAlpha = 1f;
 
             // draw lobby title and arrows
-            ActiveFont.DrawEdgeOutline(title, new Vector2(Celeste.TargetWidth / 2f, 80f), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.Gray * colorAlpha, 4f, Color.DarkSlateBlue * colorAlpha, 2f, Color.Black * colorAlpha);
+            const float titleScale = 1.75f;
+            const float titleArrowOffset = 100f;
+            const float titleArrowScale = 0.9f;
+            var titleWidth = ActiveFont.Measure(title).X * titleScale;
+            var titleY = border.Top * 0.5f;
+            ActiveFont.DrawEdgeOutline(title, new Vector2(Celeste.TargetWidth / 2f, titleY), new Vector2(0.5f, 0.5f), Vector2.One * titleScale, Color.Gray * colorAlpha, 4f, Color.DarkSlateBlue * colorAlpha, 2f, Color.Black * colorAlpha);
             if (selectedLobbyIndex > 0) {
-                arrowTexture.DrawCentered(new Vector2(960f - ActiveFont.Measure(title).X - 100f, 80f), Color.White * colorAlpha);
+                arrowTexture.DrawCentered(new Vector2(Celeste.TargetWidth / 2f - titleWidth / 2f - titleArrowOffset, titleY), Color.White * colorAlpha, titleArrowScale);
             }
             if (selectedLobbyIndex < lobbySelections.Count - 1) {
-                arrowTexture.DrawCentered(new Vector2(960f + ActiveFont.Measure(title).X + 100f, 80f), Color.White * colorAlpha, 1f, (float) Math.PI);
+                arrowTexture.DrawCentered(new Vector2(Celeste.TargetWidth / 2f + titleWidth / 2f + titleArrowOffset, titleY), Color.White * colorAlpha, titleArrowScale, (float) Math.PI);
             }
 
             // draw heart count
@@ -576,8 +588,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             // draw selected warp title
             if (warpIndex >= 0 && warpIndex < activeWarps.Count && !string.IsNullOrWhiteSpace(activeWarps[warpIndex].DialogKey)) {
+                const float warpTitleOffset = -18f;
+                const float warpTitleAlpha = 1f;
                 var clean = Dialog.Clean(activeWarps[warpIndex].DialogKey);
-                ActiveFont.DrawOutline(clean, new Vector2(bounds.Center.X, bounds.Bottom - 30f), new Vector2(0.5f), Vector2.One, Color.White, 2f, Color.Black);
+                ActiveFont.DrawOutline(clean, new Vector2(windowBounds.Center.X, windowBounds.Bottom + warpTitleOffset), new Vector2(0.5f), new Vector2(0.8f), Color.White * warpTitleAlpha, 2f, Color.Black);
             }
 
             // draw controls
@@ -590,7 +604,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             const float xOffset = 32f, yOffset = 45f;
             const float wiggleAmount = 0.05f;
 
-            var buttonPosition = new Vector2(bounds.Left + xOffset, bounds.Bottom + yOffset);
+            var buttonPosition = new Vector2(windowBounds.Left + xOffset, windowBounds.Bottom + yOffset);
 
             if (activeWarps.Count > 1) {
                 renderDoubleButton(buttonPosition, changeDestinationLabel, Input.MenuUp, Input.MenuDown,
@@ -605,7 +619,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             var closeWidth = ButtonUI.Width(closeLabel, Input.MenuCancel);
             var confirmWidth = ButtonUI.Width(confirmLabel, Input.MenuConfirm);
-            buttonPosition.X = bounds.Right + xOffset / 2f;
+            buttonPosition.X = windowBounds.Right + xOffset / 2f;
             ButtonUI.Render(buttonPosition, closeLabel, Input.MenuCancel, buttonScale, 1f, closeWiggler.Value * wiggleAmount);
             buttonPosition.X -= closeWidth / 2f + xOffset;
             ButtonUI.Render(buttonPosition, confirmLabel, Input.MenuConfirm, buttonScale, 1f, confirmWiggler.Value * wiggleAmount);
@@ -618,7 +632,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         /// </summary>
         private void drawMap() {
             if (renderTarget?.IsDisposed != false) return;
-            Draw.SpriteBatch.Draw(renderTarget, new Vector2(bounds.Left, bounds.Top), Color.White);
+            Draw.SpriteBatch.Draw(renderTarget, new Vector2(windowBounds.Left, windowBounds.Top), Color.White);
         }
 
         /// <summary>
@@ -636,14 +650,14 @@ namespace Celeste.Mod.CollabUtils2.UI {
             foreach (MarkerImage image in markerComponents) {
                 var origin = originForPosition(image.Info.Position);
                 var originOffset = origin - actualOrigin;
-                image.Position = new Vector2(bounds.Center.X + originOffset.X * actualWidth, bounds.Center.Y + originOffset.Y * actualHeight);
+                image.Position = new Vector2(mapBounds.Center.X + originOffset.X * actualWidth, mapBounds.Center.Y + originOffset.Y * actualHeight);
                 image.Scale = new Vector2(imageScale);
             }
 
             // move the player icon to the currently selected warp
             if (maddyRunSprite != null) {
                 var selectedOriginOffset = selectedOrigin - actualOrigin;
-                maddyRunSprite.Position = new Vector2(bounds.Center.X + selectedOriginOffset.X * actualWidth, bounds.Center.Y + selectedOriginOffset.Y * actualHeight);
+                maddyRunSprite.Position = new Vector2(mapBounds.Center.X + selectedOriginOffset.X * actualWidth, mapBounds.Center.Y + selectedOriginOffset.Y * actualHeight);
             }
         }
 
