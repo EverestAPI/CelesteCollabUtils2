@@ -828,6 +828,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
             focused = false;
             const float wipeDuration = 0.5f;
 
+            Audio.Play("event:/game/04_cliffside/snowball_spawn");
+
             void onComplete() {
                 closeScreen(true);
                 if (warp.SID != level.Session.Area.SID) {
