@@ -79,6 +79,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             Add(playerHairSprite);
             playerHairSprite.Play("sitHair");
 
+            Audio.Play("event:/char/madeline/backpack_drop");
+
             while (playerSprite.Animating) {
                 yield return null;
             }
