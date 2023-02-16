@@ -16,6 +16,15 @@ collabutils2_speedberry_silver= シルバー:
 collabutils2_speedberry_bronze= ブロンズ:
 collabutils2_speedberry_timeranout= 時間切れ！
 
+collabutils2_difficulty_beginner= 初級
+collabutils2_difficulty_intermediate= 中級
+collabutils2_difficulty_advanced= 上級
+collabutils2_difficulty_expert= エキスパート
+collabutils2_difficulty_grandmaster= グランドマスター
+
+collabutils2_overworld_gym=履修する
+collabutils2_overworld_exit=ロビーにもどる
+
 collabutils2_chapterpanel_continue= 続ける
 collabutils2_chapterpanel_start= 最初からはじめる
 
@@ -40,3 +49,9 @@ collabutils2_assist_skip= ハートゲートを開ける
 collabutils2_assist_skip_confirm= ハートゲートをずっと開けておくようにします。{n}よろしいですか？
 collabutils2_assist_skip_confirm_yes= はい
 collabutils2_assist_skip_confirm_no= いいえ
+
+collabutils2_lobbymap_change_destination= 行き先を選ぶ
+collabutils2_lobbymap_change_lobby= ロビーを選ぶ
+collabutils2_lobbymap_close= キャンセル
+collabutils2_lobbymap_confirm= OK
+collabutils2_lobbymap_zoom= 倍率を変える

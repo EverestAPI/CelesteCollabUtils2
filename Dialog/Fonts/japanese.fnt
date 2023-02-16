@@ -5,10 +5,12 @@
   <pages>
     <page id="0" file="collabutils2_japanese_0.png" />
   </pages>
-  <chars count="4">
-    <char id="20301" x="86" y="0" width="42" height="39" xoffset="0" yoffset="14" xadvance="43" page="0" chnl="15" />
-    <char id="25215" x="129" y="0" width="42" height="39" xoffset="0" yoffset="15" xadvance="43" page="0" chnl="15" />
+  <chars count="6">
+    <char id="20301" x="128" y="0" width="42" height="39" xoffset="0" yoffset="14" xadvance="43" page="0" chnl="15" />
+    <char id="20493" x="43" y="0" width="41" height="41" xoffset="1" yoffset="13" xadvance="43" page="0" chnl="15" />
+    <char id="23653" x="214" y="0" width="41" height="39" xoffset="1" yoffset="15" xadvance="43" page="0" chnl="15" />
+    <char id="25215" x="171" y="0" width="42" height="39" xoffset="0" yoffset="15" xadvance="43" page="0" chnl="15" />
     <char id="25552" x="0" y="0" width="42" height="41" xoffset="1" yoffset="13" xadvance="43" page="0" chnl="15" />
-    <char id="37682" x="43" y="0" width="42" height="40" xoffset="0" yoffset="14" xadvance="43" page="0" chnl="15" />
+    <char id="37682" x="85" y="0" width="42" height="40" xoffset="0" yoffset="14" xadvance="43" page="0" chnl="15" />
   </chars>
 </font>
