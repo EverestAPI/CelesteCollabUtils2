@@ -6,10 +6,10 @@
     <page id="0" file="collabutils2_chinese.png" />
   </pages>
   <chars count="5">
-    <char id="20195" x="79" y="0" width="42" height="40" xoffset="0" yoffset="14" xadvance="43" page="0" chnl="15" />
-    <char id="20339" x="0" y="0" width="40" height="41" xoffset="1" yoffset="13" xadvance="43" page="0" chnl="15" />
-    <char id="23457" x="41" y="0" width="37" height="41" xoffset="3" yoffset="13" xadvance="43" page="0" chnl="15" />
-    <char id="38108" x="164" y="0" width="39" height="40" xoffset="1" yoffset="14" xadvance="43" page="0" chnl="15" />
-    <char id="38134" x="122" y="0" width="41" height="40" xoffset="1" yoffset="14" xadvance="43" page="0" chnl="15" />
+    <char id="20064" x="166" y="0" width="35" height="38" xoffset="4" yoffset="16" xadvance="43" page="0" chnl="15" />
+    <char id="20339" x="0" y="0" width="41" height="41" xoffset="1" yoffset="13" xadvance="43" page="0" chnl="15" />
+    <char id="32553" x="42" y="0" width="40" height="41" xoffset="1" yoffset="13" xadvance="43" page="0" chnl="15" />
+    <char id="38108" x="125" y="0" width="40" height="40" xoffset="1" yoffset="14" xadvance="43" page="0" chnl="15" />
+    <char id="38134" x="83" y="0" width="41" height="40" xoffset="1" yoffset="14" xadvance="43" page="0" chnl="15" />
   </chars>
 </font>
