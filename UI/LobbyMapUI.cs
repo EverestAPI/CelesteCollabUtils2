@@ -29,6 +29,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private ByteArray2D visitedTiles;
         private LobbyVisitManager visitManager;
         private int heartCount;
+        private int initialLobbyIndex;
+        private int initialWarpIndex;
 
         // resources
         private Texture2D mapTexture;
@@ -200,9 +202,14 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 var close = false;
                 var warpIndex = selectedWarpIndexes[selectedLobbyIndex];
                 if (Input.MenuConfirm.Pressed && warpIndex >= 0 && warpIndex < activeWarps.Count) {
-                    var warp = activeWarps[warpIndex];
-                    confirmWiggler.Start();
-                    teleportToWarp(warp);
+                    if (selectedLobbyIndex == initialLobbyIndex && warpIndex == initialWarpIndex) {
+                        // confirming on the initial warp just closes the screen
+                        close = true;
+                    } else {
+                        var warp = activeWarps[warpIndex];
+                        confirmWiggler.Start();
+                        teleportToWarp(warp);
+                    }
                 } else if (Input.MenuCancel.Pressed) {
                     close = true;
                 } else if (Input.ESC.Pressed) {
@@ -387,6 +394,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         selectedWarpIndexes[selectedLobbyIndex] = i;
                     }
                 }
+
+                // keep track of where we started
+                initialLobbyIndex = selectedLobbyIndex;
+                initialWarpIndex = selectedWarpIndexes[selectedLobbyIndex];
             }
 
             var warpIndex = selectedWarpIndexes[selectedLobbyIndex];
