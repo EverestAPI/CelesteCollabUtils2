@@ -23,6 +23,8 @@ If anything is wrong or unclear, yell at max480 (max480#4596 on [the Celeste Dis
   - [Chapter Panel Trigger](#chapter-panel-trigger)
   - [Journal Trigger](#journal-trigger)
 - [Map Metadata](#map-metadata)
+  - [Randomized session flags ("weather")](#randomized-session-flags-weather)
+  - [Stickers on the journal](#stickers-on-the-journal)
 - [Lazy Loading](#lazy-loading)
 - ["Learn" tab in the chapter panel with gym teleports](learn-tab-in-the-chapter-panel-with-gym-teleports)
 
@@ -294,6 +296,8 @@ This is useful to make the journal say "Beginner Difficulty" instead of "Beginne
 
 ## Map Metadata
 
+### Randomized session flags ("weather")
+
 Collab Utils allow you to set randomized session flags in your map meta.yaml:
 ```yaml
 CollabUtilsRandomizedFlags:
@@ -301,6 +305,23 @@ CollabUtilsRandomizedFlags:
     flag2: 0.5
 ```
 With that setup, when entering the map, flag1 will have a 50% chance to be set, and flag2 will have a 20% chance to be set. **Both cannot be set at the same time**: in that example, that means there is a 30% chance no flag will be set.
+
+### Stickers on the journal
+
+You can add stickers on the journal front page by adding the following to your **lobby's** meta.yaml:
+```yaml
+Stickers:
+  - Path: some/unique/path
+    FinishedMaps:
+      - foldername/mapname1
+      - foldername/mapname2
+    X: 150
+    Y: 150
+    Scale: 1.5 # optional
+    Rotation: -20 # optional
+```
+
+This configuration will make the sticker at `Graphics/Atlases/Stickers/some/unique/path.png` appear on the journal front page at (150, 150) with 1.5x scale and -20 degrees rotation, if you finished foldername/mapname1 **and** foldername/mapname2.
 
 ## Lazy Loading
 
