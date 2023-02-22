@@ -275,7 +275,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 visitedLobbySIDs.Add(thisLobbyKey);
             }
 
-            // parse all the markers in all the lobbies that have been visited
+            // parse all the markers in all the lobbies that have at least one warp activated
             lobbySelections.Clear();
             foreach (var key in visitedLobbySIDs) {
                 // get the room and sid
@@ -284,6 +284,12 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 if (key.LastIndexOf('.') > key.LastIndexOf('/')) {
                     room = key.Substring(key.LastIndexOf('.') + 1);
                     sid = key.Substring(0, key.LastIndexOf('.'));
+                }
+
+                // get the visit manager and skip if no warps found, unless it's this lobby
+                if (key != thisLobbyKey) {
+                    var lobbyVisitManager = getLobbyVisitManager(level, sid, room);
+                    if (!lobbyVisitManager.ActivatedWarps.Any()) continue;
                 }
 
                 // get the map data from the lobby sid
@@ -327,6 +333,15 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
         }
 
+        private static LobbyVisitManager getLobbyVisitManager(Scene scene, string sid, string room) {
+            if (scene.Tracker.GetEntity<LobbyMapController>() is LobbyMapController lmc &&
+                (lmc.VisitManager?.MatchesKey(sid, room) ?? false)) {
+                return lmc.VisitManager;
+            }
+
+            return new LobbyVisitManager(sid, room);
+        }
+
         /// <summary>
         /// Configures the UI for the currently selected lobby.
         /// </summary>
@@ -342,12 +357,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             lobbyMapInfo = selection.Info;
 
             // get or create a visit manager
-            if (Scene.Tracker.GetEntity<LobbyMapController>() is LobbyMapController lmc &&
-                (lmc.VisitManager?.MatchesKey(selection.SID, selection.Room) ?? false)) {
-                visitManager = lmc.VisitManager;
-            } else {
-                visitManager = new LobbyVisitManager(selection.SID, selection.Room);
-            }
+            visitManager = getLobbyVisitManager(Scene, selection.SID, selection.Room);
 
             // generate the 2d array of visited tiles
             if (openedWithRevealMap || visitManager.VisitedAll) {
