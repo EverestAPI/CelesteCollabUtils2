@@ -383,11 +383,16 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     : string.CompareOrdinal(lhs.MarkerId, rhs.MarkerId));
 
             // regenerate marker components
+            var rainbowBerryUnlocked = isRainbowBerryUnlocked(lobbyMapInfo.LevelSet);
             markerComponents.ForEach(c => c.RemoveSelf());
             markerComponents.Clear();
             markerComponents.AddRange(markers
-                .Where(f => lobbyMapInfo.ShouldShowMarker(f))
-                .Where(f => f.Type != LobbyMapController.MarkerType.Warp || !f.WarpRequiresActivation || visitManager.ActivatedWarps.Contains(f.MarkerId))
+                .Where(f => {
+                    if (!lobbyMapInfo.ShouldShowMarker(f)) return false;
+                    if (f.Type == LobbyMapController.MarkerType.Warp && f.WarpRequiresActivation && !visitManager.ActivatedWarps.Contains(f.MarkerId)) return false;
+                    if (f.Type == LobbyMapController.MarkerType.RainbowBerry && !rainbowBerryUnlocked) return false;
+                    return true;
+                })
                 .OrderByDescending(f => f.Type)
                 .Select(createMarkerComponent));
             markerComponents.ForEach(Add);
@@ -479,6 +484,18 @@ namespace Celeste.Mod.CollabUtils2.UI {
         /// </summary>
         private Component createMarkerComponent(LobbyMapController.MarkerInfo markerInfo) {
             return new MarkerImage(markerInfo);
+        }
+
+        private static bool isRainbowBerryUnlocked(string levelSet) {
+            if (!CollabMapDataProcessor.SilverBerries.ContainsKey(levelSet)) return false;
+
+            foreach (KeyValuePair<string, EntityID> requiredSilver in CollabMapDataProcessor.SilverBerries[levelSet]) {
+                // check if the silver was collected.
+                AreaStats stats = SaveData.Instance.GetAreaStatsFor(AreaData.Get(requiredSilver.Key).ToKey());
+                if (stats.Modes[0].Strawberries.Contains(requiredSilver.Value)) return true;
+            }
+
+            return false;
         }
 
         #endregion
