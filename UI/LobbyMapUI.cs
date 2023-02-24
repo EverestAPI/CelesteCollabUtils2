@@ -29,6 +29,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private ByteArray2D visitedTiles;
         private LobbyVisitManager visitManager;
         private int heartCount;
+        private int initialLobbyIndex;
+        private int initialWarpIndex;
 
         // resources
         private Texture2D mapTexture;
@@ -200,9 +202,14 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 var close = false;
                 var warpIndex = selectedWarpIndexes[selectedLobbyIndex];
                 if (Input.MenuConfirm.Pressed && warpIndex >= 0 && warpIndex < activeWarps.Count) {
-                    var warp = activeWarps[warpIndex];
-                    confirmWiggler.Start();
-                    teleportToWarp(warp);
+                    if (selectedLobbyIndex == initialLobbyIndex && warpIndex == initialWarpIndex) {
+                        // confirming on the initial warp just closes the screen
+                        close = true;
+                    } else {
+                        var warp = activeWarps[warpIndex];
+                        confirmWiggler.Start();
+                        teleportToWarp(warp);
+                    }
                 } else if (Input.MenuCancel.Pressed) {
                     close = true;
                 } else if (Input.ESC.Pressed) {
@@ -268,7 +275,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 visitedLobbySIDs.Add(thisLobbyKey);
             }
 
-            // parse all the markers in all the lobbies that have been visited
+            // parse all the markers in all the lobbies that have at least one warp activated
             lobbySelections.Clear();
             foreach (var key in visitedLobbySIDs) {
                 // get the room and sid
@@ -277,6 +284,12 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 if (key.LastIndexOf('.') > key.LastIndexOf('/')) {
                     room = key.Substring(key.LastIndexOf('.') + 1);
                     sid = key.Substring(0, key.LastIndexOf('.'));
+                }
+
+                // get the visit manager and skip if no warps found, unless it's this lobby
+                if (key != thisLobbyKey) {
+                    var lobbyVisitManager = getLobbyVisitManager(level, sid, room);
+                    if (!lobbyVisitManager.ActivatedWarps.Any()) continue;
                 }
 
                 // get the map data from the lobby sid
@@ -320,6 +333,15 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
         }
 
+        private static LobbyVisitManager getLobbyVisitManager(Scene scene, string sid, string room) {
+            if (scene.Tracker.GetEntity<LobbyMapController>() is LobbyMapController lmc &&
+                (lmc.VisitManager?.MatchesKey(sid, room) ?? false)) {
+                return lmc.VisitManager;
+            }
+
+            return new LobbyVisitManager(sid, room);
+        }
+
         /// <summary>
         /// Configures the UI for the currently selected lobby.
         /// </summary>
@@ -335,12 +357,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             lobbyMapInfo = selection.Info;
 
             // get or create a visit manager
-            if (Scene.Tracker.GetEntity<LobbyMapController>() is LobbyMapController lmc &&
-                (lmc.VisitManager?.MatchesKey(selection.SID, selection.Room) ?? false)) {
-                visitManager = lmc.VisitManager;
-            } else {
-                visitManager = new LobbyVisitManager(selection.SID, selection.Room);
-            }
+            visitManager = getLobbyVisitManager(Scene, selection.SID, selection.Room);
 
             // generate the 2d array of visited tiles
             if (openedWithRevealMap || visitManager.VisitedAll) {
@@ -366,11 +383,16 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     : string.CompareOrdinal(lhs.MarkerId, rhs.MarkerId));
 
             // regenerate marker components
+            var rainbowBerryUnlocked = isRainbowBerryUnlocked(lobbyMapInfo.LevelSet);
             markerComponents.ForEach(c => c.RemoveSelf());
             markerComponents.Clear();
             markerComponents.AddRange(markers
-                .Where(f => lobbyMapInfo.ShouldShowMarker(f))
-                .Where(f => f.Type != LobbyMapController.MarkerType.Warp || !f.WarpRequiresActivation || visitManager.ActivatedWarps.Contains(f.MarkerId))
+                .Where(f => {
+                    if (!lobbyMapInfo.ShouldShowMarker(f)) return false;
+                    if (f.Type == LobbyMapController.MarkerType.Warp && f.WarpRequiresActivation && !visitManager.ActivatedWarps.Contains(f.MarkerId)) return false;
+                    if (f.Type == LobbyMapController.MarkerType.RainbowBerry && !rainbowBerryUnlocked) return false;
+                    return true;
+                })
                 .OrderByDescending(f => f.Type)
                 .Select(createMarkerComponent));
             markerComponents.ForEach(Add);
@@ -387,6 +409,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         selectedWarpIndexes[selectedLobbyIndex] = i;
                     }
                 }
+
+                // keep track of where we started
+                initialLobbyIndex = selectedLobbyIndex;
+                initialWarpIndex = selectedWarpIndexes[selectedLobbyIndex];
             }
 
             var warpIndex = selectedWarpIndexes[selectedLobbyIndex];
@@ -458,6 +484,18 @@ namespace Celeste.Mod.CollabUtils2.UI {
         /// </summary>
         private Component createMarkerComponent(LobbyMapController.MarkerInfo markerInfo) {
             return new MarkerImage(markerInfo);
+        }
+
+        private static bool isRainbowBerryUnlocked(string levelSet) {
+            if (!CollabMapDataProcessor.SilverBerries.ContainsKey(levelSet)) return false;
+
+            foreach (KeyValuePair<string, EntityID> requiredSilver in CollabMapDataProcessor.SilverBerries[levelSet]) {
+                // check if the silver was collected.
+                AreaStats stats = SaveData.Instance.GetAreaStatsFor(AreaData.Get(requiredSilver.Key).ToKey());
+                if (stats.Modes[0].Strawberries.Contains(requiredSilver.Value)) return true;
+            }
+
+            return false;
         }
 
         #endregion
