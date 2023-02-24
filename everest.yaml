@@ -1,5 +1,5 @@
 - Name: CollabUtils2
-  Version: 1.8.4
+  Version: 1.8.5
   DLL: bin/Release/net452/CollabUtils2.dll
   Dependencies:
     - Name: Everest

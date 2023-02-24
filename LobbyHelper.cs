@@ -188,6 +188,7 @@ namespace Celeste.Mod.CollabUtils2 {
             On.Celeste.OuiChapterSelectIcon.AssistModeUnlockRoutine += onAssistUnlockRoutine;
             Everest.Events.Journal.OnEnter += onJournalEnter;
             On.Celeste.OuiFileSelectSlot.Show += onOuiFileSelectSlotShow;
+            On.Celeste.OuiChapterPanel.UpdateStats += onChapterPanelUpdateStats;
 
             hookOnOuiFileSelectRenderDisplayName = new ILHook(typeof(OuiFileSelectSlot).GetMethod("orig_Render"), modSelectSlotLevelSetDisplayName);
             hookOnOuiFileSelectRenderStrawberryStamp = new ILHook(typeof(OuiFileSelectSlot).GetMethod("orig_Render"), modSelectSlotCollectedStrawberries);
@@ -222,6 +223,7 @@ namespace Celeste.Mod.CollabUtils2 {
             On.Celeste.OuiChapterSelectIcon.AssistModeUnlockRoutine -= onAssistUnlockRoutine;
             Everest.Events.Journal.OnEnter -= onJournalEnter;
             On.Celeste.OuiFileSelectSlot.Show -= onOuiFileSelectSlotShow;
+            On.Celeste.OuiChapterPanel.UpdateStats -= onChapterPanelUpdateStats;
 
             hookOnOuiFileSelectRenderDisplayName?.Dispose();
             hookOnOuiFileSelectRenderStrawberryStamp?.Dispose();
@@ -615,6 +617,15 @@ namespace Celeste.Mod.CollabUtils2 {
             // Restore the last area if it was replaced at the beginning of this method.
             if (savedLastArea != null) {
                 self.SaveData.LastArea_Safe = savedLastArea.Value;
+            }
+        }
+
+        private static void onChapterPanelUpdateStats(On.Celeste.OuiChapterPanel.orig_UpdateStats orig, OuiChapterPanel self, bool wiggle, bool? overrideStrawberryWiggle, bool? overrideDeathWiggle, bool? overrideHeartWiggle) {
+            orig(self, wiggle, overrideStrawberryWiggle, overrideDeathWiggle, overrideHeartWiggle);
+
+            if (IsCollabLobby(self.Area.SID)) {
+                // hide the deaths counter for collab lobbies.
+                new DynData<OuiChapterPanel>(self).Get<DeathsCounter>("deaths").Visible = false;
             }
         }
 
