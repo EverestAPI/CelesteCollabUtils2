@@ -67,13 +67,15 @@ placements.entities.CollabUtils2/LobbyMapController.tooltips.totalMaps=The numbe
 placements.entities.CollabUtils2/LobbyMapController.tooltips.customMarkers=A comma separated list of entity names that should be considered map entry pedestals. The target entities must have a "map" attribute with the full SID of the map to load.
 placements.entities.CollabUtils2/LobbyMapController.tooltips.warpIcon=The default texture in the Gui atlas to use as an icon for a warp.
 placements.entities.CollabUtils2/LobbyMapController.tooltips.rainbowBerryIcon=The default texture in the Gui atlas to use as an icon for a rainbow berry.
-placements.entities.CollabUtils2/LobbyMapController.tooltips.heartDoorIcon=The default texture in the Gui atlas to use as an icon for a heart door.
+placements.entities.CollabUtils2/LobbyMapController.tooltips.heartGateIcon=The default texture in the Gui atlas to use as an icon for a heart gate.
+placements.entities.CollabUtils2/LobbyMapController.tooltips.heartSideIcon=The default texture in the Gui atlas to use as an icon for a heart side.
 placements.entities.CollabUtils2/LobbyMapController.tooltips.gymIcon=The default texture in the Gui atlas to use as an icon for a gym.
 placements.entities.CollabUtils2/LobbyMapController.tooltips.mapIcon=The default texture in the Gui atlas to use as an icon for a map entry pedestal.
 placements.entities.CollabUtils2/LobbyMapController.tooltips.journalIcon=The default texture in the Gui atlas to use as an icon for a journal.
 placements.entities.CollabUtils2/LobbyMapController.tooltips.showWarps=Whether warps should be shown on the lobby map.
 placements.entities.CollabUtils2/LobbyMapController.tooltips.showRainbowBerry=Whether rainbow berries should be shown on the lobby map.
-placements.entities.CollabUtils2/LobbyMapController.tooltips.showHeartDoor=Whether heart doors should be shown on the lobby map.
+placements.entities.CollabUtils2/LobbyMapController.tooltips.showHeartGate=Whether heart gates should be shown on the lobby map.
+placements.entities.CollabUtils2/LobbyMapController.tooltips.showHeartSide=Whether heart sides should be shown on the lobby map.
 placements.entities.CollabUtils2/LobbyMapController.tooltips.showGyms=Whether gyms should be shown on the lobby map.
 placements.entities.CollabUtils2/LobbyMapController.tooltips.showMaps=Whether map entry pedestals should be shown on the lobby map.
 placements.entities.CollabUtils2/LobbyMapController.tooltips.showJournals=Whether journals should be shown on the lobby map.
@@ -92,6 +94,7 @@ placements.entities.CollabUtils2/LobbyMapWarp.tooltips.playerFacing=The directio
 placements.entities.CollabUtils2/LobbyMapWarp.tooltips.interactOffsetY=The offset in pixels from the warp position at which to display the talk interaction bubble. Defaults to -16.
 placements.entities.CollabUtils2/LobbyMapWarp.tooltips.depth=The depth at which the warp will render. Defaults to 2000 (Depths.Below).
 placements.entities.CollabUtils2/LobbyMapWarp.tooltips.warpRequiresActivation=If true, this warp must be activated before it will appear on the map.
+placements.entities.CollabUtils2/LobbyMapWarp.tooltips.wipeType=The wipe to use when teleporting to this warp.
 
 # Lobby Map Marker
 placements.entities.CollabUtils2/LobbyMapMarker.tooltips.icon=The icon to display for this simple map marker.
