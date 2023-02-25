@@ -281,7 +281,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 }
 
                 // if this marker represents an enterable map, try to read the data for that map
-                if (value.Type == MarkerType.Map && !string.IsNullOrWhiteSpace(value.Map)) {
+                if (value.Type == MarkerType.Map && !string.IsNullOrWhiteSpace(value.Map) || value.Type == MarkerType.HeartSide) {
                     value.MapInfo = new MapInfo(value.Map);
                 }
 
