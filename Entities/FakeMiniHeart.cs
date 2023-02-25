@@ -38,6 +38,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 SceneAs<Level>().Shake();
                 SlashFx.Burst(Position, angle);
                 player?.RefillDash();
+                Audio.Play("event:/game/general/diamond_touch", Position);
             }
         }
     }
