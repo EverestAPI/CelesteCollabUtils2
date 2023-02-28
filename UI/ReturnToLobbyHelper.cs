@@ -147,6 +147,46 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 if (lobbySID != null) {
                     Logger.Log(LogLevel.Warn, "CollabUtils2/ReturnToLobbyHelper", $"We are in {session.Area.GetSID()} without a Return to Lobby button! Setting it to {lobbySID}.");
                     CollabModule.Instance.Session.LobbySID = lobbySID;
+
+                    // Try finding the chapter panel trigger of the map in order to restore the spawn point and such.
+                    foreach (LevelData room in AreaData.Get(lobbySID).Mode[0].MapData.Levels) {
+                        EntityData foundEntity = null;
+
+                        // search for chapter panel triggers
+                        foreach (EntityData trigger in room.Triggers) {
+                            if (trigger.Name == "CollabUtils2/ChapterPanelTrigger" && trigger.Attr("map") == session.Area.GetSID()) {
+                                foundEntity = trigger;
+                                break;
+                            }
+                        }
+
+                        if (foundEntity == null) {
+                            // search for helper entities from Strawberry Jam and the FLCC collab
+                            foreach (EntityData entity in room.Entities) {
+                                if ((entity.Name == "SJ2021/StrawberryJamJar" || entity.Name == "FlushelineCollab/LevelEntrance")
+                                    && entity.Attr("map") == session.Area.GetSID()) {
+
+                                    foundEntity = entity;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (foundEntity != null) {
+                            // found it!
+                            Vector2 spawnPoint = room.Spawns.ClosestTo(foundEntity.Position + room.Position);
+
+                            CollabModule.Instance.Session.LobbyRoom = room.Name;
+                            CollabModule.Instance.Session.LobbySpawnPointX = spawnPoint.X;
+                            CollabModule.Instance.Session.LobbySpawnPointY = spawnPoint.Y;
+                            CollabModule.Instance.Session.SaveAndReturnToLobbyAllowed = foundEntity.Bool("allowSaving", defaultValue: true);
+                            Logger.Log(LogLevel.Info, "CollabUtils2/ReturnToLobbyHelper", "Found respawn information: "
+                                + "room = " + CollabModule.Instance.Session.LobbyRoom + ", "
+                                + "spawn point = " + spawnPoint + ", "
+                                + "allow saving = " + CollabModule.Instance.Session.SaveAndReturnToLobbyAllowed);
+                            break;
+                        }
+                    }
                 }
             }
         }
