@@ -1,10 +1,17 @@
+using Celeste.Mod.Entities;
 using Monocle;
 using MonoMod.Utils;
 using System.Linq;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
-    // no [CustomEntity]: this is added in the map as an entity, but isn't loaded in as one in LoadLevel.
-    class GoldenBerryPlayerRespawnPoint {
+    [CustomEntity("CollabUtils2/GoldenBerryPlayerRespawnPoint")]
+    public class GoldenBerryPlayerRespawnPoint : Entity {
+        public override void Added(Scene scene) {
+            // only the entity data of this entity is used, not the entity itself, so we can remove it.
+            base.Added(scene);
+            RemoveSelf();
+        }
+
         internal static void Load() {
             On.Celeste.Session.Restart += onSessionRestart;
         }
