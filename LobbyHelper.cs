@@ -196,7 +196,7 @@ namespace Celeste.Mod.CollabUtils2 {
             hookOnOuiFileSelectSlotGolden = new ILHook(typeof(OuiFileSelectSlot).GetMethod("get_Golden", BindingFlags.NonPublic | BindingFlags.Instance), modSelectSlotCollectedStrawberries);
             hookOnOuiFileSelectSlotRender = new ILHook(typeof(OuiFileSelectSlot).GetMethod("orig_Render"), modOuiFileSelectSlotRender);
 
-            MethodInfo discordRichPresence = typeof(EverestModule).Assembly.GetType("Celeste.Mod.Everest+DiscordSDK")?.GetMethod("GetMapIconURL", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo discordRichPresence = typeof(EverestModule).Assembly.GetType("Celeste.Mod.Everest+DiscordSDK")?.GetMethod("GetMapIconURLCached", BindingFlags.NonPublic | BindingFlags.Instance);
             if (discordRichPresence != null) {
                 hookDiscordGameSDKIcon = new Hook(discordRichPresence, typeof(LobbyHelper)
                     .GetMethod("onDiscordGetPresenceIcon", BindingFlags.NonPublic | BindingFlags.Static));
