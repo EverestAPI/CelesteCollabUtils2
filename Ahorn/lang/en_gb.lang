@@ -24,6 +24,7 @@ placements.entities.CollabUtils2/FakeMiniHeart.tooltips.requireDashToBreak=Wheth
 placements.entities.CollabUtils2/FakeMiniHeart.tooltips.noGhostSprite=If checked, the heart will never use the "ghost" sprite even when already collected.
 placements.entities.CollabUtils2/FakeMiniHeart.tooltips.particleColor=The color of the particles emitted by the fake mini heart. Leave empty to use default colors.
 placements.entities.CollabUtils2/FakeMiniHeart.tooltips.playPulseSound=Whether the heart should play a sound along with its pulse.
+placements.entities.CollabUtils2/FakeMiniHeart.tooltips.playBreakSound=Whether the heart should play a refill sound when broken.
 
 # Rainbow Berry
 placements.entities.CollabUtils2/RainbowBerry.tooltips.levelSet=The rainbow berry will only spawn if all silver berries in this level set have been collected.

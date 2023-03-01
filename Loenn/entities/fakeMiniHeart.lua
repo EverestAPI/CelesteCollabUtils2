@@ -10,7 +10,8 @@ fakeMiniHeart.placements = {
             requireDashToBreak = true,
             noGhostSprite = false,
             particleColor = "",
-            playPulseSound = true
+            playPulseSound = true,
+			playBreakSound = false
         }
     }
 }

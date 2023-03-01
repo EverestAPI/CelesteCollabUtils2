@@ -20,6 +20,7 @@ entities.CollabUtils2/FakeMiniHeart.attributes.description.requireDashToBreak=Wh
 entities.CollabUtils2/FakeMiniHeart.attributes.description.noGhostSprite=If checked, the heart will never use the "ghost" sprite even when already collected.
 entities.CollabUtils2/FakeMiniHeart.attributes.description.particleColor=The color of the particles emitted by the fake mini heart. Leave empty to use default colors.
 entities.CollabUtils2/FakeMiniHeart.attributes.description.playPulseSound=Whether the heart should play a sound along with its pulse.
+entities.CollabUtils2/FakeMiniHeart.attributes.description.playBreakSound=Whether the heart should play a refill sound when broken.
 
 # Mini Heart Door
 entities.CollabUtils2/MiniHeartDoor.placements.name.door=Mini Heart Door
