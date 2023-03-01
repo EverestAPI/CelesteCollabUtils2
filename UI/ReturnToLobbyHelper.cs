@@ -202,7 +202,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     returnToMapIndex = menu.GetItems().Count - 1;
                 }
 
-                // add the "Return to Lobby" button
+                // instantiate the "Return to Lobby" button
                 TextMenu.Button returnToLobbyButton = new TextMenu.Button(Dialog.Clean("collabutils2_returntolobby"));
                 returnToLobbyButton.Pressed(() => {
                     level.PauseMainMenuOpen = false;
@@ -210,7 +210,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     openReturnToLobbyConfirmMenu(level, menu.Selection);
                 });
                 returnToLobbyButton.ConfirmSfx = "event:/ui/main/message_confirm";
-                menu.Insert(returnToMapIndex + 1, returnToLobbyButton);
+
+                // replace the "return to map" button with "return to lobby"
+                menu.Remove(menu.Items[returnToMapIndex]);
+                menu.Insert(returnToMapIndex, returnToLobbyButton);
             }
         }
 
