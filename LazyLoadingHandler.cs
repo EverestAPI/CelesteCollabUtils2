@@ -181,7 +181,7 @@ namespace Celeste.Mod.CollabUtils2 {
 
                     // look for maps that use this, so that we can fill out texturesPerMap as we go through all textures.
                     foreach (KeyValuePair<string, HashSet<string>> mapGraphics in pathsPerMap) {
-                        if (mapGraphics.Value.Any(path => name == path)) {
+                        if (mapGraphics.Value.Contains(name)) {
                             Logger.Log("CollabUtils2/LazyLoadingHandler", name + " is associated to map " + mapGraphics.Key);
 
                             // associate the (non-loaded) texture to the map so that it can be loaded more easily later.
