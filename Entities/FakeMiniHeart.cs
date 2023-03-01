@@ -6,9 +6,12 @@ namespace Celeste.Mod.CollabUtils2.Entities {
     [CustomEntity("CollabUtils2/FakeMiniHeart")]
     public class FakeMiniHeart : AbstractMiniHeart {
         private float respawnTimer;
+        private bool soundOnDashed;
 
         public FakeMiniHeart(EntityData data, Vector2 position, EntityID gid)
-            : base(data, position, gid) { }
+            : base(data, position, gid) {
+            soundOnDashed = data.Bool("playBreakSound", false);
+        }
 
         public override void Update() {
             base.Update();
@@ -38,6 +41,9 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 SceneAs<Level>().Shake();
                 SlashFx.Burst(Position, angle);
                 player?.RefillDash();
+                if (soundOnDashed) {
+                    Audio.Play("event:/game/general/diamond_touch", Position);
+                }
             }
         }
     }
