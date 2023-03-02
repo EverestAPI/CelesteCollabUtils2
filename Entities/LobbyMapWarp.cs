@@ -48,6 +48,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         private void onTalk(Player player) {
             if (player.Scene is Level level) {
+                level.CanRetry = false;
                 if (level.Tracker.GetEntity<LobbyMapController>() is LobbyMapController lmc) {
                     lmc.VisitManager?.ActivateWarp(info.MarkerId);
                 }

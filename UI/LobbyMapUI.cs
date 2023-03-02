@@ -102,6 +102,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
             openedWithRevealMap = CollabModule.Instance.SaveData.RevealMap;
 
             if (scene is Level level && level.Tracker.GetEntity<Player>() is Player player) {
+                level.CanRetry = false;
+
                 var path = player.Inventory.Backpack ? "marker/runBackpack" : "marker/runNoBackpack";
                 Add(maddyRunSprite = new Sprite(MTN.Mountain, path));
                 maddyRunSprite.Justify = new Vector2(0.5f, 1f);
@@ -128,6 +130,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
             renderTarget = null;
             overlayTexture = null;
             mapTexture = null;
+
+            if (scene is Level level) {
+                level.CanRetry = true;
+            }
         }
 
         public override void Update() {
