@@ -16,8 +16,6 @@ namespace Celeste.Mod.CollabUtils2 {
 
         public bool VisitedAll { get; private set; }
 
-        private VisitedPoint lastVisitedPoint = new VisitedPoint(Vector2.Zero);
-
         public const int EXPLORATION_RADIUS = 20;
         private const ushort currentVersion = 1;
 
@@ -49,8 +47,6 @@ namespace Celeste.Mod.CollabUtils2 {
             VisitedPoints.Clear();
             ActivatedWarps.Clear();
             VisitedAll = false;
-
-            lastVisitedPoint = new VisitedPoint(Vector2.Zero);
 
             if (shouldSave) {
                 Save();
@@ -156,33 +152,26 @@ namespace Celeste.Mod.CollabUtils2 {
         }
 
         public void VisitPoint(Vector2 point, bool shouldSave = true) {
-            const int nearby_point_count = 50;
-            const float generate_distance = EXPLORATION_RADIUS / 2f;
-            const float sort_threshold = EXPLORATION_RADIUS;
+            const float threshold = EXPLORATION_RADIUS / 2f;
 
             // don't need to do anything if we've visited everywhere
             if (VisitedAll) return;
 
-            var lenSq = lastVisitedPoint == null ? float.MaxValue : (point - lastVisitedPoint.Point).LengthSquared();
             var shouldGenerate = !VisitedPoints.Any();
-            if (!shouldGenerate && lenSq > generate_distance * generate_distance) {
-                // if the distance has gone past the sort threshold, recalculate and sort the list
-                if (lenSq > sort_threshold * sort_threshold) {
-                    foreach (var vp in VisitedPoints) {
-                        vp.DistanceSquared = (vp.Point - point).LengthSquared();
-                    }
+            var shouldSort = !shouldGenerate && (point - VisitedPoints.First().Point).LengthSquared() > threshold * threshold;
 
-                    VisitedPoints.Sort((a, b) => Math.Sign(b.DistanceSquared - a.DistanceSquared));
+            if (shouldSort) {
+                // update distances and sort
+                foreach (var vp in VisitedPoints) {
+                    vp.DistanceSquared = (vp.Point - point).LengthSquared();
                 }
-
-                // update last visited to closest of the first 50
-                lastVisitedPoint = VisitedPoints.Take(nearby_point_count).FirstOrDefault(v => (v.Point - point).LengthSquared() < generate_distance * generate_distance);
-                // generate if it still passes the threshold
-                shouldGenerate = lastVisitedPoint == null;
+                VisitedPoints.Sort((a, b) => Math.Sign(a.DistanceSquared - b.DistanceSquared));
+                // check whether we should generate after the sort
+                shouldGenerate = VisitedPoints.First().DistanceSquared > threshold * threshold;
             }
 
             if (shouldGenerate) {
-                VisitedPoints.Add(lastVisitedPoint = new VisitedPoint(point, 0f));
+                VisitedPoints.Insert(0, new VisitedPoint(point, 0f));
                 if (shouldSave) {
                     Save();
                 }
