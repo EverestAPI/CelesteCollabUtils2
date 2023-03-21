@@ -28,5 +28,9 @@ namespace Celeste.Mod.CollabUtils2 {
 
         // whether the map should be forced visible, regardless of exploration
         public bool RevealMap { get; set; }
+        // whether the visit manager should pause visiting points, useful for TAS routing
+        public bool PauseVisitingPoints { get; set; }
+        // whether the lobby map controller should show visited points, useful for TAS routing
+        public bool ShowVisitedPoints { get; set; }
     }
 }

@@ -169,11 +169,45 @@ namespace Celeste.Mod.CollabUtils2 {
         }
 
         /// <summary>
-        /// Toggles the fog-of-war effect on the lobby map.
+        /// Enables or disables the exploration mask effect on the lobby map.
         /// </summary>
-        [Command("cu2_lobby_map_reveal", "Toggles the fog-of-war effect on the lobby map")]
-        private static void CmdToggleMapReveal() {
-            Instance.SaveData.RevealMap = !Instance.SaveData.RevealMap;
+        [Command("cu2_lobby_map_reveal", "Temporarily reveals or hides unexplored areas on the lobby map (0 = hidden, 1 = revealed)")]
+        private static void CmdLobbyMapReveal(int revealed = -1) {
+            if (revealed == -1) {
+                Engine.Commands.Log($"Unexplored areas are currently {(Instance.SaveData.RevealMap ? "revealed" : "hidden")}");
+                return;
+            }
+
+            Instance.SaveData.RevealMap = revealed == 1;
+            Engine.Commands.Log($"Unexplored areas are now {(Instance.SaveData.RevealMap ? "revealed" : "hidden")}");
+        }
+
+        /// <summary>
+        /// Pauses or unpauses the active LobbyVisitManager.
+        /// </summary>
+        [Command("cu2_lobby_map_pause", "Pauses updating the lobby map (0 = unpaused, 1 = paused)")]
+        private static void CmdLobbyMapPause(int paused = -1) {
+            if (paused == -1) {
+                Engine.Commands.Log($"Visiting lobby map points is currently {(Instance.SaveData.PauseVisitingPoints ? "paused" : "unpaused")}");
+                return;
+            }
+
+            Instance.SaveData.PauseVisitingPoints = paused == 1;
+            Engine.Commands.Log($"Visiting lobby map points is now {(Instance.SaveData.PauseVisitingPoints ? "paused" : "unpaused")}");
+        }
+
+        /// <summary>
+        /// Shows or hides visited points for the current lobby map.
+        /// </summary>
+        [Command("cu2_lobby_map_debug", "Shows or hides visited points on the map (0 = hidden, 1 = visible)")]
+        private static void CmdLobbyMapDebug(int visible = -1) {
+            if (visible == -1) {
+                Engine.Commands.Log($"Visited points are currently {(Instance.SaveData.ShowVisitedPoints ? "visible" : "hidden")}");
+                return;
+            }
+
+            Instance.SaveData.ShowVisitedPoints = visible == 1;
+            Engine.Commands.Log($"Visited points are now {(Instance.SaveData.ShowVisitedPoints ? "visible" : "hidden")}");
         }
 
         /// <summary>

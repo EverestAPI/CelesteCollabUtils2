@@ -14,6 +14,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         public LobbyMapController(EntityData data, Vector2 offset) : base(data.Position + offset) {
             Info = new ControllerInfo(data);
+            Depth = Depths.Top;
         }
 
         public override void Added(Scene scene) {
@@ -31,7 +32,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 level.Tracker.GetEntity<LobbyMapUI>() == null &&
                 level.Tracker.GetEntity<Player>() is Player player) {
 
-                if (!level.OnInterval(0.2f) || player.StateMachine.State == Player.StDummy) {
+                if (!level.OnInterval(0.2f) || player.StateMachine.State == Player.StDummy || CollabModule.Instance.SaveData.PauseVisitingPoints) {
                     return;
                 }
 
@@ -39,6 +40,37 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     var playerPosition = new Vector2(Math.Min((float) Math.Floor((player.Center.X - level.Bounds.X) / 8f), (float) Math.Round(level.Bounds.Width / 8f, MidpointRounding.AwayFromZero) - 1),
                         Math.Min((float) Math.Floor((player.Center.Y - level.Bounds.Y) / 8f), (float) Math.Round(level.Bounds.Height / 8f, MidpointRounding.AwayFromZero) + 1));
                     VisitManager?.VisitPoint(playerPosition);
+                }
+            }
+        }
+
+        public override void Render() {
+            base.Render();
+
+            if (CollabModule.Instance.SaveData.ShowVisitedPoints && VisitManager != null &&
+                Scene is Level level && level.Tracker.GetEntity<Player>() is Player player) {
+
+                const int nearest_lines = 3;
+                var paused = CollabModule.Instance.SaveData.PauseVisitingPoints;
+
+                // loop through each of the visited points and try to render them
+                // some extra checks are done while visiting is paused since distances will be inaccurate
+                for (int i = 0; i < VisitManager.VisitedPoints.Count; i++) {
+                    var visitedPoint = VisitManager.VisitedPoints[i];
+
+                    // if the point is more than 100 tiles away and visiting is not paused, just bail
+                    if (!paused && visitedPoint.DistanceSquared >= 100 * 100) break;
+
+                    // calculate the location in level-space
+                    var centre = visitedPoint.Point * 8 + Vector2.One * 4 + new Vector2(level.Bounds.Left, level.Bounds.Top);
+
+                    // draw lines to the first few sorted points if visiting is not paused
+                    if (!paused && i < nearest_lines) {
+                        Draw.Line(centre.X, centre.Y, player.CenterX, player.CenterY, Color.Green);
+                    }
+
+                    // draw a rectangle on the point
+                    Draw.Rect(centre.X - 2, centre.Y - 2, 4, 4, i == 0 ? Color.Blue : Color.Red);
                 }
             }
         }
