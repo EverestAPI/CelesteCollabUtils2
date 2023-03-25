@@ -569,8 +569,15 @@ namespace Celeste.Mod.CollabUtils2.UI {
         public override void Render() {
             drawBackground();
             drawMap();
+
             base.Render();
+
             maddyRunSprite?.Render();
+
+            if (CollabModule.Instance.SaveData.ShowVisitedPoints) {
+                drawVisitedPoints();
+            }
+
             drawForeground();
         }
 
@@ -677,6 +684,25 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private void drawMap() {
             if (renderTarget?.IsDisposed != false) return;
             Draw.SpriteBatch.Draw(renderTarget, new Vector2(windowBounds.Left, windowBounds.Top), Color.White);
+        }
+
+        /// <summary>
+        /// Draw every visited point.
+        /// </summary>
+        private void drawVisitedPoints() {
+            if (visitManager == null) return;
+
+            var scale = finalScale;
+            var actualWidth = mapTexture.Width * scale;
+            var actualHeight = mapTexture.Height * scale;
+
+            foreach (var visitedPoint in visitManager.VisitedPoints) {
+                var origin = originForPosition(visitedPoint.Point * Vector2.One * 8);
+                var originOffset = origin - actualOrigin;
+                var pointX = mapBounds.Center.X + originOffset.X * actualWidth;
+                var pointY = mapBounds.Center.Y + originOffset.Y * actualHeight;
+                Draw.Rect(pointX - 1, pointY - 1, 3, 3, Color.Red);
+            }
         }
 
         /// <summary>
