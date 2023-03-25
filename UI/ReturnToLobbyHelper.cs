@@ -268,7 +268,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     SaveData.Instance.AddDeath(level.Session.Area);
 
                     level.DoScreenWipe(wipeIn: false, () => {
-                        CollabModule.Instance.SaveData.SessionsPerLevel.Add(level.Session.Area.GetSID(), Encoding.UTF8.GetString(UserIO.Serialize(level.Session)));
+                        CollabModule.Instance.SaveData.SessionsPerLevel[level.Session.Area.GetSID()] = Encoding.UTF8.GetString(UserIO.Serialize(level.Session));
 
                         // save all mod sessions of mods that have mod sessions.
                         Dictionary<string, string> modSessions = new Dictionary<string, string>();
