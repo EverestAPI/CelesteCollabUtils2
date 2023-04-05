@@ -5,7 +5,7 @@ But they also come with some _extra behavior_ that requires you to follow a cert
 
 This doc will explain you how to set up that structure and how the entities work. **Please read it before asking questions!** Maybe the answers are in there. :sweat_smile:
 
-If anything is wrong or unclear, yell at max480 (max480#4596 on [the Celeste Discord](https://discord.gg/celeste)) about that.
+If anything is wrong or unclear, yell at Maddie (maddie480#4596 on [the Celeste Discord](https://discord.gg/celeste)) about that.
 
 ## Table of Contents
 
@@ -104,7 +104,7 @@ Maps/
             4-Winter.bin
 ```
 
-- When in a lobby, **session flags will be set for every map the player has beaten in this lobby**. These flags are named `CollabUtils2_MapCompleted_{binname}`. In the example above, if you beat map3, the session flag `CollabUtils2_MapCompleted_map3` will be set when you enter the `2-Summer` lobby. For example, you can use this to make stylegrounds (dis)appear, or to trigger flag-controlled entities like flag switch gates (from max480's Helping Hand) or flag temple gates (from Pandora's Box), allowing you to open/close paths.
+- When in a lobby, **session flags will be set for every map the player has beaten in this lobby**. These flags are named `CollabUtils2_MapCompleted_{binname}`. In the example above, if you beat map3, the session flag `CollabUtils2_MapCompleted_map3` will be set when you enter the `2-Summer` lobby. For example, you can use this to make stylegrounds (dis)appear, or to trigger flag-controlled entities like flag switch gates (from Maddie's Helping Hand) or flag temple gates (from Pandora's Box), allowing you to open/close paths.
 
 ## Entities
 
