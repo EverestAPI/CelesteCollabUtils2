@@ -1,8 +1,10 @@
 using Celeste.Mod.CollabUtils2.UI;
 using Celeste.Mod.Entities;
+using Celeste.Pico8;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Monocle;
+using System;
 using System.Collections;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
@@ -47,7 +49,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         }
 
         private void onTalk(Player player) {
-            if (player.Scene is Level level) {
+            // don't allow this to somehow trigger twice from the same action
+            if (player.Scene is Level level && level.CanRetry) {
                 level.CanRetry = false;
                 if (level.Tracker.GetEntity<LobbyMapController>() is LobbyMapController lmc) {
                     lmc.VisitManager?.ActivateWarp(info.MarkerId);
@@ -65,6 +68,15 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
             player.StateMachine.State = Player.StDummy;
             yield return player.DummyWalkToExact((int)X, false, 1f, true);
+
+            // handle the case where we're dead or not on the ground in front of it
+            if (!validPlayer(player)) {
+                if (!player.Dead) {
+                    player.StateMachine.State = Player.StNormal;
+                }
+                yield break;
+            }
+
             player.Facing = playerFacing;
 
             player.Sprite.Visible = player.Hair.Visible = false;
@@ -82,11 +94,19 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
             Audio.Play("event:/char/madeline/backpack_drop");
 
-            while (playerSprite.Animating) {
+            // loop until animation is finished or the player can no longer use the bench
+            while (playerSprite.Animating && validPlayer(player)) {
+                // force dummy state while animating
+                player.StateMachine.State = Player.StDummy;
                 yield return null;
             }
 
-            player.Scene.Add(new LobbyMapUI());
+            // show the UI if the player successfully sat down
+            if (validPlayer(player)) {
+                player.Scene.Add(new LobbyMapUI());
+            } else {
+                player.StateMachine.State = Player.StNormal;
+            }
 
             yield return 0.5f;
 
@@ -94,6 +114,11 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             playerHairSprite.RemoveSelf();
 
             player.Sprite.Visible = player.Hair.Visible = true;
+        }
+
+        private bool validPlayer(Player player) {
+            // validates that the player is standing on the ground in front of the bench, and isn't dead
+            return (Center - player.Center).LengthSquared() < 16 * 16 && !player.Dead && player.OnGround();
         }
     }
 }
