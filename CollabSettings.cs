@@ -4,6 +4,8 @@ namespace Celeste.Mod.CollabUtils2 {
         public enum SpeedBerryTimerPositions { TopLeft, TopCenter };
         public enum BestTimeInJournal { SpeedBerry, ChapterTimer };
 
+        public ButtonBinding DisplayLobbyMap { get; set; }
+
         public SpeedBerryTimerPositions SpeedBerryTimerPosition { get; set; } = SpeedBerryTimerPositions.TopLeft;
 
         public bool HideSpeedBerryTimerDuringGameplay { get; set; } = false;

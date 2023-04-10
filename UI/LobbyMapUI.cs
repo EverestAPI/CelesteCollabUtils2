@@ -70,13 +70,16 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private bool focused;
 
         private bool openedWithRevealMap;
+        private readonly bool viewOnly;
 
         #endregion
 
-        public LobbyMapUI() {
+        public LobbyMapUI(bool viewOnly = false) {
             Tag = Tags.PauseUpdate | Tags.HUD;
             Depth = Depths.FGTerrain - 2;
             Visible = false;
+
+            this.viewOnly = viewOnly;
 
             const int top = 140, bottom = 80, left = 100, right = 100;
             const int topPadding = 10, bottomPadding = 40, leftPadding = 10, rightPadding = 10;
@@ -147,7 +150,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             // handle input
             if (focused) {
-                if (activeWarps.Count > 0) {
+                if (!viewOnly && activeWarps.Count > 0) {
                     int moveDir = 0;
                     if (Input.MenuUp.Pressed) {
                         if (!Input.MenuUp.Repeating && selectedWarpIndexes[selectedLobbyIndex] == 0) {
@@ -213,7 +216,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
                 var close = false;
                 var warpIndex = selectedWarpIndexes[selectedLobbyIndex];
-                if (Input.MenuConfirm.Pressed && warpIndex >= 0 && warpIndex < activeWarps.Count) {
+                if (!viewOnly && Input.MenuConfirm.Pressed && warpIndex >= 0 && warpIndex < activeWarps.Count) {
                     if (selectedLobbyIndex == initialLobbyIndex && warpIndex == initialWarpIndex) {
                         // confirming on the initial warp just closes the screen
                         close = true;
@@ -239,8 +242,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 }
             }
 
-            // update map position for warp selection
-            if (activeWarps.Count > 0 && lastSelectedWarpIndex != selectedWarpIndexes[selectedLobbyIndex]) {
+            // update map position for warp selection if not view only
+            if (!viewOnly && activeWarps.Count > 0 && lastSelectedWarpIndex != selectedWarpIndexes[selectedLobbyIndex]) {
                 var warp = activeWarps[selectedWarpIndexes[selectedLobbyIndex]];
                 selectedOrigin = originForPosition(warp.Position);
 
@@ -409,8 +412,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 .Select(createMarkerComponent));
             markerComponents.ForEach(Add);
 
-            // if this is the first time we've selected a lobby, select the nearest warp
-            if (first && Engine.Scene is Level level && level.Tracker.GetEntity<Player>() is Player player) {
+            // if this is the first time we've selected a lobby, select the nearest warp if not view only
+            if (!viewOnly && first && Engine.Scene is Level level && level.Tracker.GetEntity<Player>() is Player player) {
                 selectedWarpIndexes[selectedLobbyIndex] = 0;
                 var nearestWarpLengthSquared = float.MaxValue;
                 for (int i = 0; i < activeWarps.Count; i++) {
@@ -426,8 +429,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 initialLobbyIndex = selectedLobbyIndex;
                 initialWarpIndex = selectedWarpIndexes[selectedLobbyIndex];
             }
-
-            var warpIndex = selectedWarpIndexes[selectedLobbyIndex];
 
             // get the map texture
             mapTexture = GFX.Gui[lobbyMapInfo.MapTexture].Texture.Texture;
@@ -447,8 +448,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
             zoomLevel = Calc.Clamp(zoomLevel, 0, zoomLevels.Length);
             actualScale = zoomLevels[zoomLevel];
             shouldCentreOrigin = zoomLevel == 0;
-            selectedOrigin = warpIndex >= 0 && warpIndex < activeWarps.Count ? originForPosition(activeWarps[warpIndex].Position) : new Vector2(0.5f);
-            actualOrigin = shouldCentreOrigin ? new Vector2(0.5f) : selectedOrigin;
+
+            if (!viewOnly) {
+                var warpIndex = selectedWarpIndexes[selectedLobbyIndex];
+                selectedOrigin = warpIndex >= 0 && warpIndex < activeWarps.Count ? originForPosition(activeWarps[warpIndex].Position) : new Vector2(0.5f);
+                actualOrigin = shouldCentreOrigin ? new Vector2(0.5f) : selectedOrigin;
+            }
+
             translateTimeRemaining = 0f;
             scaleTimeRemaining = 0f;
 
@@ -616,7 +622,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
             Draw.Rect(border.Right - thickness, border.Top, thickness, border.Height, Color.White);
 
             var lobby = lobbySelections[selectedLobbyIndex];
-            var warpIndex = selectedWarpIndexes[selectedLobbyIndex];
             var title = Dialog.Clean(lobby.SID);
             var colorAlpha = 1f;
 
@@ -644,11 +649,14 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
 
             // draw selected warp title
-            if (warpIndex >= 0 && warpIndex < activeWarps.Count && !string.IsNullOrWhiteSpace(activeWarps[warpIndex].DialogKey)) {
-                const float warpTitleOffset = -18f;
-                const float warpTitleAlpha = 1f;
-                var clean = Dialog.Clean(activeWarps[warpIndex].DialogKey);
-                ActiveFont.DrawOutline(clean, new Vector2(windowBounds.Center.X, windowBounds.Bottom + warpTitleOffset), new Vector2(0.5f), new Vector2(0.8f), Color.White * warpTitleAlpha, 2f, Color.Black);
+            if (!viewOnly) {
+                var warpIndex = selectedWarpIndexes[selectedLobbyIndex];
+                if (warpIndex >= 0 && warpIndex < activeWarps.Count && !string.IsNullOrWhiteSpace(activeWarps[warpIndex].DialogKey)) {
+                    const float warpTitleOffset = -18f;
+                    const float warpTitleAlpha = 1f;
+                    var clean = Dialog.Clean(activeWarps[warpIndex].DialogKey);
+                    ActiveFont.DrawOutline(clean, new Vector2(windowBounds.Center.X, windowBounds.Bottom + warpTitleOffset), new Vector2(0.5f), new Vector2(0.8f), Color.White * warpTitleAlpha, 2f, Color.Black);
+                }
             }
 
             // draw controls
@@ -663,7 +671,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             var buttonPosition = new Vector2(windowBounds.Left + xOffset, windowBounds.Bottom + yOffset);
 
-            if (activeWarps.Count > 1) {
+            if (!viewOnly && activeWarps.Count > 1) {
                 renderDoubleButton(buttonPosition, changeDestinationLabel, Input.MenuUp, Input.MenuDown,
                     buttonScale, true, true, 0f, selectWarpWiggler.Value * wiggleAmount);
                 buttonPosition.X += measureDoubleButton(changeDestinationLabel, Input.MenuUp, Input.MenuDown) / 2f + xOffset;
@@ -677,10 +685,18 @@ namespace Celeste.Mod.CollabUtils2.UI {
             var closeWidth = ButtonUI.Width(closeLabel, Input.MenuCancel);
             var confirmWidth = ButtonUI.Width(confirmLabel, Input.MenuConfirm);
             buttonPosition.X = windowBounds.Right + xOffset / 2f;
+
+            // draw close button
             ButtonUI.Render(buttonPosition, closeLabel, Input.MenuCancel, buttonScale, 1f, closeWiggler.Value * wiggleAmount);
             buttonPosition.X -= closeWidth / 2f + xOffset;
-            ButtonUI.Render(buttonPosition, confirmLabel, Input.MenuConfirm, buttonScale, 1f, confirmWiggler.Value * wiggleAmount);
-            buttonPosition.X -= confirmWidth / 2f + xOffset;
+
+            // draw confirm button if not view only
+            if (!viewOnly) {
+                ButtonUI.Render(buttonPosition, confirmLabel, Input.MenuConfirm, buttonScale, 1f, confirmWiggler.Value * wiggleAmount);
+                buttonPosition.X -= confirmWidth / 2f + xOffset;
+            }
+
+            // draw zoom button
             ButtonUI.Render(buttonPosition, zoomLabel, Input.MenuJournal, buttonScale, 1f, zoomWiggler.Value * wiggleAmount);
         }
 
@@ -730,7 +746,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 image.Scale = new Vector2(imageScale);
             }
 
-            // move the player icon to the currently selected warp
+            // move the player icon
             if (maddyRunSprite != null) {
                 var selectedOriginOffset = selectedOrigin - actualOrigin;
                 maddyRunSprite.Position = new Vector2(mapBounds.Center.X + selectedOriginOffset.X * actualWidth, mapBounds.Center.Y + selectedOriginOffset.Y * actualHeight);

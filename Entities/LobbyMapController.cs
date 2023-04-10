@@ -32,6 +32,21 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 level.Tracker.GetEntity<LobbyMapUI>() == null &&
                 level.Tracker.GetEntity<Player>() is Player player) {
 
+                // check if the player pressed the lobby map button and we're on the ground
+                if (CollabModule.Instance.Settings.DisplayLobbyMap.Pressed && level.CanRetry &&
+                    player.StateMachine.State == Player.StNormal && player.OnGround() &&
+                    level.Tracker.GetEntity<LobbyMapUI>() == null) {
+
+                    // stop us from retrying
+                    level.CanRetry = false;
+                    // set dummy state
+                    player.StateMachine.State = Player.StDummy;
+                    // display the lobby map view only
+                    level.Add(new LobbyMapUI(true));
+                    // don't do any more
+                    return;
+                }
+
                 if (!level.OnInterval(0.2f) || player.StateMachine.State == Player.StDummy || CollabModule.Instance.SaveData.PauseVisitingPoints) {
                     return;
                 }
