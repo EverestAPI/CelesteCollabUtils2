@@ -1,10 +1,8 @@
 using Celeste.Mod.CollabUtils2.UI;
 using Celeste.Mod.Entities;
-using Celeste.Pico8;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Monocle;
-using System;
 using System.Collections;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
