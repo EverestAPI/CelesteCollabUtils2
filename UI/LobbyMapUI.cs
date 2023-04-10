@@ -139,6 +139,12 @@ namespace Celeste.Mod.CollabUtils2.UI {
         public override void Update() {
             base.Update();
 
+            // if we're somehow not on the ground, bail
+            if (Scene?.Tracker.GetEntity<Player>()?.OnGround() != true) {
+                closeScreen();
+                return;
+            }
+
             // handle input
             if (focused) {
                 if (activeWarps.Count > 0) {
