@@ -29,9 +29,6 @@ namespace Celeste.Mod.CollabUtils2 {
         private static ILHook hookOnLevelSetSwitch;
         private static ILHook hookOnOuiFileSelectSlotRender;
 
-        // TODO: replace this with On.Celeste once Discord Game SDK reached stable
-        private static Hook hookDiscordGameSDKIcon;
-
         private static HashSet<string> collabNames = new HashSet<string>();
 
         internal static void OnInitialize() {
@@ -196,11 +193,7 @@ namespace Celeste.Mod.CollabUtils2 {
             hookOnOuiFileSelectSlotGolden = new ILHook(typeof(OuiFileSelectSlot).GetMethod("get_Golden", BindingFlags.NonPublic | BindingFlags.Instance), modSelectSlotCollectedStrawberries);
             hookOnOuiFileSelectSlotRender = new ILHook(typeof(OuiFileSelectSlot).GetMethod("orig_Render"), modOuiFileSelectSlotRender);
 
-            MethodInfo discordRichPresence = typeof(EverestModule).Assembly.GetType("Celeste.Mod.Everest+DiscordSDK")?.GetMethod("GetMapIconURLCached", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (discordRichPresence != null) {
-                hookDiscordGameSDKIcon = new Hook(discordRichPresence, typeof(LobbyHelper)
-                    .GetMethod("onDiscordGetPresenceIcon", BindingFlags.NonPublic | BindingFlags.Static));
-            }
+            On.Celeste.Mod.Everest.DiscordSDK.GetMapIconURLCached += onDiscordGetPresenceIcon;
 
             typeof(ModExports).ModInterop();
         }
@@ -231,7 +224,7 @@ namespace Celeste.Mod.CollabUtils2 {
             hookOnOuiFileSelectSlotGolden?.Dispose();
             hookOnOuiFileSelectSlotRender?.Dispose();
 
-            hookDiscordGameSDKIcon?.Dispose();
+            On.Celeste.Mod.Everest.DiscordSDK.GetMapIconURLCached -= onDiscordGetPresenceIcon;
 
             if (Everest.Loader.DependencyLoaded(new EverestModuleMetadata() { Name = "CelesteNet.Client", Version = new Version(2, 0, 0) })) {
                 teardownAdjustCollabIcon();
@@ -256,7 +249,7 @@ namespace Celeste.Mod.CollabUtils2 {
             }
         }
 
-        private static string onDiscordGetPresenceIcon(Func<object, AreaData, string> orig, object self, AreaData areaData) {
+        private static string onDiscordGetPresenceIcon(On.Celeste.Mod.Everest.DiscordSDK.orig_GetMapIconURLCached orig, Everest.DiscordSDK self, AreaData areaData) {
             // if we are in a collab map, change the icon displayed in Discord Rich Presence to the lobby icon.
             string lobbySID = GetLobbyForMap(areaData.SID);
             if (lobbySID != null) {

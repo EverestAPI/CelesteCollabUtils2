@@ -41,8 +41,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
             { "grandmaster", Calc.HexToColor("DD87FF") }
         };
 
-        private static Hook hookOnDiscordRichPresenceChange;
-
         private static bool presenceLock = false;
 
         internal static void Load() {
@@ -65,20 +63,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             IL.Celeste.OuiChapterPanel._FixTitleLength += ModFixTitleLength;
             On.Celeste.OuiMainMenu.CreateButtons += OnOuiMainMenuCreateButtons;
 
-            // hooks the Discord rich presence update method of stable version 3650
-            // TODO: this should be replace with On.Celeste when this will have reached stable
-            MethodInfo discordRichPresence = typeof(EverestModule).Assembly.GetType("Celeste.Mod.Everest+Discord")?.GetMethod("UpdateText");
-            if (discordRichPresence != null) {
-                hookOnDiscordRichPresenceChange = new Hook(discordRichPresence, typeof(InGameOverworldHelper)
-                    .GetMethod("OnDiscordChangePresenceOld", BindingFlags.NonPublic | BindingFlags.Static));
-            }
-
-            // hooks the Discord rich presence update method of pull request https://github.com/EverestAPI/Everest/pull/543
-            discordRichPresence = typeof(EverestModule).Assembly.GetType("Celeste.Mod.Everest+DiscordSDK")?.GetMethod("UpdatePresence", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (discordRichPresence != null) {
-                hookOnDiscordRichPresenceChange = new Hook(discordRichPresence, typeof(InGameOverworldHelper)
-                    .GetMethod("OnDiscordChangePresenceNew", BindingFlags.NonPublic | BindingFlags.Static));
-            }
+            On.Celeste.Mod.Everest.DiscordSDK.UpdatePresence += OnDiscordChangePresence;
 
             hookOnMapDataOrigLoad = new Hook(
                 typeof(MapData).GetMethod("orig_Load", BindingFlags.NonPublic | BindingFlags.Instance),
@@ -129,8 +114,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             hookOnMapDataOrigLoad?.Dispose();
             hookOnMapDataOrigLoad = null;
 
-            hookOnDiscordRichPresenceChange?.Dispose();
-            hookOnDiscordRichPresenceChange = null;
+            On.Celeste.Mod.Everest.DiscordSDK.UpdatePresence -= OnDiscordChangePresence;
         }
 
         private static void OnOuiChapterPanelStart(On.Celeste.OuiChapterPanel.orig_Start orig, OuiChapterPanel self, string checkpoint) {
@@ -217,14 +201,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
             orig();
         }
 
-        private static void OnDiscordChangePresenceOld(Action<string, string, Session> orig, string details, string state, Session session) {
-            if (!presenceLock) {
-                orig(details, state, session);
-            }
-        }
 
-
-        private static void OnDiscordChangePresenceNew(Action<object, Session> orig, object self, Session session) {
+        private static void OnDiscordChangePresence(On.Celeste.Mod.Everest.DiscordSDK.orig_UpdatePresence orig, Everest.DiscordSDK self, Session session) {
             if (!presenceLock) {
                 orig(self, session);
             }
