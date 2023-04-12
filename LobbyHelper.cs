@@ -194,6 +194,7 @@ namespace Celeste.Mod.CollabUtils2 {
             hookOnOuiFileSelectSlotRender = new ILHook(typeof(OuiFileSelectSlot).GetMethod("orig_Render"), modOuiFileSelectSlotRender);
 
             On.Celeste.Mod.Everest.DiscordSDK.GetMapIconURLCached += onDiscordGetPresenceIcon;
+            IL.Celeste.Mod.Everest.DiscordSDK.UpdatePresence += modDiscordChangePresence;
 
             typeof(ModExports).ModInterop();
         }
@@ -225,6 +226,7 @@ namespace Celeste.Mod.CollabUtils2 {
             hookOnOuiFileSelectSlotRender?.Dispose();
 
             On.Celeste.Mod.Everest.DiscordSDK.GetMapIconURLCached -= onDiscordGetPresenceIcon;
+            IL.Celeste.Mod.Everest.DiscordSDK.UpdatePresence -= modDiscordChangePresence;
 
             if (Everest.Loader.DependencyLoaded(new EverestModuleMetadata() { Name = "CelesteNet.Client", Version = new Version(2, 0, 0) })) {
                 teardownAdjustCollabIcon();
@@ -257,6 +259,24 @@ namespace Celeste.Mod.CollabUtils2 {
             }
 
             return orig(self, areaData);
+        }
+
+
+        private static void modDiscordChangePresence(ILContext il) {
+            ILCursor cursor = new ILCursor(il);
+
+            if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdflda<Session>("Area"), instr => instr.MatchCall<AreaKey>("get_ChapterIndex"))) {
+                Logger.Log("CollabUtils2/InGameOverworldHelper", $"Hiding chapter number from collab maps at {cursor.Index} in IL for DiscordSDK.UpdatePresence");
+
+                cursor.Emit(OpCodes.Ldarg_1);
+                cursor.EmitDelegate<Func<int, Session, int>>((orig, session) => {
+                    if (IsCollabMap(session.Area.GetSID())) {
+                        // prevent Everest from displaying the chapter number
+                        return -1;
+                    }
+                    return orig;
+                });
+            }
         }
 
         public static void OnSessionCreated() {
