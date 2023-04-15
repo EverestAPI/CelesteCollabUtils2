@@ -2,8 +2,6 @@ using Microsoft.Xna.Framework;
 using Monocle;
 using MonoMod.Utils;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
     class MiniHeartDoorUnlockCutscene : CutsceneEntity {
