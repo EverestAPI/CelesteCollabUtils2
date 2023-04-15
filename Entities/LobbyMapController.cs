@@ -37,6 +37,12 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     player.StateMachine.State == Player.StNormal && player.OnGround() &&
                     level.Tracker.GetEntity<LobbyMapUI>() == null) {
 
+                    // if we're standing in front of a bench, trigger it instead
+                    if (player.CollideFirst<LobbyMapWarp>() is LobbyMapWarp warp) {
+                        warp.OnTalk(player);
+                        return;
+                    }
+
                     // stop us from retrying
                     level.CanRetry = false;
                     // set dummy state

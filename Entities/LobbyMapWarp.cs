@@ -6,6 +6,7 @@ using Monocle;
 using System.Collections;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
+    [Tracked]
     [CustomEntity("CollabUtils2/LobbyMapWarp")]
     public class LobbyMapWarp : Entity {
         private readonly string warpSpritePath;
@@ -34,7 +35,11 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 image.JustifyOrigin(0.5f, 1f);
             }
 
-            Add(new TalkComponent(new Rectangle(-16, -32, 32, 32), new Vector2(0, data.Float("interactOffsetY", -16f)), onTalk) {
+            var talkRect = new Rectangle(-16, -32, 32, 32);
+            Collidable = true;
+            Collider = new Hitbox(talkRect.Width, talkRect.Height, talkRect.X, talkRect.Y);
+
+            Add(new TalkComponent(talkRect, new Vector2(0, data.Float("interactOffsetY", -16f)), OnTalk) {
                 PlayerMustBeFacing = false,
             });
         }
@@ -46,7 +51,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             info.Room = level.Session.Level;
         }
 
-        private void onTalk(Player player) {
+        public void OnTalk(Player player) {
             // don't allow this to somehow trigger twice from the same action
             if (player.Scene is Level level && level.CanRetry) {
                 level.CanRetry = false;
