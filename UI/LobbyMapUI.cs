@@ -2,6 +2,7 @@ using Celeste.Mod.CollabUtils2.Entities;
 using Celeste.Mod.Helpers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using Monocle;
 using System;
 using System.Collections;
@@ -22,6 +23,16 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private static VirtualButton lobbyMapDownButton;
         private static VirtualButton lobbyMapLeftButton;
         private static VirtualButton lobbyMapRightButton;
+
+        // cached button render info
+        private ButtonHelper.ButtonRenderInfo changeDestinationButtonRenderInfo;
+        private ButtonHelper.ButtonRenderInfo changeLobbyButtonRenderInfo;
+        private ButtonHelper.ButtonRenderInfo closeButtonRenderInfo;
+        private ButtonHelper.ButtonRenderInfo confirmButtonRenderInfo;
+        private ButtonHelper.ButtonRenderInfo zoomButtonRenderInfo;
+        private ButtonHelper.ButtonRenderInfo holdToPanButtonRenderInfo;
+        private ButtonHelper.ButtonRenderInfo panButtonRenderInfo;
+        private ButtonHelper.ButtonRenderInfo aimButtonRenderInfo;
 
         // all lobbies in the collab
         private readonly List<LobbySelection> lobbySelections = new List<LobbySelection>();
@@ -115,6 +126,22 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             Add(new BeforeRenderHook(beforeRender));
             Add(new Coroutine(mapFocusRoutine()));
+
+            // cache render info
+            changeDestinationButtonRenderInfo = new ButtonHelper.ButtonRenderInfo(Dialog.Clean("collabutils2_lobbymap_change_destination"), Input.MenuUp, Input.MenuDown, wiggler: selectWarpWiggler);
+            changeLobbyButtonRenderInfo = new ButtonHelper.ButtonRenderInfo(Dialog.Clean("collabutils2_lobbymap_change_lobby"), Input.MenuLeft, Input.MenuRight, wiggler: selectLobbyWiggler);
+            closeButtonRenderInfo = new ButtonHelper.ButtonRenderInfo(Dialog.Clean("collabutils2_lobbymap_close"), Input.MenuCancel, wiggler: closeWiggler);
+            confirmButtonRenderInfo = new ButtonHelper.ButtonRenderInfo(Dialog.Clean("collabutils2_lobbymap_confirm"), Input.MenuConfirm, wiggler: confirmWiggler);
+            zoomButtonRenderInfo = new ButtonHelper.ButtonRenderInfo(Dialog.Clean("collabutils2_lobbymap_zoom"), Input.MenuJournal, wiggler: zoomWiggler);
+            holdToPanButtonRenderInfo = new ButtonHelper.ButtonRenderInfo(Dialog.Clean("collabutils2_lobbymap_hold_to_pan"), Input.Grab);
+
+            // pan can be custom or aim
+            panButtonRenderInfo = new ButtonHelper.ButtonRenderInfo(Dialog.Clean("collabutils2_lobbymap_pan"), lobbyMapUpButton, lobbyMapDownButton, lobbyMapLeftButton, lobbyMapRightButton);
+            aimButtonRenderInfo = new ButtonHelper.ButtonRenderInfo(Dialog.Clean("collabutils2_lobbymap_pan"),
+                new VirtualButton { Binding = Settings.Instance.Up },
+                new VirtualButton { Binding = Settings.Instance.Down },
+                new VirtualButton { Binding = Settings.Instance.Left },
+                new VirtualButton { Binding = Settings.Instance.Right });
         }
 
         #region Entity Overrides
@@ -708,14 +735,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
 
             // draw controls
-            var changeDestinationLabel = Dialog.Clean("collabutils2_lobbymap_change_destination");
-            var changeLobbyLabel = Dialog.Clean("collabutils2_lobbymap_change_lobby");
-            var holdToPanLabel = Dialog.Clean("collabutils2_lobbymap_hold_to_pan");
-            var panLabel = Dialog.Clean("collabutils2_lobbymap_pan");
-            var closeLabel = Dialog.Clean("collabutils2_lobbymap_close");
-            var confirmLabel = Dialog.Clean("collabutils2_lobbymap_confirm");
-            var zoomLabel = Dialog.Clean("collabutils2_lobbymap_zoom");
             const float buttonScale = 0.5f;
+            const float disabledButtonAlpha = 0.4f;
             const float xOffset = 32f, yOffset = 45f;
             const float wiggleAmount = 0.05f;
 
@@ -723,41 +744,41 @@ namespace Celeste.Mod.CollabUtils2.UI {
             var holdToPan = Input.Grab.Check;
 
             if (!viewOnly && activeWarps.Count > 1 && !holdToPan) {
-                buttonPosition.X += renderMultiButton(buttonPosition, changeDestinationLabel, new[] { Input.MenuUp, Input.MenuDown }, null, buttonScale, 0f, selectWarpWiggler.Value * wiggleAmount) + xOffset;
+                ButtonHelper.RenderMultiButton(ref buttonPosition, xOffset, changeDestinationButtonRenderInfo, buttonScale, justifyX: 0f, wiggle: wiggleAmount);
             }
 
             if (lobbySelections.Count > 1 && !holdToPan) {
-                buttonPosition.X += renderMultiButton(buttonPosition, changeLobbyLabel,
-                    new[] { Input.MenuLeft, Input.MenuRight },
-                    new[] { selectedLobbyIndex > 0 ? 1f : 0.4f, selectedLobbyIndex < lobbySelections.Count - 1 ? 1f : 0.4f },
-                    buttonScale, 0f, selectLobbyWiggler.Value * wiggleAmount);
+                changeLobbyButtonRenderInfo.Button1Alpha = selectedLobbyIndex > 0 ? 1f : disabledButtonAlpha;
+                changeLobbyButtonRenderInfo.Button2Alpha = selectedLobbyIndex < lobbySelections.Count - 1 ? 1f : disabledButtonAlpha;
+                ButtonHelper.RenderMultiButton(ref buttonPosition, xOffset, changeLobbyButtonRenderInfo, buttonScale, justifyX: 0f, wiggle: wiggleAmount);
             }
 
             buttonPosition.X = windowBounds.Right;
 
             // draw close button
-            buttonPosition.X -= renderMultiButton(buttonPosition, closeLabel, new[] { Input.MenuCancel }, null, buttonScale, 1f, closeWiggler.Value * wiggleAmount) + xOffset;
+            ButtonHelper.RenderMultiButton(ref buttonPosition, xOffset, closeButtonRenderInfo, buttonScale, justifyX: 1f, wiggle: wiggleAmount);
 
             // draw confirm button if not view only
             if (!viewOnly) {
-                buttonPosition.X -= renderMultiButton(buttonPosition, confirmLabel, new[] { Input.MenuConfirm }, null, buttonScale, 1f, confirmWiggler.Value * wiggleAmount) + xOffset;
+                ButtonHelper.RenderMultiButton(ref buttonPosition, xOffset, confirmButtonRenderInfo, buttonScale, justifyX: 1f, wiggle: wiggleAmount);
             }
 
             // draw zoom button
-            buttonPosition.X -= renderMultiButton(buttonPosition, zoomLabel, new[] { Input.MenuJournal }, null, buttonScale, 1f, zoomWiggler.Value * wiggleAmount) + xOffset;
+            ButtonHelper.RenderMultiButton(ref buttonPosition, xOffset, zoomButtonRenderInfo, buttonScale, justifyX: 1f, wiggle: wiggleAmount);
+
+            var panAlpha = shouldCentreOrigin ? disabledButtonAlpha : 1f;
 
             if (holdToPan) {
-                // draw menu inputs for panning (for now)
-                renderMultiButton(buttonPosition, panLabel, new[] { Input.MenuUp, Input.MenuDown, Input.MenuLeft, Input.MenuRight }, null, buttonScale, 1f);
-            } else if (Input.GuiButton(lobbyMapUpButton, Input.PrefixMode.Latest, null) != null ||
-                Input.GuiButton(lobbyMapDownButton, Input.PrefixMode.Latest, null) != null ||
-                Input.GuiButton(lobbyMapLeftButton, Input.PrefixMode.Latest, null) != null ||
-                Input.GuiButton(lobbyMapRightButton, Input.PrefixMode.Latest, null) != null) {
+                ButtonHelper.RenderMultiButton(ref buttonPosition, xOffset, aimButtonRenderInfo, buttonScale, panAlpha, justifyX: 1f, wiggle: wiggleAmount);
+            } else if (hasLatestBinding(CollabModule.Instance.Settings.PanLobbyMapUp.Binding,
+                CollabModule.Instance.Settings.PanLobbyMapDown.Binding,
+                CollabModule.Instance.Settings.PanLobbyMapLeft.Binding,
+                CollabModule.Instance.Settings.PanLobbyMapRight.Binding)) {
                 // draw custom pan inputs if at least one is bound
-                renderMultiButton(buttonPosition, panLabel, new[] { lobbyMapUpButton, lobbyMapDownButton, lobbyMapLeftButton, lobbyMapRightButton }, null, buttonScale, 1f, 0f);
+                ButtonHelper.RenderMultiButton(ref buttonPosition, xOffset, panButtonRenderInfo, buttonScale, panAlpha, justifyX: 1f, wiggle: wiggleAmount);
             } else {
                 // otherwise we draw the "hold to pan" input
-                renderMultiButton(buttonPosition, holdToPanLabel, new[] { Input.Grab }, null, buttonScale, 1f, 0f);
+                ButtonHelper.RenderMultiButton(ref buttonPosition, xOffset, holdToPanButtonRenderInfo, buttonScale, panAlpha, justifyX: 1f, wiggle: wiggleAmount);
             }
         }
 
@@ -859,6 +880,57 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 Visible = false;
                 DoClose();
             }
+        }
+
+        /// <summary>
+        /// Teleports to the selected warp within the current map.
+        /// </summary>
+        private void teleportToWarp(LobbyMapController.MarkerInfo warp) {
+            if (!(Scene is Level level)) return;
+
+            focused = false;
+            const float wipeDuration = 0.5f;
+
+            Audio.Play("event:/game/04_cliffside/snowball_spawn");
+
+            void onComplete() {
+                closeScreen(true);
+                if (warp.SID != level.Session.Area.SID) {
+                    level.OnEndOfFrame += () => {
+                        var areaId = AreaData.Areas.FirstOrDefault(a => a.SID == warp.SID)?.ID ?? level.Session.Area.ID;
+                        var levelData = AreaData.Get(new AreaKey(areaId)).Mode[0].MapData.Get(warp.Room);
+                        var session = new Session(new AreaKey(areaId)) {
+                            Level = warp.Room,
+                            FirstLevel = false,
+                            RespawnPoint = levelData.Spawns.ClosestTo(levelData.Position + warp.Position),
+                        };
+                        LevelEnter.Go(session, fromSaveData: false);
+                    };
+                } else {
+                    level.OnEndOfFrame += () => {
+                        if (level.Tracker.GetEntity<Player>() is Player oldPlayer) {
+                            Leader.StoreStrawberries(oldPlayer.Leader);
+                            level.Remove(oldPlayer);
+                        }
+
+                        level.UnloadLevel();
+                        level.Session.Level = warp.Room;
+                        level.Session.FirstLevel = false;
+                        level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top) + warp.Position);
+                        level.LoadLevel(Player.IntroTypes.Respawn);
+                        level.Wipe?.Cancel();
+
+                        if (level.Tracker.GetEntity<Player>() is Player newPlayer) {
+                            level.Camera.Position = newPlayer.CameraTarget;
+                            Leader.RestoreStrawberries(newPlayer.Leader);
+                        }
+
+                        createWipe(warp.WipeType, wipeDuration, level, true);
+                    };
+                }
+            }
+
+            createWipe(warp.WipeType, wipeDuration, level, false, onComplete);
         }
 
         #endregion
@@ -972,57 +1044,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
             return array;
         }
 
-        /// <summary>
-        /// Teleports to the selected warp within the current map.
-        /// </summary>
-        private void teleportToWarp(LobbyMapController.MarkerInfo warp) {
-            if (!(Scene is Level level)) return;
-
-            focused = false;
-            const float wipeDuration = 0.5f;
-
-            Audio.Play("event:/game/04_cliffside/snowball_spawn");
-
-            void onComplete() {
-                closeScreen(true);
-                if (warp.SID != level.Session.Area.SID) {
-                    level.OnEndOfFrame += () => {
-                        var areaId = AreaData.Areas.FirstOrDefault(a => a.SID == warp.SID)?.ID ?? level.Session.Area.ID;
-                        var levelData = AreaData.Get(new AreaKey(areaId)).Mode[0].MapData.Get(warp.Room);
-                        var session = new Session(new AreaKey(areaId)) {
-                            Level = warp.Room,
-                            FirstLevel = false,
-                            RespawnPoint = levelData.Spawns.ClosestTo(levelData.Position + warp.Position),
-                        };
-                        LevelEnter.Go(session, fromSaveData: false);
-                    };
-                } else {
-                    level.OnEndOfFrame += () => {
-                        if (level.Tracker.GetEntity<Player>() is Player oldPlayer) {
-                            Leader.StoreStrawberries(oldPlayer.Leader);
-                            level.Remove(oldPlayer);
-                        }
-
-                        level.UnloadLevel();
-                        level.Session.Level = warp.Room;
-                        level.Session.FirstLevel = false;
-                        level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top) + warp.Position);
-                        level.LoadLevel(Player.IntroTypes.Respawn);
-                        level.Wipe?.Cancel();
-
-                        if (level.Tracker.GetEntity<Player>() is Player newPlayer) {
-                            level.Camera.Position = newPlayer.CameraTarget;
-                            Leader.RestoreStrawberries(newPlayer.Leader);
-                        }
-
-                        createWipe(warp.WipeType, wipeDuration, level, true);
-                    };
-                }
-            }
-
-            createWipe(warp.WipeType, wipeDuration, level, false, onComplete);
-        }
-
         private static ScreenWipe createWipe(string wipeTypeName, float wipeDuration, Level level, bool wipeIn, Action onComplete = null) {
             Type wipeType = FakeAssembly.GetFakeEntryAssembly().GetType(wipeTypeName);
             if (wipeType == null) {
@@ -1034,48 +1055,12 @@ namespace Celeste.Mod.CollabUtils2.UI {
             return screenWipe;
         }
 
-        /// <summary>
-        /// Draws a multi button.
-        /// </summary>
-        public static float renderMultiButton(Vector2 position, string label, VirtualButton[] buttons, float[] buttonAlpha, float scale, float justifyX = 0.5f, float wiggle = 0f, float alpha = 1f, bool showFallback = true) {
-            var textures = new List<MTexture>();
-            foreach (var button in buttons) {
-                textures.Add(Input.GuiButton(button, showFallback ? "controls/keyboard/oemquestion" : null));
+        private static bool hasLatestBinding(Binding binding1, Binding binding2 = null, Binding binding3 = null, Binding binding4 = null) {
+            if (Input.GuiInputPrefix() == "keyboard") {
+                return binding1?.Keyboard.Any() == true || binding2?.Keyboard.Any() == true || binding3?.Keyboard.Any() == true || binding4?.Keyboard.Any() == true;
+            } else {
+                return binding1?.Controller.Any() == true || binding2?.Controller.Any() == true || binding3?.Controller.Any() == true || binding4?.Controller.Any() == true;
             }
-
-            float buttonWidths = 0;
-            foreach (var texture in textures) {
-                buttonWidths += texture?.Width ?? 0;
-            }
-
-            float labelWidth = ActiveFont.Measure(label).X;
-            float fullWidth = labelWidth + 8f + buttonWidths;
-            float labelJustifyX = fullWidth / 2f / labelWidth;
-
-            position.X += scale * fullWidth * (0.5f - justifyX);
-
-            drawText(label, position, labelJustifyX, scale + wiggle, alpha);
-
-            float buttonX = labelWidth + 8f - fullWidth / 2f;
-            for (int i = 0; i < buttons.Length; i++) {
-                if (textures[i] is MTexture texture) {
-                    var origin = new Vector2(-buttonX, texture.Height / 2f);
-                    buttonX += texture.Width;
-                    float ba = buttonAlpha == null ? 1f : buttonAlpha[i];
-                    if (ba > 0) {
-                        texture.Draw(position, origin, Color.White * alpha * ba, scale + wiggle);
-                    }
-                }
-            }
-
-            return fullWidth * scale;
-        }
-
-        /// <summary>
-        /// Draws text for a double button in the specified position.
-        /// </summary>
-        private static void drawText(string text, Vector2 position, float justifyX, float scale, float alpha) {
-            ActiveFont.DrawOutline(text, position, new Vector2(justifyX, 0.5f), Vector2.One * scale, Color.White * alpha, 2f, Color.Black * alpha);
         }
 
         /// <summary>
@@ -1129,6 +1114,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 Room = data.Level.Name;
             }
         }
+
+
 
         #endregion
     }
