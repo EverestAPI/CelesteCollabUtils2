@@ -277,6 +277,18 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     }
                     var newOrigin = actualOrigin + offset * Engine.DeltaTime;
                     actualOrigin = newOrigin.Clamp(0, 0, 1, 1);
+
+                    // update the selected warp if we should
+                    if (!viewOnly && !shouldCentreOrigin) {
+                        var nearestWarpIndex = nearestWarpIndexToActualOrigin();
+                        if (nearestWarpIndex != selectedWarpIndexes[selectedLobbyIndex]) {
+                            Audio.Play(nearestWarpIndex < selectedWarpIndexes[selectedLobbyIndex] ? "event:/ui/main/rollover_up" : "event:/ui/main/rollover_down");
+                            selectedWarpIndexes[selectedLobbyIndex] = lastSelectedWarpIndex = nearestWarpIndex;
+                            selectedOrigin = originForPosition(activeWarps[nearestWarpIndex].Position);
+                        }
+                    }
+
+                    // make sure the markers are in the right place
                     updateMarkers();
                 }
 
@@ -322,6 +334,23 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
                 lastSelectedWarpIndex = selectedWarpIndexes[selectedLobbyIndex];
             }
+        }
+
+        /// <summary>
+        /// Finds the index into <see cref="activeWarps"/> that has the nearest warp to <see cref="actualOrigin"/>.
+        /// </summary>
+        private int nearestWarpIndexToActualOrigin() {
+            int nearestIndex = -1;
+            var nearestLengthSquared = float.MaxValue;
+            for (int i = 0; i < activeWarps.Count; i++) {
+                var warpOrigin = originForPosition(activeWarps[i].Position);
+                var warpLengthSquared = (actualOrigin - warpOrigin).LengthSquared();
+                if (warpLengthSquared < nearestLengthSquared) {
+                    nearestLengthSquared = warpLengthSquared;
+                    nearestIndex = i;
+                }
+            }
+            return nearestIndex;
         }
 
         #endregion
