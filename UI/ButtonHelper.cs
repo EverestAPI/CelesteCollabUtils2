@@ -7,12 +7,16 @@ namespace Celeste.Mod.CollabUtils2.UI {
         // cached for performance
         private static readonly List<MTexture> multiButtonTextures = new List<MTexture>();
 
+        /// <summary>
+        /// Draws a multi button, and automatically advances the rendering position based on the width.
+        /// </summary>
         public static void RenderMultiButton(ref Vector2 position, float xAdvance, ButtonRenderInfo renderInfo, float scale = 1f, float alpha = 1f, float justifyX = 0.5f, float wiggle = 1f, Wiggler wiggler = null) {
             var width = RenderMultiButton(position, renderInfo, scale, alpha, justifyX, wiggle, wiggler);
-            if (justifyX < 0.5f)
+            if (justifyX < 0.5f) {
                 position.X += width + xAdvance;
-            else
+            } else {
                 position.X -= width + xAdvance;
+            }
         }
 
         /// <summary>
@@ -57,6 +61,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
             ActiveFont.DrawOutline(text, position, new Vector2(justifyX, 0.5f), Vector2.One * scale, Color.White * alpha, 2f, Color.Black * alpha);
         }
 
+        /// <summary>
+        /// Gets the textures for each of the buttons in the render info.
+        /// We use a statically cached list for performance.
+        /// </summary>
         private static List<MTexture> getTextures(ButtonRenderInfo renderInfo) {
             multiButtonTextures.Clear();
             var fallback = renderInfo.ShowFallback ? "controls/keyboard/oemquestion" : null;
@@ -67,6 +75,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
             return multiButtonTextures;
         }
 
+        /// <summary>
+        /// Stores the information required for rendering a multi-button.
+        /// <see cref="Button1Alpha"/> and so on should be updated as required before calling RenderMultiButton.
+        /// </summary>
         public struct ButtonRenderInfo {
             public readonly string Label;
             public readonly VirtualButton Button1;

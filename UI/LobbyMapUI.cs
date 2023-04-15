@@ -2,7 +2,6 @@ using Celeste.Mod.CollabUtils2.Entities;
 using Celeste.Mod.Helpers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using Monocle;
 using System;
 using System.Collections;
@@ -410,6 +409,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
         }
 
+        /// <summary>
+        /// Finds or creates a <see cref="LobbyVisitManager"/> for the specified lobby.
+        /// </summary>
         private static LobbyVisitManager getLobbyVisitManager(Scene scene, string sid, string room) {
             if (scene.Tracker.GetEntity<LobbyMapController>() is LobbyMapController lmc &&
                 (lmc.VisitManager?.MatchesKey(sid, room) ?? false)) {
@@ -579,18 +581,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
             return new MarkerImage(markerInfo);
         }
 
-        private static bool isRainbowBerryUnlocked(string levelSet) {
-            if (!CollabMapDataProcessor.SilverBerries.ContainsKey(levelSet)) return false;
-
-            foreach (KeyValuePair<string, EntityID> requiredSilver in CollabMapDataProcessor.SilverBerries[levelSet]) {
-                // check if the silver was collected.
-                AreaStats stats = SaveData.Instance.GetAreaStatsFor(AreaData.Get(requiredSilver.Key).ToKey());
-                if (stats.Modes[0].Strawberries.Contains(requiredSilver.Value)) return true;
-            }
-
-            return false;
-        }
-
         #endregion
 
         #region Rendering
@@ -745,10 +735,12 @@ namespace Celeste.Mod.CollabUtils2.UI {
             var buttonPosition = new Vector2(windowBounds.Left, windowBounds.Bottom + yOffset);
             var holdToPan = Input.Grab.Check;
 
+            // draw change destination button
             if (!viewOnly && activeWarps.Count > 1 && !holdToPan) {
                 ButtonHelper.RenderMultiButton(ref buttonPosition, xOffset, changeDestinationButtonRenderInfo, buttonScale, justifyX: 0f, wiggle: wiggleAmount);
             }
 
+            // draw change lobby button
             if (lobbySelections.Count > 1 && !holdToPan) {
                 changeLobbyButtonRenderInfo.Button1Alpha = selectedLobbyIndex > 0 ? 1f : disabledButtonAlpha;
                 changeLobbyButtonRenderInfo.Button2Alpha = selectedLobbyIndex < lobbySelections.Count - 1 ? 1f : disabledButtonAlpha;
@@ -771,6 +763,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             var panAlpha = shouldCentreOrigin ? disabledButtonAlpha : 1f;
 
             if (holdToPan) {
+                // if we're holding pan, render the aim buttons as controls
                 ButtonHelper.RenderMultiButton(ref buttonPosition, xOffset, aimButtonRenderInfo, buttonScale, panAlpha, justifyX: 1f, wiggle: wiggleAmount);
             } else if (hasLatestBinding(CollabModule.Instance.Settings.PanLobbyMapUp.Binding,
                 CollabModule.Instance.Settings.PanLobbyMapDown.Binding,
@@ -1038,6 +1031,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
             return array;
         }
 
+        /// <summary>
+        /// Creates a screen wipe animation.
+        /// </summary>
         private static ScreenWipe createWipe(string wipeTypeName, float wipeDuration, Level level, bool wipeIn, Action onComplete = null) {
             Type wipeType = FakeAssembly.GetFakeEntryAssembly().GetType(wipeTypeName);
             if (wipeType == null) {
@@ -1049,6 +1045,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
             return screenWipe;
         }
 
+        /// <summary>
+        /// Checks whether any of the passed bindings have a valid button for the latest control scheme.
+        /// </summary>
         private static bool hasLatestBinding(Binding binding1, Binding binding2 = null, Binding binding3 = null, Binding binding4 = null) {
             if (Input.GuiInputPrefix() == "keyboard") {
                 return binding1?.Keyboard.Any() == true || binding2?.Keyboard.Any() == true || binding3?.Keyboard.Any() == true || binding4?.Keyboard.Any() == true;
@@ -1063,10 +1062,28 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private static EntityData findEntityData(LevelData levelData, string entityName) =>
             levelData.Entities.FirstOrDefault(e => e.Name == entityName);
 
+        /// <summary>
+        /// Returns true if at least one silver berry has been collected for this lobby.
+        /// </summary>
+        private static bool isRainbowBerryUnlocked(string levelSet) {
+            if (!CollabMapDataProcessor.SilverBerries.ContainsKey(levelSet)) return false;
+
+            foreach (KeyValuePair<string, EntityID> requiredSilver in CollabMapDataProcessor.SilverBerries[levelSet]) {
+                // check if the silver was collected.
+                AreaStats stats = SaveData.Instance.GetAreaStatsFor(AreaData.Get(requiredSilver.Key).ToKey());
+                if (stats.Modes[0].Strawberries.Contains(requiredSilver.Value)) return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Enforces removal of player control as much as possible.
+        /// </summary>
         public static void SetLocked(bool locked, Scene scene = null, Player player = null) {
+            // if we didn't pass in a scene and/or player, grab them ourselves
             Level level = (scene ?? Engine.Scene) as Level;
             player = player ?? level?.Tracker.GetEntity<Player>();
-
             if (level == null || player == null) return;
 
             level.CanRetry = !locked;
@@ -1079,6 +1096,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
             player.DummyAutoAnimate = !locked || player.OnGround();
         }
 
+        /// <summary>
+        /// Verifies that player control is still removed and there's no interaction storage we know of.
+        /// </summary>
         public bool CheckLocked() {
             if (Scene is Level level && level.Tracker.GetEntity<Player>() is Player player) {
                 // we really want to stop interaction storage, so if any of these checks fail, it's no longer valid to show the map
