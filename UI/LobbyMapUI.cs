@@ -267,9 +267,14 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         targetOrigin = shouldCentreOrigin ? new Vector2(0.5f) : selectedOrigin;
                         translateTimeRemaining = translate_time_seconds;
                     }
-                } else if (!shouldCentreOrigin && translateTimeRemaining <= 0 && scaleTimeRemaining <= 0 && aiming) {
-                    var aspectRatio = (float)mapBounds.Width / mapBounds.Height;
-                    var offset = aim * 2f / actualScale / new Vector2(aspectRatio, 1f);
+                } else if (!shouldCentreOrigin && translateTimeRemaining <= 0 && scaleTimeRemaining <= 0 && aiming && mapTexture != null) {
+                    var aspectRatio = (float)mapTexture.Width / mapTexture.Height;
+                    var offset = aim.SafeNormalize() * 2f / actualScale;
+                    if (aspectRatio > 0) {
+                        offset.X /= aspectRatio;
+                    } else {
+                        offset.Y *= aspectRatio;
+                    }
                     var newOrigin = actualOrigin + offset * Engine.DeltaTime;
                     actualOrigin = newOrigin.Clamp(0, 0, 1, 1);
                     updateMarkers();
