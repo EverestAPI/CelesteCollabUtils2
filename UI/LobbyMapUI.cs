@@ -16,6 +16,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
     public class LobbyMapUI : Entity {
         #region Fields
 
+        // input handling
+        private static VirtualJoystick lobbyMapJoystick;
+        private static VirtualButton lobbyMapUpButton;
+        private static VirtualButton lobbyMapDownButton;
+        private static VirtualButton lobbyMapLeftButton;
+        private static VirtualButton lobbyMapRightButton;
+
         // all lobbies in the collab
         private readonly List<LobbySelection> lobbySelections = new List<LobbySelection>();
 
@@ -55,6 +62,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private float targetScale = 1f;
         private Vector2 targetOrigin = Vector2.Zero;
         private Vector2 selectedOrigin = Vector2.Zero;
+        private bool shouldShowMaddy;
         private bool shouldCentreOrigin;
         private float scaleTimeRemaining;
         private float translateTimeRemaining;
@@ -78,6 +86,18 @@ namespace Celeste.Mod.CollabUtils2.UI {
             Tag = Tags.PauseUpdate | Tags.HUD;
             Depth = Depths.FGTerrain - 2;
             Visible = false;
+
+            if (lobbyMapJoystick == null) {
+                lobbyMapJoystick = new VirtualJoystick(
+                    CollabModule.Instance.Settings.PanLobbyMapUp.Binding,
+                    CollabModule.Instance.Settings.PanLobbyMapDown.Binding,
+                    CollabModule.Instance.Settings.PanLobbyMapLeft.Binding,
+                    CollabModule.Instance.Settings.PanLobbyMapRight.Binding, Input.Gamepad, 0.1f);
+                lobbyMapUpButton = new VirtualButton(CollabModule.Instance.Settings.PanLobbyMapUp.Binding, Input.Gamepad, 0f, 0.4f);
+                lobbyMapDownButton = new VirtualButton(CollabModule.Instance.Settings.PanLobbyMapDown.Binding, Input.Gamepad, 0f, 0.4f);
+                lobbyMapLeftButton = new VirtualButton(CollabModule.Instance.Settings.PanLobbyMapLeft.Binding, Input.Gamepad, 0f, 0.4f);
+                lobbyMapRightButton = new VirtualButton(CollabModule.Instance.Settings.PanLobbyMapRight.Binding, Input.Gamepad, 0f, 0.4f);
+            }
 
             this.viewOnly = viewOnly;
 
@@ -150,7 +170,16 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             // handle input
             if (focused) {
-                if (!viewOnly && activeWarps.Count > 0) {
+                var holdToPan = Input.Grab.Check;
+                var mainAim = Input.Aim.Value;
+                var lobbyAim = lobbyMapJoystick.Value;
+                var mainAiming = mainAim.LengthSquared() > float.Epsilon;
+
+                // if holding pan and using the main aim method, use main aim, otherwise fall back to our custom aim
+                var aim = holdToPan && mainAiming ? mainAim : lobbyAim;
+                var aiming = aim.LengthSquared() > float.Epsilon;
+
+                if (!viewOnly && activeWarps.Count > 0 && !holdToPan) {
                     int moveDir = 0;
                     if (Input.MenuUp.Pressed) {
                         if (!Input.MenuUp.Repeating && selectedWarpIndexes[selectedLobbyIndex] == 0) {
@@ -176,7 +205,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     }
                 }
 
-                if (Input.MenuLeft.Pressed) {
+                if (!holdToPan && Input.MenuLeft.Pressed) {
                     if (selectedLobbyIndex > 0) {
                         Audio.Play("event:/ui/main/rollover_up");
                         selectLobbyWiggler.Start();
@@ -184,7 +213,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         selectedLobbyIndex--;
                         updateSelectedLobby();
                     }
-                } else if (Input.MenuRight.Pressed) {
+                } else if (!holdToPan && Input.MenuRight.Pressed) {
                     if (selectedLobbyIndex < lobbySelections.Count - 1) {
                         Audio.Play("event:/ui/main/rollover_down");
                         selectLobbyWiggler.Start();
@@ -192,9 +221,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         selectedLobbyIndex++;
                         updateSelectedLobby();
                     }
-                }
-
-                if (Input.MenuJournal.Pressed) {
+                } else if (Input.MenuJournal.Pressed) {
                     zoomWiggler.Start();
                     zoomLevel--;
                     if (zoomLevel < 0) {
@@ -212,6 +239,12 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         targetOrigin = shouldCentreOrigin ? new Vector2(0.5f) : selectedOrigin;
                         translateTimeRemaining = translate_time_seconds;
                     }
+                } else if (!shouldCentreOrigin && translateTimeRemaining <= 0 && scaleTimeRemaining <= 0 && aiming) {
+                    var aspectRatio = (float)mapBounds.Width / mapBounds.Height;
+                    var offset = aim * 2f / actualScale / new Vector2(aspectRatio, 1f);
+                    var newOrigin = actualOrigin + offset * Engine.DeltaTime;
+                    actualOrigin = newOrigin.Clamp(0, 0, 1, 1);
+                    updateMarkers();
                 }
 
                 var close = false;
@@ -367,6 +400,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 return false;
             }
 
+            if (!(Engine.Scene is Level level) || !(level.Tracker.GetEntity<Player>() is Player player)) {
+                Logger.Log(LogLevel.Warn, "CollabUtils2/LobbyMapUI", $"updateSelectedLobby: Couldn't find level or player");
+                return false;
+            }
+
             var selection = lobbySelections[selectedLobbyIndex];
             var markers = lobbySelections[selectedLobbyIndex].Markers;
             lobbyMapInfo = selection.Info;
@@ -413,7 +451,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             markerComponents.ForEach(Add);
 
             // if this is the first time we've selected a lobby, select the nearest warp if not view only
-            if (!viewOnly && first && Engine.Scene is Level level && level.Tracker.GetEntity<Player>() is Player player) {
+            if (!viewOnly && first) {
                 selectedWarpIndexes[selectedLobbyIndex] = 0;
                 var nearestWarpLengthSquared = float.MaxValue;
                 for (int i = 0; i < activeWarps.Count; i++) {
@@ -449,10 +487,18 @@ namespace Celeste.Mod.CollabUtils2.UI {
             actualScale = zoomLevels[zoomLevel];
             shouldCentreOrigin = zoomLevel == 0;
 
+            var isCurrentLobby = selection.SID == level.Session.Area.SID;
+            shouldShowMaddy = !viewOnly || isCurrentLobby;
+
             if (!viewOnly) {
                 var warpIndex = selectedWarpIndexes[selectedLobbyIndex];
                 selectedOrigin = warpIndex >= 0 && warpIndex < activeWarps.Count ? originForPosition(activeWarps[warpIndex].Position) : new Vector2(0.5f);
                 actualOrigin = shouldCentreOrigin ? new Vector2(0.5f) : selectedOrigin;
+            } else if (isCurrentLobby) {
+                selectedOrigin = originForPosition(player.Position - level.Bounds.Location.ToVector2());
+                actualOrigin = shouldCentreOrigin ? new Vector2(0.5f) : selectedOrigin;
+            } else {
+                selectedOrigin = actualOrigin = new Vector2(0.5f);
             }
 
             translateTimeRemaining = 0f;
@@ -584,7 +630,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             base.Render();
 
-            maddyRunSprite?.Render();
+            if (shouldShowMaddy) {
+                maddyRunSprite?.Render();
+            }
 
             if (CollabModule.Instance.SaveData.ShowVisitedPoints) {
                 drawVisitedPoints();
@@ -662,6 +710,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
             // draw controls
             var changeDestinationLabel = Dialog.Clean("collabutils2_lobbymap_change_destination");
             var changeLobbyLabel = Dialog.Clean("collabutils2_lobbymap_change_lobby");
+            var holdToPanLabel = Dialog.Clean("collabutils2_lobbymap_hold_to_pan");
+            var panLabel = Dialog.Clean("collabutils2_lobbymap_pan");
             var closeLabel = Dialog.Clean("collabutils2_lobbymap_close");
             var confirmLabel = Dialog.Clean("collabutils2_lobbymap_confirm");
             var zoomLabel = Dialog.Clean("collabutils2_lobbymap_zoom");
@@ -669,35 +719,46 @@ namespace Celeste.Mod.CollabUtils2.UI {
             const float xOffset = 32f, yOffset = 45f;
             const float wiggleAmount = 0.05f;
 
-            var buttonPosition = new Vector2(windowBounds.Left + xOffset, windowBounds.Bottom + yOffset);
+            var buttonPosition = new Vector2(windowBounds.Left, windowBounds.Bottom + yOffset);
+            var holdToPan = Input.Grab.Check;
 
-            if (!viewOnly && activeWarps.Count > 1) {
-                renderDoubleButton(buttonPosition, changeDestinationLabel, Input.MenuUp, Input.MenuDown,
-                    buttonScale, true, true, 0f, selectWarpWiggler.Value * wiggleAmount);
-                buttonPosition.X += measureDoubleButton(changeDestinationLabel, Input.MenuUp, Input.MenuDown) / 2f + xOffset;
+            if (!viewOnly && activeWarps.Count > 1 && !holdToPan) {
+                buttonPosition.X += renderMultiButton(buttonPosition, changeDestinationLabel, new[] { Input.MenuUp, Input.MenuDown }, null, buttonScale, 0f, selectWarpWiggler.Value * wiggleAmount) + xOffset;
             }
 
-            if (lobbySelections.Count > 1) {
-                renderDoubleButton(buttonPosition, changeLobbyLabel, Input.MenuLeft, Input.MenuRight,
-                    buttonScale, selectedLobbyIndex > 0, selectedLobbyIndex < lobbySelections.Count - 1, 0f, selectLobbyWiggler.Value * wiggleAmount);
+            if (lobbySelections.Count > 1 && !holdToPan) {
+                buttonPosition.X += renderMultiButton(buttonPosition, changeLobbyLabel,
+                    new[] { Input.MenuLeft, Input.MenuRight },
+                    new[] { selectedLobbyIndex > 0 ? 1f : 0.4f, selectedLobbyIndex < lobbySelections.Count - 1 ? 1f : 0.4f },
+                    buttonScale, 0f, selectLobbyWiggler.Value * wiggleAmount);
             }
 
-            var closeWidth = ButtonUI.Width(closeLabel, Input.MenuCancel);
-            var confirmWidth = ButtonUI.Width(confirmLabel, Input.MenuConfirm);
-            buttonPosition.X = windowBounds.Right + xOffset / 2f;
+            buttonPosition.X = windowBounds.Right;
 
             // draw close button
-            ButtonUI.Render(buttonPosition, closeLabel, Input.MenuCancel, buttonScale, 1f, closeWiggler.Value * wiggleAmount);
-            buttonPosition.X -= closeWidth / 2f + xOffset;
+            buttonPosition.X -= renderMultiButton(buttonPosition, closeLabel, new[] { Input.MenuCancel }, null, buttonScale, 1f, closeWiggler.Value * wiggleAmount) + xOffset;
 
             // draw confirm button if not view only
             if (!viewOnly) {
-                ButtonUI.Render(buttonPosition, confirmLabel, Input.MenuConfirm, buttonScale, 1f, confirmWiggler.Value * wiggleAmount);
-                buttonPosition.X -= confirmWidth / 2f + xOffset;
+                buttonPosition.X -= renderMultiButton(buttonPosition, confirmLabel, new[] { Input.MenuConfirm }, null, buttonScale, 1f, confirmWiggler.Value * wiggleAmount) + xOffset;
             }
 
             // draw zoom button
-            ButtonUI.Render(buttonPosition, zoomLabel, Input.MenuJournal, buttonScale, 1f, zoomWiggler.Value * wiggleAmount);
+            buttonPosition.X -= renderMultiButton(buttonPosition, zoomLabel, new[] { Input.MenuJournal }, null, buttonScale, 1f, zoomWiggler.Value * wiggleAmount) + xOffset;
+
+            if (holdToPan) {
+                // draw menu inputs for panning (for now)
+                renderMultiButton(buttonPosition, panLabel, new[] { Input.MenuUp, Input.MenuDown, Input.MenuLeft, Input.MenuRight }, null, buttonScale, 1f);
+            } else if (Input.GuiButton(lobbyMapUpButton, Input.PrefixMode.Latest, null) != null ||
+                Input.GuiButton(lobbyMapDownButton, Input.PrefixMode.Latest, null) != null ||
+                Input.GuiButton(lobbyMapLeftButton, Input.PrefixMode.Latest, null) != null ||
+                Input.GuiButton(lobbyMapRightButton, Input.PrefixMode.Latest, null) != null) {
+                // draw custom pan inputs if at least one is bound
+                renderMultiButton(buttonPosition, panLabel, new[] { lobbyMapUpButton, lobbyMapDownButton, lobbyMapLeftButton, lobbyMapRightButton }, null, buttonScale, 1f, 0f);
+            } else {
+                // otherwise we draw the "hold to pan" input
+                renderMultiButton(buttonPosition, holdToPanLabel, new[] { Input.Grab }, null, buttonScale, 1f, 0f);
+            }
         }
 
         /// <summary>
@@ -974,43 +1035,47 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         /// <summary>
-        /// Calculates the width of a double button.
+        /// Draws a multi button.
         /// </summary>
-        public static float measureDoubleButton(string label, VirtualButton button1, VirtualButton button2) {
-            MTexture mTexture1 = Input.GuiButton(button1, "controls/keyboard/oemquestion");
-            MTexture mTexture2 = Input.GuiButton(button2, "controls/keyboard/oemquestion");
-            return ActiveFont.Measure(label).X + 8f + mTexture1.Width + mTexture2.Width;
-        }
-
-        /// <summary>
-        /// Draws a double button.
-        /// </summary>
-        public static void renderDoubleButton(Vector2 position, string label, VirtualButton button1, VirtualButton button2, float scale, bool displayButton1, bool displayButton2, float justifyX = 0.5f, float wiggle = 0f, float alpha = 1f) {
-            MTexture mTexture1 = Input.GuiButton(button1, "controls/keyboard/oemquestion");
-            MTexture mTexture2 = Input.GuiButton(button2, "controls/keyboard/oemquestion");
-            float num = ActiveFont.Measure(label).X + 8f + mTexture1.Width;
-            position.X -= scale * num * (justifyX - 0.5f) + mTexture2.Width / 2;
-            drawText(label, position, num / 2f, scale + wiggle, alpha);
-            if (displayButton1 && !displayButton2) {
-                mTexture1.Draw(position, new Vector2(mTexture1.Width - num / 2f, mTexture1.Height / 2f), Color.White * alpha, scale + wiggle);
+        public static float renderMultiButton(Vector2 position, string label, VirtualButton[] buttons, float[] buttonAlpha, float scale, float justifyX = 0.5f, float wiggle = 0f, float alpha = 1f, bool showFallback = true) {
+            var textures = new List<MTexture>();
+            foreach (var button in buttons) {
+                textures.Add(Input.GuiButton(button, showFallback ? "controls/keyboard/oemquestion" : null));
             }
 
-            if (!displayButton1 && displayButton2) {
-                mTexture2.Draw(position, new Vector2(mTexture2.Width - num / 2f, mTexture2.Height / 2f), Color.White * alpha, scale + wiggle);
+            float buttonWidths = 0;
+            foreach (var texture in textures) {
+                buttonWidths += texture?.Width ?? 0;
             }
 
-            if (displayButton1 && displayButton2) {
-                mTexture1.Draw(position, new Vector2(mTexture1.Width - num / 2f, mTexture1.Height / 2f), Color.White * alpha, scale + wiggle);
-                mTexture2.Draw(position + new Vector2(mTexture1.Width / 2, 0f), new Vector2(mTexture2.Width - num / 2f, mTexture2.Height / 2f), Color.White * alpha, scale + wiggle);
+            float labelWidth = ActiveFont.Measure(label).X;
+            float fullWidth = labelWidth + 8f + buttonWidths;
+            float labelJustifyX = fullWidth / 2f / labelWidth;
+
+            position.X += scale * fullWidth * (0.5f - justifyX);
+
+            drawText(label, position, labelJustifyX, scale + wiggle, alpha);
+
+            float buttonX = labelWidth + 8f - fullWidth / 2f;
+            for (int i = 0; i < buttons.Length; i++) {
+                if (textures[i] is MTexture texture) {
+                    var origin = new Vector2(-buttonX, texture.Height / 2f);
+                    buttonX += texture.Width;
+                    float ba = buttonAlpha == null ? 1f : buttonAlpha[i];
+                    if (ba > 0) {
+                        texture.Draw(position, origin, Color.White * alpha * ba, scale + wiggle);
+                    }
+                }
             }
+
+            return fullWidth * scale;
         }
 
         /// <summary>
         /// Draws text for a double button in the specified position.
         /// </summary>
-        private static void drawText(string text, Vector2 position, float justify, float scale, float alpha) {
-            float x = ActiveFont.Measure(text).X;
-            ActiveFont.DrawOutline(text, position, new Vector2(justify / x, 0.5f), Vector2.One * scale, Color.White * alpha, 2f, Color.Black * alpha);
+        private static void drawText(string text, Vector2 position, float justifyX, float scale, float alpha) {
+            ActiveFont.DrawOutline(text, position, new Vector2(justifyX, 0.5f), Vector2.One * scale, Color.White * alpha, 2f, Color.Black * alpha);
         }
 
         /// <summary>

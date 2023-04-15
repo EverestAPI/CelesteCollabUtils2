@@ -54,4 +54,6 @@ collabutils2_lobbymap_change_destination= Change Destination
 collabutils2_lobbymap_change_lobby= Change Lobby
 collabutils2_lobbymap_close= Close
 collabutils2_lobbymap_confirm= Confirm
+collabutils2_lobbymap_hold_to_pan= Hold to Pan
+collabutils2_lobbymap_pan= Pan
 collabutils2_lobbymap_zoom= Zoom
