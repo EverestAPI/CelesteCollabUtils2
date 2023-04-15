@@ -54,7 +54,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         public void OnTalk(Player player) {
             // don't allow this to somehow trigger twice from the same action
             if (player.Scene is Level level && level.CanRetry) {
-                level.CanRetry = false;
+                LobbyMapUI.SetLocked(true);
                 if (level.Tracker.GetEntity<LobbyMapController>() is LobbyMapController lmc) {
                     lmc.VisitManager?.ActivateWarp(info.MarkerId);
                 }
@@ -69,13 +69,13 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private IEnumerator activateRoutine(Player player) {
             if (player == null) yield break;
 
-            player.StateMachine.State = Player.StDummy;
+            LobbyMapUI.SetLocked(true, Scene, player);
             yield return player.DummyWalkToExact((int)X, false, 1f, true);
 
             // handle the case where we're dead or not on the ground in front of it
             if (!validPlayer(player)) {
                 if (!player.Dead) {
-                    player.StateMachine.State = Player.StNormal;
+                    LobbyMapUI.SetLocked(false, Scene, player);
                 }
                 yield break;
             }
@@ -99,8 +99,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
             // loop until animation is finished or the player can no longer use the bench
             while (playerSprite.Animating && validPlayer(player)) {
-                // force dummy state while animating
-                player.StateMachine.State = Player.StDummy;
+                // force locked while animating to prevent jank
+                LobbyMapUI.SetLocked(true, Scene, player);
                 yield return null;
             }
 
@@ -108,7 +108,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             if (validPlayer(player)) {
                 player.Scene.Add(new LobbyMapUI());
             } else {
-                player.StateMachine.State = Player.StNormal;
+                LobbyMapUI.SetLocked(false, Scene, player);
             }
 
             yield return 0.5f;

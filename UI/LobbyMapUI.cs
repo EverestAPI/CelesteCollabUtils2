@@ -87,9 +87,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private Rectangle mapBounds;
 
         private bool focused;
+        private bool closing;
 
         private bool openedWithRevealMap;
         private readonly bool viewOnly;
+        private Vector2 initialPlayerCenter;
 
         #endregion
 
@@ -152,7 +154,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
             openedWithRevealMap = CollabModule.Instance.SaveData.RevealMap;
 
             if (scene is Level level && level.Tracker.GetEntity<Player>() is Player player) {
-                level.CanRetry = false;
+                initialPlayerCenter = player.Center;
+
+                SetLocked(true);
 
                 var path = player.Inventory.Backpack ? "marker/runBackpack" : "marker/runNoBackpack";
                 Add(maddyRunSprite = new Sprite(MTN.Mountain, path));
@@ -181,16 +185,14 @@ namespace Celeste.Mod.CollabUtils2.UI {
             overlayTexture = null;
             mapTexture = null;
 
-            if (scene is Level level) {
-                level.CanRetry = true;
-            }
+            SetLocked(false);
         }
 
         public override void Update() {
             base.Update();
 
-            // if we're somehow not on the ground, bail
-            if (Scene?.Tracker.GetEntity<Player>()?.OnGround() != true) {
+            if (!CheckLocked()) {
+                // something exploity happened, so bail
                 closeScreen();
                 return;
             }
@@ -840,36 +842,28 @@ namespace Celeste.Mod.CollabUtils2.UI {
         #region Lifetime
 
         /// <summary>
-        /// Opens the screen with PauseLock.
+        /// Opens the screen.
         /// </summary>
         private void openScreen() {
-            if (Scene is Level level) {
-                level.PauseLock = true;
+            SetLocked(true, Scene);
 
-                if (level.Tracker.GetEntity<Player>() is Player player) {
-                    player.StateMachine.State = Player.StDummy;
-                }
+            Audio.Play(SFX.ui_game_pause);
 
-                Audio.Play(SFX.ui_game_pause);
-                Add(new Coroutine(transitionRoutine(onFadeOut: () => {
-                    Visible = true;
-                })));
-            }
+            Add(new Coroutine(transitionRoutine(onFadeOut: () => {
+                Visible = true;
+            })));
         }
 
         /// <summary>
-        /// Closes the screen and resets PauseLock.
+        /// Closes the screen.
         /// </summary>
         private void closeScreen(bool force = false) {
+            // don't try to close twice
+            if (closing) return;
+            closing = true;
+
             void DoClose() {
-                if (Scene is Level level) {
-                    level.PauseLock = false;
-
-                    if (level.Tracker.GetEntity<Player>() is Player player) {
-                        player.StateMachine.State = Player.StNormal;
-                    }
-                }
-
+                SetLocked(false, Scene);
                 RemoveSelf();
             }
 
@@ -1069,6 +1063,33 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private static EntityData findEntityData(LevelData levelData, string entityName) =>
             levelData.Entities.FirstOrDefault(e => e.Name == entityName);
 
+        public static void SetLocked(bool locked, Scene scene = null, Player player = null) {
+            Level level = (scene ?? Engine.Scene) as Level;
+            player = player ?? level?.Tracker.GetEntity<Player>();
+
+            if (level == null || player == null) return;
+
+            level.CanRetry = !locked;
+            level.PauseLock = locked;
+            player.Speed = Vector2.Zero;
+            player.DummyGravity = !locked;
+            player.StateMachine.State = locked ? Player.StDummy : Player.StNormal;
+
+            // disable auto animate if we're locking while not on the ground (happens while swimming)
+            player.DummyAutoAnimate = !locked || player.OnGround();
+        }
+
+        public bool CheckLocked() {
+            if (Scene is Level level && level.Tracker.GetEntity<Player>() is Player player) {
+                // we really want to stop interaction storage, so if any of these checks fail, it's no longer valid to show the map
+                return (initialPlayerCenter - player.Center).LengthSquared() < 16 * 16 &&
+                    !player.Dead && !level.CanRetry && level.PauseLock && !player.DummyGravity &&
+                    player.Speed == Vector2.Zero && player.StateMachine.State == Player.StDummy;
+            }
+
+            return false;
+        }
+
         #endregion
 
         #region Nested Classes
@@ -1114,8 +1135,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 Room = data.Level.Name;
             }
         }
-
-
 
         #endregion
     }
