@@ -17,11 +17,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
         #region Fields
 
         // input handling
-        private static VirtualJoystick lobbyMapJoystick;
-        private static VirtualButton lobbyMapUpButton;
-        private static VirtualButton lobbyMapDownButton;
-        private static VirtualButton lobbyMapLeftButton;
-        private static VirtualButton lobbyMapRightButton;
+        private readonly VirtualJoystick lobbyMapJoystick;
+        private readonly VirtualButton lobbyMapUpButton;
+        private readonly VirtualButton lobbyMapDownButton;
+        private readonly VirtualButton lobbyMapLeftButton;
+        private readonly VirtualButton lobbyMapRightButton;
 
         // cached button render info
         private ButtonHelper.ButtonRenderInfo changeDestinationButtonRenderInfo;
@@ -101,17 +101,15 @@ namespace Celeste.Mod.CollabUtils2.UI {
             Depth = Depths.FGTerrain - 2;
             Visible = false;
 
-            if (lobbyMapJoystick == null) {
-                lobbyMapJoystick = new VirtualJoystick(
-                    CollabModule.Instance.Settings.PanLobbyMapUp.Binding,
-                    CollabModule.Instance.Settings.PanLobbyMapDown.Binding,
-                    CollabModule.Instance.Settings.PanLobbyMapLeft.Binding,
-                    CollabModule.Instance.Settings.PanLobbyMapRight.Binding, Input.Gamepad, 0.1f);
-                lobbyMapUpButton = new VirtualButton(CollabModule.Instance.Settings.PanLobbyMapUp.Binding, Input.Gamepad, 0f, 0.4f);
-                lobbyMapDownButton = new VirtualButton(CollabModule.Instance.Settings.PanLobbyMapDown.Binding, Input.Gamepad, 0f, 0.4f);
-                lobbyMapLeftButton = new VirtualButton(CollabModule.Instance.Settings.PanLobbyMapLeft.Binding, Input.Gamepad, 0f, 0.4f);
-                lobbyMapRightButton = new VirtualButton(CollabModule.Instance.Settings.PanLobbyMapRight.Binding, Input.Gamepad, 0f, 0.4f);
-            }
+            lobbyMapJoystick = new VirtualJoystick(
+                CollabModule.Instance.Settings.PanLobbyMapUp.Binding,
+                CollabModule.Instance.Settings.PanLobbyMapDown.Binding,
+                CollabModule.Instance.Settings.PanLobbyMapLeft.Binding,
+                CollabModule.Instance.Settings.PanLobbyMapRight.Binding, Input.Gamepad, 0.1f);
+            lobbyMapUpButton = new VirtualButton(CollabModule.Instance.Settings.PanLobbyMapUp.Binding, Input.Gamepad, 0f, 0.4f);
+            lobbyMapDownButton = new VirtualButton(CollabModule.Instance.Settings.PanLobbyMapDown.Binding, Input.Gamepad, 0f, 0.4f);
+            lobbyMapLeftButton = new VirtualButton(CollabModule.Instance.Settings.PanLobbyMapLeft.Binding, Input.Gamepad, 0f, 0.4f);
+            lobbyMapRightButton = new VirtualButton(CollabModule.Instance.Settings.PanLobbyMapRight.Binding, Input.Gamepad, 0f, 0.4f);
 
             this.viewOnly = viewOnly;
 
