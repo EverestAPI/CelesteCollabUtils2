@@ -32,6 +32,27 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 level.Tracker.GetEntity<LobbyMapUI>() == null &&
                 level.Tracker.GetEntity<Player>() is Player player) {
 
+                // check if the player pressed the lobby map button and we're on the ground or swimming
+                if (CollabModule.Instance.Settings.DisplayLobbyMap.Pressed && level.CanRetry &&
+                    (player.StateMachine.State == Player.StNormal && player.OnGround() || player.StateMachine.State == Player.StSwim) &&
+                    level.Tracker.GetEntity<LobbyMapUI>() == null) {
+
+                    // if we're standing in front of a bench, trigger it instead
+                    if (player.CollideFirst<LobbyMapWarp>() is LobbyMapWarp warp) {
+                        warp.OnTalk(player);
+                        return;
+                    }
+
+                    // lock the player from doing anything
+                    LobbyMapUI.SetLocked(true, level, player);
+
+                    // display the lobby map view only
+                    level.Add(new LobbyMapUI(true));
+
+                    // don't do any more
+                    return;
+                }
+
                 if (!level.OnInterval(0.2f) || player.StateMachine.State == Player.StDummy || CollabModule.Instance.SaveData.PauseVisitingPoints) {
                     return;
                 }

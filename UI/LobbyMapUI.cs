@@ -16,6 +16,23 @@ namespace Celeste.Mod.CollabUtils2.UI {
     public class LobbyMapUI : Entity {
         #region Fields
 
+        // input handling
+        private readonly VirtualJoystick lobbyMapJoystick;
+        private readonly VirtualButton lobbyMapUpButton;
+        private readonly VirtualButton lobbyMapDownButton;
+        private readonly VirtualButton lobbyMapLeftButton;
+        private readonly VirtualButton lobbyMapRightButton;
+
+        // cached button render info
+        private ButtonHelper.ButtonRenderInfo changeDestinationButtonRenderInfo;
+        private ButtonHelper.ButtonRenderInfo changeLobbyButtonRenderInfo;
+        private ButtonHelper.ButtonRenderInfo closeButtonRenderInfo;
+        private ButtonHelper.ButtonRenderInfo confirmButtonRenderInfo;
+        private ButtonHelper.ButtonRenderInfo zoomButtonRenderInfo;
+        private ButtonHelper.ButtonRenderInfo holdToPanButtonRenderInfo;
+        private ButtonHelper.ButtonRenderInfo panButtonRenderInfo;
+        private ButtonHelper.ButtonRenderInfo aimButtonRenderInfo;
+
         // all lobbies in the collab
         private readonly List<LobbySelection> lobbySelections = new List<LobbySelection>();
 
@@ -45,6 +62,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private readonly Wiggler closeWiggler;
         private readonly Wiggler confirmWiggler;
         private readonly Wiggler zoomWiggler;
+        private readonly SineWave notifySineWave;
 
         // current view
         private readonly float[] zoomLevels = { 1f, 2f, 3f };
@@ -55,6 +73,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private float targetScale = 1f;
         private Vector2 targetOrigin = Vector2.Zero;
         private Vector2 selectedOrigin = Vector2.Zero;
+        private bool shouldShowMaddy;
         private bool shouldCentreOrigin;
         private float scaleTimeRemaining;
         private float translateTimeRemaining;
@@ -68,15 +87,31 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private Rectangle mapBounds;
 
         private bool focused;
+        private bool closing;
 
         private bool openedWithRevealMap;
+        private readonly bool viewOnly;
+        private Vector2 initialPlayerCenter;
+        private float missingKeybindsTimeRemaining;
 
         #endregion
 
-        public LobbyMapUI() {
+        public LobbyMapUI(bool viewOnly = false) {
             Tag = Tags.PauseUpdate | Tags.HUD;
             Depth = Depths.FGTerrain - 2;
             Visible = false;
+
+            lobbyMapJoystick = new VirtualJoystick(
+                CollabModule.Instance.Settings.PanLobbyMapUp.Binding,
+                CollabModule.Instance.Settings.PanLobbyMapDown.Binding,
+                CollabModule.Instance.Settings.PanLobbyMapLeft.Binding,
+                CollabModule.Instance.Settings.PanLobbyMapRight.Binding, Input.Gamepad, 0.1f);
+            lobbyMapUpButton = new VirtualButton(CollabModule.Instance.Settings.PanLobbyMapUp.Binding, Input.Gamepad, 0f, 0.4f);
+            lobbyMapDownButton = new VirtualButton(CollabModule.Instance.Settings.PanLobbyMapDown.Binding, Input.Gamepad, 0f, 0.4f);
+            lobbyMapLeftButton = new VirtualButton(CollabModule.Instance.Settings.PanLobbyMapLeft.Binding, Input.Gamepad, 0f, 0.4f);
+            lobbyMapRightButton = new VirtualButton(CollabModule.Instance.Settings.PanLobbyMapRight.Binding, Input.Gamepad, 0f, 0.4f);
+
+            this.viewOnly = viewOnly;
 
             const int top = 140, bottom = 80, left = 100, right = 100;
             const int topPadding = 10, bottomPadding = 40, leftPadding = 10, rightPadding = 10;
@@ -89,9 +124,26 @@ namespace Celeste.Mod.CollabUtils2.UI {
             Add(closeWiggler = Wiggler.Create(0.4f, 4f));
             Add(confirmWiggler = Wiggler.Create(0.4f, 4f));
             Add(zoomWiggler = Wiggler.Create(0.4f, 4f));
+            Add(notifySineWave = new SineWave(1f));
 
             Add(new BeforeRenderHook(beforeRender));
             Add(new Coroutine(mapFocusRoutine()));
+
+            // cache render info
+            changeDestinationButtonRenderInfo = new ButtonHelper.ButtonRenderInfo(Dialog.Clean("collabutils2_lobbymap_change_destination"), Input.MenuUp, Input.MenuDown, wiggler: selectWarpWiggler);
+            changeLobbyButtonRenderInfo = new ButtonHelper.ButtonRenderInfo(Dialog.Clean("collabutils2_lobbymap_change_lobby"), Input.MenuLeft, Input.MenuRight, wiggler: selectLobbyWiggler);
+            closeButtonRenderInfo = new ButtonHelper.ButtonRenderInfo(Dialog.Clean("collabutils2_lobbymap_close"), Input.MenuCancel, wiggler: closeWiggler);
+            confirmButtonRenderInfo = new ButtonHelper.ButtonRenderInfo(Dialog.Clean("collabutils2_lobbymap_confirm"), Input.MenuConfirm, wiggler: confirmWiggler);
+            zoomButtonRenderInfo = new ButtonHelper.ButtonRenderInfo(Dialog.Clean("collabutils2_lobbymap_zoom"), Input.MenuJournal, wiggler: zoomWiggler);
+            holdToPanButtonRenderInfo = new ButtonHelper.ButtonRenderInfo(Dialog.Clean("collabutils2_lobbymap_hold_to_pan"), new VirtualButton { Binding = CollabModule.Instance.Settings.HoldToPan.Binding });
+
+            // pan can be custom or aim
+            panButtonRenderInfo = new ButtonHelper.ButtonRenderInfo(Dialog.Clean("collabutils2_lobbymap_pan"), lobbyMapUpButton, lobbyMapDownButton, lobbyMapLeftButton, lobbyMapRightButton);
+            aimButtonRenderInfo = new ButtonHelper.ButtonRenderInfo(Dialog.Clean("collabutils2_lobbymap_pan"),
+                new VirtualButton { Binding = Settings.Instance.Up },
+                new VirtualButton { Binding = Settings.Instance.Down },
+                new VirtualButton { Binding = Settings.Instance.Left },
+                new VirtualButton { Binding = Settings.Instance.Right });
         }
 
         #region Entity Overrides
@@ -100,9 +152,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
             base.Added(scene);
 
             openedWithRevealMap = CollabModule.Instance.SaveData.RevealMap;
+            missingKeybindsTimeRemaining = CollabModule.Instance.Settings.NewLobbyMapKeybindsNotified ? 0f : 5f;
+            CollabModule.Instance.Settings.NewLobbyMapKeybindsNotified = true;
 
             if (scene is Level level && level.Tracker.GetEntity<Player>() is Player player) {
-                level.CanRetry = false;
+                initialPlayerCenter = player.Center;
+
+                SetLocked(true);
 
                 var path = player.Inventory.Backpack ? "marker/runBackpack" : "marker/runNoBackpack";
                 Add(maddyRunSprite = new Sprite(MTN.Mountain, path));
@@ -131,23 +187,30 @@ namespace Celeste.Mod.CollabUtils2.UI {
             overlayTexture = null;
             mapTexture = null;
 
-            if (scene is Level level) {
-                level.CanRetry = true;
-            }
+            SetLocked(false);
         }
 
         public override void Update() {
             base.Update();
 
-            // if we're somehow not on the ground, bail
-            if (Scene?.Tracker.GetEntity<Player>()?.OnGround() != true) {
+            if (!CheckLocked()) {
+                // something exploity happened, so bail
                 closeScreen();
                 return;
             }
 
             // handle input
             if (focused) {
-                if (activeWarps.Count > 0) {
+                var holdToPan = CollabModule.Instance.Settings.HoldToPan.Check;
+                var mainAim = Input.Aim.Value;
+                var lobbyAim = lobbyMapJoystick.Value;
+                var mainAiming = mainAim.LengthSquared() > float.Epsilon;
+
+                // if holding pan and using the main aim method, use main aim, otherwise fall back to our custom aim
+                var aim = holdToPan && mainAiming ? mainAim : lobbyAim;
+                var aiming = aim.LengthSquared() > float.Epsilon;
+
+                if (!viewOnly && activeWarps.Count > 0 && !holdToPan) {
                     int moveDir = 0;
                     if (Input.MenuUp.Pressed) {
                         if (!Input.MenuUp.Repeating && selectedWarpIndexes[selectedLobbyIndex] == 0) {
@@ -173,7 +236,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     }
                 }
 
-                if (Input.MenuLeft.Pressed) {
+                if (!holdToPan && Input.MenuLeft.Pressed) {
                     if (selectedLobbyIndex > 0) {
                         Audio.Play("event:/ui/main/rollover_up");
                         selectLobbyWiggler.Start();
@@ -181,7 +244,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         selectedLobbyIndex--;
                         updateSelectedLobby();
                     }
-                } else if (Input.MenuRight.Pressed) {
+                } else if (!holdToPan && Input.MenuRight.Pressed) {
                     if (selectedLobbyIndex < lobbySelections.Count - 1) {
                         Audio.Play("event:/ui/main/rollover_down");
                         selectLobbyWiggler.Start();
@@ -189,9 +252,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         selectedLobbyIndex++;
                         updateSelectedLobby();
                     }
-                }
-
-                if (Input.MenuJournal.Pressed) {
+                } else if (Input.MenuJournal.Pressed) {
                     zoomWiggler.Start();
                     zoomLevel--;
                     if (zoomLevel < 0) {
@@ -209,11 +270,34 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         targetOrigin = shouldCentreOrigin ? new Vector2(0.5f) : selectedOrigin;
                         translateTimeRemaining = translate_time_seconds;
                     }
+                } else if (!shouldCentreOrigin && translateTimeRemaining <= 0 && scaleTimeRemaining <= 0 && aiming && mapTexture != null) {
+                    var aspectRatio = (float)mapTexture.Width / mapTexture.Height;
+                    var offset = aim.SafeNormalize() * 2f / actualScale;
+                    if (aspectRatio > 0) {
+                        offset.X /= aspectRatio;
+                    } else {
+                        offset.Y *= aspectRatio;
+                    }
+                    var newOrigin = actualOrigin + offset * Engine.DeltaTime;
+                    actualOrigin = newOrigin.Clamp(0, 0, 1, 1);
+
+                    // update the selected warp if we should
+                    if (!viewOnly && !shouldCentreOrigin) {
+                        var nearestWarpIndex = nearestWarpIndexToActualOrigin();
+                        if (nearestWarpIndex != selectedWarpIndexes[selectedLobbyIndex]) {
+                            Audio.Play(nearestWarpIndex < selectedWarpIndexes[selectedLobbyIndex] ? "event:/ui/main/rollover_up" : "event:/ui/main/rollover_down");
+                            selectedWarpIndexes[selectedLobbyIndex] = lastSelectedWarpIndex = nearestWarpIndex;
+                            selectedOrigin = originForPosition(activeWarps[nearestWarpIndex].Position);
+                        }
+                    }
+
+                    // make sure the markers are in the right place
+                    updateMarkers();
                 }
 
                 var close = false;
                 var warpIndex = selectedWarpIndexes[selectedLobbyIndex];
-                if (Input.MenuConfirm.Pressed && warpIndex >= 0 && warpIndex < activeWarps.Count) {
+                if (!viewOnly && Input.MenuConfirm.Pressed && warpIndex >= 0 && warpIndex < activeWarps.Count) {
                     if (selectedLobbyIndex == initialLobbyIndex && warpIndex == initialWarpIndex) {
                         // confirming on the initial warp just closes the screen
                         close = true;
@@ -239,8 +323,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 }
             }
 
-            // update map position for warp selection
-            if (activeWarps.Count > 0 && lastSelectedWarpIndex != selectedWarpIndexes[selectedLobbyIndex]) {
+            // update map position for warp selection if not view only
+            if (!viewOnly && activeWarps.Count > 0 && lastSelectedWarpIndex != selectedWarpIndexes[selectedLobbyIndex]) {
                 var warp = activeWarps[selectedWarpIndexes[selectedLobbyIndex]];
                 selectedOrigin = originForPosition(warp.Position);
 
@@ -253,6 +337,23 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
                 lastSelectedWarpIndex = selectedWarpIndexes[selectedLobbyIndex];
             }
+        }
+
+        /// <summary>
+        /// Finds the index into <see cref="activeWarps"/> that has the nearest warp to <see cref="actualOrigin"/>.
+        /// </summary>
+        private int nearestWarpIndexToActualOrigin() {
+            int nearestIndex = -1;
+            var nearestLengthSquared = float.MaxValue;
+            for (int i = 0; i < activeWarps.Count; i++) {
+                var warpOrigin = originForPosition(activeWarps[i].Position);
+                var warpLengthSquared = (actualOrigin - warpOrigin).LengthSquared();
+                if (warpLengthSquared < nearestLengthSquared) {
+                    nearestLengthSquared = warpLengthSquared;
+                    nearestIndex = i;
+                }
+            }
+            return nearestIndex;
         }
 
         #endregion
@@ -345,6 +446,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
         }
 
+        /// <summary>
+        /// Finds or creates a <see cref="LobbyVisitManager"/> for the specified lobby.
+        /// </summary>
         private static LobbyVisitManager getLobbyVisitManager(Scene scene, string sid, string room) {
             if (scene.Tracker.GetEntity<LobbyMapController>() is LobbyMapController lmc &&
                 (lmc.VisitManager?.MatchesKey(sid, room) ?? false)) {
@@ -361,6 +465,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
             // validate lobby index
             if (selectedLobbyIndex < 0 || selectedLobbyIndex >= lobbySelections.Count) {
                 Logger.Log(LogLevel.Warn, "CollabUtils2/LobbyMapUI", $"updateSelectedLobby: Invalid lobby selection {selectedLobbyIndex}");
+                return false;
+            }
+
+            if (!(Engine.Scene is Level level) || !(level.Tracker.GetEntity<Player>() is Player player)) {
+                Logger.Log(LogLevel.Warn, "CollabUtils2/LobbyMapUI", $"updateSelectedLobby: Couldn't find level or player");
                 return false;
             }
 
@@ -409,8 +518,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 .Select(createMarkerComponent));
             markerComponents.ForEach(Add);
 
-            // if this is the first time we've selected a lobby, select the nearest warp
-            if (first && Engine.Scene is Level level && level.Tracker.GetEntity<Player>() is Player player) {
+            // if this is the first time we've selected a lobby, select the nearest warp if not view only
+            if (!viewOnly && first) {
                 selectedWarpIndexes[selectedLobbyIndex] = 0;
                 var nearestWarpLengthSquared = float.MaxValue;
                 for (int i = 0; i < activeWarps.Count; i++) {
@@ -426,8 +535,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 initialLobbyIndex = selectedLobbyIndex;
                 initialWarpIndex = selectedWarpIndexes[selectedLobbyIndex];
             }
-
-            var warpIndex = selectedWarpIndexes[selectedLobbyIndex];
 
             // get the map texture
             mapTexture = GFX.Gui[lobbyMapInfo.MapTexture].Texture.Texture;
@@ -447,8 +554,21 @@ namespace Celeste.Mod.CollabUtils2.UI {
             zoomLevel = Calc.Clamp(zoomLevel, 0, zoomLevels.Length);
             actualScale = zoomLevels[zoomLevel];
             shouldCentreOrigin = zoomLevel == 0;
-            selectedOrigin = warpIndex >= 0 && warpIndex < activeWarps.Count ? originForPosition(activeWarps[warpIndex].Position) : new Vector2(0.5f);
-            actualOrigin = shouldCentreOrigin ? new Vector2(0.5f) : selectedOrigin;
+
+            var isCurrentLobby = selection.SID == level.Session.Area.SID;
+            shouldShowMaddy = !viewOnly || isCurrentLobby;
+
+            if (!viewOnly) {
+                var warpIndex = selectedWarpIndexes[selectedLobbyIndex];
+                selectedOrigin = warpIndex >= 0 && warpIndex < activeWarps.Count ? originForPosition(activeWarps[warpIndex].Position) : new Vector2(0.5f);
+                actualOrigin = shouldCentreOrigin ? new Vector2(0.5f) : selectedOrigin;
+            } else if (isCurrentLobby) {
+                selectedOrigin = originForPosition(player.Position - level.Bounds.Location.ToVector2());
+                actualOrigin = shouldCentreOrigin ? new Vector2(0.5f) : selectedOrigin;
+            } else {
+                selectedOrigin = actualOrigin = new Vector2(0.5f);
+            }
+
             translateTimeRemaining = 0f;
             scaleTimeRemaining = 0f;
 
@@ -496,18 +616,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
         /// </summary>
         private Component createMarkerComponent(LobbyMapController.MarkerInfo markerInfo) {
             return new MarkerImage(markerInfo);
-        }
-
-        private static bool isRainbowBerryUnlocked(string levelSet) {
-            if (!CollabMapDataProcessor.SilverBerries.ContainsKey(levelSet)) return false;
-
-            foreach (KeyValuePair<string, EntityID> requiredSilver in CollabMapDataProcessor.SilverBerries[levelSet]) {
-                // check if the silver was collected.
-                AreaStats stats = SaveData.Instance.GetAreaStatsFor(AreaData.Get(requiredSilver.Key).ToKey());
-                if (stats.Modes[0].Strawberries.Contains(requiredSilver.Value)) return true;
-            }
-
-            return false;
         }
 
         #endregion
@@ -578,7 +686,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             base.Render();
 
-            maddyRunSprite?.Render();
+            if (shouldShowMaddy) {
+                maddyRunSprite?.Render();
+            }
 
             if (CollabModule.Instance.SaveData.ShowVisitedPoints) {
                 drawVisitedPoints();
@@ -616,7 +726,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
             Draw.Rect(border.Right - thickness, border.Top, thickness, border.Height, Color.White);
 
             var lobby = lobbySelections[selectedLobbyIndex];
-            var warpIndex = selectedWarpIndexes[selectedLobbyIndex];
             var title = Dialog.Clean(lobby.SID);
             var colorAlpha = 1f;
 
@@ -644,44 +753,75 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
 
             // draw selected warp title
-            if (warpIndex >= 0 && warpIndex < activeWarps.Count && !string.IsNullOrWhiteSpace(activeWarps[warpIndex].DialogKey)) {
-                const float warpTitleOffset = -18f;
-                const float warpTitleAlpha = 1f;
-                var clean = Dialog.Clean(activeWarps[warpIndex].DialogKey);
-                ActiveFont.DrawOutline(clean, new Vector2(windowBounds.Center.X, windowBounds.Bottom + warpTitleOffset), new Vector2(0.5f), new Vector2(0.8f), Color.White * warpTitleAlpha, 2f, Color.Black);
+            if (!viewOnly) {
+                var warpIndex = selectedWarpIndexes[selectedLobbyIndex];
+                if (warpIndex >= 0 && warpIndex < activeWarps.Count && !string.IsNullOrWhiteSpace(activeWarps[warpIndex].DialogKey)) {
+                    const float warpTitleOffset = -18f;
+                    const float warpTitleAlpha = 1f;
+                    var clean = Dialog.Clean(activeWarps[warpIndex].DialogKey);
+                    ActiveFont.DrawOutline(clean, new Vector2(windowBounds.Center.X, windowBounds.Bottom + warpTitleOffset), new Vector2(0.5f), new Vector2(0.8f), Color.White * warpTitleAlpha, 2f, Color.Black);
+                }
             }
 
             // draw controls
-            var changeDestinationLabel = Dialog.Clean("collabutils2_lobbymap_change_destination");
-            var changeLobbyLabel = Dialog.Clean("collabutils2_lobbymap_change_lobby");
-            var closeLabel = Dialog.Clean("collabutils2_lobbymap_close");
-            var confirmLabel = Dialog.Clean("collabutils2_lobbymap_confirm");
-            var zoomLabel = Dialog.Clean("collabutils2_lobbymap_zoom");
             const float buttonScale = 0.5f;
+            const float disabledButtonAlpha = 0.4f;
             const float xOffset = 32f, yOffset = 45f;
             const float wiggleAmount = 0.05f;
 
-            var buttonPosition = new Vector2(windowBounds.Left + xOffset, windowBounds.Bottom + yOffset);
+            var buttonPosition = new Vector2(windowBounds.Left, windowBounds.Bottom + yOffset);
+            var holdToPan = CollabModule.Instance.Settings.HoldToPan.Check;
 
-            if (activeWarps.Count > 1) {
-                renderDoubleButton(buttonPosition, changeDestinationLabel, Input.MenuUp, Input.MenuDown,
-                    buttonScale, true, true, 0f, selectWarpWiggler.Value * wiggleAmount);
-                buttonPosition.X += measureDoubleButton(changeDestinationLabel, Input.MenuUp, Input.MenuDown) / 2f + xOffset;
+            // draw change destination button
+            if (!viewOnly && activeWarps.Count > 1 && !holdToPan) {
+                ButtonHelper.RenderMultiButton(ref buttonPosition, xOffset, changeDestinationButtonRenderInfo, buttonScale, justifyX: 0f, wiggle: wiggleAmount);
             }
 
-            if (lobbySelections.Count > 1) {
-                renderDoubleButton(buttonPosition, changeLobbyLabel, Input.MenuLeft, Input.MenuRight,
-                    buttonScale, selectedLobbyIndex > 0, selectedLobbyIndex < lobbySelections.Count - 1, 0f, selectLobbyWiggler.Value * wiggleAmount);
+            // draw change lobby button
+            if (lobbySelections.Count > 1 && !holdToPan) {
+                changeLobbyButtonRenderInfo.Button1Alpha = selectedLobbyIndex > 0 ? 1f : disabledButtonAlpha;
+                changeLobbyButtonRenderInfo.Button2Alpha = selectedLobbyIndex < lobbySelections.Count - 1 ? 1f : disabledButtonAlpha;
+                ButtonHelper.RenderMultiButton(ref buttonPosition, xOffset, changeLobbyButtonRenderInfo, buttonScale, justifyX: 0f, wiggle: wiggleAmount);
             }
 
-            var closeWidth = ButtonUI.Width(closeLabel, Input.MenuCancel);
-            var confirmWidth = ButtonUI.Width(confirmLabel, Input.MenuConfirm);
-            buttonPosition.X = windowBounds.Right + xOffset / 2f;
-            ButtonUI.Render(buttonPosition, closeLabel, Input.MenuCancel, buttonScale, 1f, closeWiggler.Value * wiggleAmount);
-            buttonPosition.X -= closeWidth / 2f + xOffset;
-            ButtonUI.Render(buttonPosition, confirmLabel, Input.MenuConfirm, buttonScale, 1f, confirmWiggler.Value * wiggleAmount);
-            buttonPosition.X -= confirmWidth / 2f + xOffset;
-            ButtonUI.Render(buttonPosition, zoomLabel, Input.MenuJournal, buttonScale, 1f, zoomWiggler.Value * wiggleAmount);
+            buttonPosition.X = windowBounds.Right;
+
+            // draw close button
+            ButtonHelper.RenderMultiButton(ref buttonPosition, xOffset, closeButtonRenderInfo, buttonScale, justifyX: 1f, wiggle: wiggleAmount);
+
+            // draw confirm button if not view only
+            if (!viewOnly) {
+                ButtonHelper.RenderMultiButton(ref buttonPosition, xOffset, confirmButtonRenderInfo, buttonScale, justifyX: 1f, wiggle: wiggleAmount);
+            }
+
+            // draw zoom button
+            ButtonHelper.RenderMultiButton(ref buttonPosition, xOffset, zoomButtonRenderInfo, buttonScale, justifyX: 1f, wiggle: wiggleAmount);
+
+            var panAlpha = shouldCentreOrigin ? disabledButtonAlpha : 1f;
+
+            if (holdToPan) {
+                // if we're holding pan, render the aim buttons as controls
+                ButtonHelper.RenderMultiButton(ref buttonPosition, xOffset, aimButtonRenderInfo, buttonScale, panAlpha, justifyX: 1f, wiggle: wiggleAmount);
+            } else if (hasLatestBinding(CollabModule.Instance.Settings.PanLobbyMapUp.Binding,
+                CollabModule.Instance.Settings.PanLobbyMapDown.Binding,
+                CollabModule.Instance.Settings.PanLobbyMapLeft.Binding,
+                CollabModule.Instance.Settings.PanLobbyMapRight.Binding)) {
+                // draw custom pan inputs if at least one is bound
+                ButtonHelper.RenderMultiButton(ref buttonPosition, xOffset, panButtonRenderInfo, buttonScale, panAlpha, justifyX: 1f, wiggle: wiggleAmount);
+            } else if (hasLatestBinding(CollabModule.Instance.Settings.HoldToPan.Binding)) {
+                // draw the "hold to pan" input if it's bound
+                ButtonHelper.RenderMultiButton(ref buttonPosition, xOffset, holdToPanButtonRenderInfo, buttonScale, panAlpha, justifyX: 1f, wiggle: wiggleAmount);
+            }
+
+            // let the player know that there are new keybinds available
+            if (missingKeybindsTimeRemaining > 0) {
+                missingKeybindsTimeRemaining -= Engine.DeltaTime;
+                var notifyAlpha = Calc.Clamp(missingKeybindsTimeRemaining, 0f, 1f);
+                var notifyText = Dialog.Clean("collabutils2_lobbymap_notify_keybinds");
+                var notifyScale = 0.8f + notifySineWave.Value * 0.05f;
+                const float notifyOffset = 30f;
+                ActiveFont.DrawOutline(notifyText, new Vector2(windowBounds.Center.X, windowBounds.Top + notifyOffset), new Vector2(0.5f), new Vector2(notifyScale), Color.White * notifyAlpha, 2f, Color.Black * notifyAlpha);
+            }
         }
 
         /// <summary>
@@ -730,7 +870,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 image.Scale = new Vector2(imageScale);
             }
 
-            // move the player icon to the currently selected warp
+            // move the player icon
             if (maddyRunSprite != null) {
                 var selectedOriginOffset = selectedOrigin - actualOrigin;
                 maddyRunSprite.Position = new Vector2(mapBounds.Center.X + selectedOriginOffset.X * actualWidth, mapBounds.Center.Y + selectedOriginOffset.Y * actualHeight);
@@ -742,36 +882,28 @@ namespace Celeste.Mod.CollabUtils2.UI {
         #region Lifetime
 
         /// <summary>
-        /// Opens the screen with PauseLock.
+        /// Opens the screen.
         /// </summary>
         private void openScreen() {
-            if (Scene is Level level) {
-                level.PauseLock = true;
+            SetLocked(true, Scene);
 
-                if (level.Tracker.GetEntity<Player>() is Player player) {
-                    player.StateMachine.State = Player.StDummy;
-                }
+            Audio.Play(SFX.ui_game_pause);
 
-                Audio.Play(SFX.ui_game_pause);
-                Add(new Coroutine(transitionRoutine(onFadeOut: () => {
-                    Visible = true;
-                })));
-            }
+            Add(new Coroutine(transitionRoutine(onFadeOut: () => {
+                Visible = true;
+            })));
         }
 
         /// <summary>
-        /// Closes the screen and resets PauseLock.
+        /// Closes the screen.
         /// </summary>
         private void closeScreen(bool force = false) {
+            // don't try to close twice
+            if (closing) return;
+            closing = true;
+
             void DoClose() {
-                if (Scene is Level level) {
-                    level.PauseLock = false;
-
-                    if (level.Tracker.GetEntity<Player>() is Player player) {
-                        player.StateMachine.State = Player.StNormal;
-                    }
-                }
-
+                SetLocked(false, Scene);
                 RemoveSelf();
             }
 
@@ -782,6 +914,57 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 Visible = false;
                 DoClose();
             }
+        }
+
+        /// <summary>
+        /// Teleports to the selected warp within the current map.
+        /// </summary>
+        private void teleportToWarp(LobbyMapController.MarkerInfo warp) {
+            if (!(Scene is Level level)) return;
+
+            focused = false;
+            const float wipeDuration = 0.5f;
+
+            Audio.Play("event:/game/04_cliffside/snowball_spawn");
+
+            void onComplete() {
+                closeScreen(true);
+                if (warp.SID != level.Session.Area.SID) {
+                    level.OnEndOfFrame += () => {
+                        var areaId = AreaData.Areas.FirstOrDefault(a => a.SID == warp.SID)?.ID ?? level.Session.Area.ID;
+                        var levelData = AreaData.Get(new AreaKey(areaId)).Mode[0].MapData.Get(warp.Room);
+                        var session = new Session(new AreaKey(areaId)) {
+                            Level = warp.Room,
+                            FirstLevel = false,
+                            RespawnPoint = levelData.Spawns.ClosestTo(levelData.Position + warp.Position),
+                        };
+                        LevelEnter.Go(session, fromSaveData: false);
+                    };
+                } else {
+                    level.OnEndOfFrame += () => {
+                        if (level.Tracker.GetEntity<Player>() is Player oldPlayer) {
+                            Leader.StoreStrawberries(oldPlayer.Leader);
+                            level.Remove(oldPlayer);
+                        }
+
+                        level.UnloadLevel();
+                        level.Session.Level = warp.Room;
+                        level.Session.FirstLevel = false;
+                        level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top) + warp.Position);
+                        level.LoadLevel(Player.IntroTypes.Respawn);
+                        level.Wipe?.Cancel();
+
+                        if (level.Tracker.GetEntity<Player>() is Player newPlayer) {
+                            level.Camera.Position = newPlayer.CameraTarget;
+                            Leader.RestoreStrawberries(newPlayer.Leader);
+                        }
+
+                        createWipe(warp.WipeType, wipeDuration, level, true);
+                    };
+                }
+            }
+
+            createWipe(warp.WipeType, wipeDuration, level, false, onComplete);
         }
 
         #endregion
@@ -896,56 +1079,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         /// <summary>
-        /// Teleports to the selected warp within the current map.
+        /// Creates a screen wipe animation.
         /// </summary>
-        private void teleportToWarp(LobbyMapController.MarkerInfo warp) {
-            if (!(Scene is Level level)) return;
-
-            focused = false;
-            const float wipeDuration = 0.5f;
-
-            Audio.Play("event:/game/04_cliffside/snowball_spawn");
-
-            void onComplete() {
-                closeScreen(true);
-                if (warp.SID != level.Session.Area.SID) {
-                    level.OnEndOfFrame += () => {
-                        var areaId = AreaData.Areas.FirstOrDefault(a => a.SID == warp.SID)?.ID ?? level.Session.Area.ID;
-                        var levelData = AreaData.Get(new AreaKey(areaId)).Mode[0].MapData.Get(warp.Room);
-                        var session = new Session(new AreaKey(areaId)) {
-                            Level = warp.Room,
-                            FirstLevel = false,
-                            RespawnPoint = levelData.Spawns.ClosestTo(levelData.Position + warp.Position),
-                        };
-                        LevelEnter.Go(session, fromSaveData: false);
-                    };
-                } else {
-                    level.OnEndOfFrame += () => {
-                        if (level.Tracker.GetEntity<Player>() is Player oldPlayer) {
-                            Leader.StoreStrawberries(oldPlayer.Leader);
-                            level.Remove(oldPlayer);
-                        }
-
-                        level.UnloadLevel();
-                        level.Session.Level = warp.Room;
-                        level.Session.FirstLevel = false;
-                        level.Session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top) + warp.Position);
-                        level.LoadLevel(Player.IntroTypes.Respawn);
-                        level.Wipe?.Cancel();
-
-                        if (level.Tracker.GetEntity<Player>() is Player newPlayer) {
-                            level.Camera.Position = newPlayer.CameraTarget;
-                            Leader.RestoreStrawberries(newPlayer.Leader);
-                        }
-
-                        createWipe(warp.WipeType, wipeDuration, level, true);
-                    };
-                }
-            }
-
-            createWipe(warp.WipeType, wipeDuration, level, false, onComplete);
-        }
-
         private static ScreenWipe createWipe(string wipeTypeName, float wipeDuration, Level level, bool wipeIn, Action onComplete = null) {
             Type wipeType = FakeAssembly.GetFakeEntryAssembly().GetType(wipeTypeName);
             if (wipeType == null) {
@@ -958,43 +1093,14 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         /// <summary>
-        /// Calculates the width of a double button.
+        /// Checks whether any of the passed bindings have a valid button for the latest control scheme.
         /// </summary>
-        public static float measureDoubleButton(string label, VirtualButton button1, VirtualButton button2) {
-            MTexture mTexture1 = Input.GuiButton(button1, "controls/keyboard/oemquestion");
-            MTexture mTexture2 = Input.GuiButton(button2, "controls/keyboard/oemquestion");
-            return ActiveFont.Measure(label).X + 8f + mTexture1.Width + mTexture2.Width;
-        }
-
-        /// <summary>
-        /// Draws a double button.
-        /// </summary>
-        public static void renderDoubleButton(Vector2 position, string label, VirtualButton button1, VirtualButton button2, float scale, bool displayButton1, bool displayButton2, float justifyX = 0.5f, float wiggle = 0f, float alpha = 1f) {
-            MTexture mTexture1 = Input.GuiButton(button1, "controls/keyboard/oemquestion");
-            MTexture mTexture2 = Input.GuiButton(button2, "controls/keyboard/oemquestion");
-            float num = ActiveFont.Measure(label).X + 8f + mTexture1.Width;
-            position.X -= scale * num * (justifyX - 0.5f) + mTexture2.Width / 2;
-            drawText(label, position, num / 2f, scale + wiggle, alpha);
-            if (displayButton1 && !displayButton2) {
-                mTexture1.Draw(position, new Vector2(mTexture1.Width - num / 2f, mTexture1.Height / 2f), Color.White * alpha, scale + wiggle);
+        private static bool hasLatestBinding(Binding binding1, Binding binding2 = null, Binding binding3 = null, Binding binding4 = null) {
+            if (Input.GuiInputPrefix() == "keyboard") {
+                return binding1?.Keyboard.Any() == true || binding2?.Keyboard.Any() == true || binding3?.Keyboard.Any() == true || binding4?.Keyboard.Any() == true;
+            } else {
+                return binding1?.Controller.Any() == true || binding2?.Controller.Any() == true || binding3?.Controller.Any() == true || binding4?.Controller.Any() == true;
             }
-
-            if (!displayButton1 && displayButton2) {
-                mTexture2.Draw(position, new Vector2(mTexture2.Width - num / 2f, mTexture2.Height / 2f), Color.White * alpha, scale + wiggle);
-            }
-
-            if (displayButton1 && displayButton2) {
-                mTexture1.Draw(position, new Vector2(mTexture1.Width - num / 2f, mTexture1.Height / 2f), Color.White * alpha, scale + wiggle);
-                mTexture2.Draw(position + new Vector2(mTexture1.Width / 2, 0f), new Vector2(mTexture2.Width - num / 2f, mTexture2.Height / 2f), Color.White * alpha, scale + wiggle);
-            }
-        }
-
-        /// <summary>
-        /// Draws text for a double button in the specified position.
-        /// </summary>
-        private static void drawText(string text, Vector2 position, float justify, float scale, float alpha) {
-            float x = ActiveFont.Measure(text).X;
-            ActiveFont.DrawOutline(text, position, new Vector2(justify / x, 0.5f), Vector2.One * scale, Color.White * alpha, 2f, Color.Black * alpha);
         }
 
         /// <summary>
@@ -1002,6 +1108,54 @@ namespace Celeste.Mod.CollabUtils2.UI {
         /// </summary>
         private static EntityData findEntityData(LevelData levelData, string entityName) =>
             levelData.Entities.FirstOrDefault(e => e.Name == entityName);
+
+        /// <summary>
+        /// Returns true if at least one silver berry has been collected for this lobby.
+        /// </summary>
+        private static bool isRainbowBerryUnlocked(string levelSet) {
+            if (!CollabMapDataProcessor.SilverBerries.ContainsKey(levelSet)) return false;
+
+            foreach (KeyValuePair<string, EntityID> requiredSilver in CollabMapDataProcessor.SilverBerries[levelSet]) {
+                // check if the silver was collected.
+                AreaStats stats = SaveData.Instance.GetAreaStatsFor(AreaData.Get(requiredSilver.Key).ToKey());
+                if (stats.Modes[0].Strawberries.Contains(requiredSilver.Value)) return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Enforces removal of player control as much as possible.
+        /// </summary>
+        public static void SetLocked(bool locked, Scene scene = null, Player player = null) {
+            // if we didn't pass in a scene and/or player, grab them ourselves
+            Level level = (scene ?? Engine.Scene) as Level;
+            player = player ?? level?.Tracker.GetEntity<Player>();
+            if (level == null || player == null) return;
+
+            level.CanRetry = !locked;
+            level.PauseLock = locked;
+            player.Speed = Vector2.Zero;
+            player.DummyGravity = !locked;
+            player.StateMachine.State = locked ? Player.StDummy : Player.StNormal;
+
+            // disable auto animate if we're locking while not on the ground (happens while swimming)
+            player.DummyAutoAnimate = !locked || player.OnGround();
+        }
+
+        /// <summary>
+        /// Verifies that player control is still removed and there's no interaction storage we know of.
+        /// </summary>
+        public bool CheckLocked() {
+            if (Scene is Level level && level.Tracker.GetEntity<Player>() is Player player) {
+                // we really want to stop interaction storage, so if any of these checks fail, it's no longer valid to show the map
+                return (initialPlayerCenter - player.Center).LengthSquared() < 16 * 16 &&
+                    !player.Dead && !level.CanRetry && level.PauseLock && !player.DummyGravity &&
+                    player.Speed == Vector2.Zero && player.StateMachine.State == Player.StDummy;
+            }
+
+            return false;
+        }
 
         #endregion
 
