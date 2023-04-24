@@ -174,7 +174,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
                         if (foundEntity != null) {
                             // found it!
-                            Vector2 spawnPoint = room.Spawns.ClosestTo(foundEntity.Position + room.Position);
+                            Vector2 spawnPoint = room.Spawns.ClosestTo(foundEntity.Position + new Vector2(foundEntity.Width, foundEntity.Height) / 2 + room.Position);
 
                             CollabModule.Instance.Session.LobbyRoom = room.Name;
                             CollabModule.Instance.Session.LobbySpawnPointX = spawnPoint.X;
