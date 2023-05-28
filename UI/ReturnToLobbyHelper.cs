@@ -1,6 +1,7 @@
 using Celeste.Mod.CollabUtils2.Triggers;
 using Microsoft.Xna.Framework;
 using Monocle;
+using MonoMod.ModInterop;
 using MonoMod.RuntimeDetour;
 using MonoMod.Utils;
 using System;
@@ -31,6 +32,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
             using (new DetourContext { Before = { "*" } }) {
                 On.Celeste.LevelEnter.Go += onLevelEnterGo;
             }
+
+            typeof(ModExports).ModInterop();
         }
 
         internal static void Unload() {
@@ -62,47 +65,16 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             if (forceArea != null) {
                 // current chapter panel is in-game: set up Return to Lobby.
-                ChapterPanelTrigger.ReturnToLobbyMode returnToLobbyMode = data.Get<ChapterPanelTrigger.ReturnToLobbyMode>("returnToLobbyMode");
+                string gymExitMapSID = null;
+                bool gymExitSaveAllowed = false;
 
-                temporarySaveAllowedHolder = data.Get<bool>("saveAndReturnToLobbyAllowed");
-
-                if (returnToLobbyMode == ChapterPanelTrigger.ReturnToLobbyMode.DoNotChangeReturn) {
-                    // carry over current values.
-                    temporaryLobbySIDHolder = CollabModule.Instance.Session.LobbySID;
-                    temporaryRoomHolder = CollabModule.Instance.Session.LobbyRoom;
-                    temporarySpawnPointHolder = new Vector2(CollabModule.Instance.Session.LobbySpawnPointX, CollabModule.Instance.Session.LobbySpawnPointY);
-                } else if (returnToLobbyMode == ChapterPanelTrigger.ReturnToLobbyMode.SetReturnToHere) {
-                    // set the values to the current map, the current room, and the nearest spawn point.
-                    temporaryLobbySIDHolder = (Engine.Scene as Level)?.Session?.MapData?.Area.GetSID();
-                    temporaryRoomHolder = (Engine.Scene as Level)?.Session?.LevelData?.Name;
-
-                    // and save the spawn point closest to the player.
-                    Player player = Engine.Scene.Tracker.GetEntity<Player>();
-                    if (player != null) {
-                        temporarySpawnPointHolder = (Engine.Scene as Level).GetSpawnPoint(player.Position);
-                    } else {
-                        // player is dead, presumably? AAAAA
-                        // let's use camera position instead.
-                        temporarySpawnPointHolder = (Engine.Scene as Level).GetSpawnPoint((Engine.Scene as Level).Camera.Position + new Vector2(320 / 2, 180 / 2));
-                    }
-                } else if (returnToLobbyMode == ChapterPanelTrigger.ReturnToLobbyMode.RemoveReturn) {
-                    // make sure the "temporary" variables are empty.
-                    temporaryLobbySIDHolder = null;
-                    temporaryRoomHolder = null;
-                    temporarySpawnPointHolder = Vector2.Zero;
+                if (data.Data.TryGetValue("gymExitMapSID", out object gymExitMapSIDRaw)) {
+                    gymExitMapSID = (string) gymExitMapSIDRaw;
+                    gymExitSaveAllowed = data.Get<bool>("gymExitSaveAllowed");
                 }
 
-                if (LobbyHelper.IsCollabLobby((Engine.Scene as Level)?.Session?.MapData?.Area.GetSID() ?? "")) {
-                    // be sure to grab the gym map SID if there is one!
-                    if (data.Data.TryGetValue("gymExitMapSID", out object gymExitMapSID)) {
-                        temporaryGymExitMapSIDHolder = (string) gymExitMapSID;
-                        temporaryGymExitSaveAllowedHolder = data.Get<bool>("gymExitSaveAllowed");
-                    }
-                } else {
-                    // be sure to carry over the gym map SID, especially if we're going from gym to gym.
-                    temporaryGymExitMapSIDHolder = CollabModule.Instance.Session.GymExitMapSID;
-                    temporaryGymExitSaveAllowedHolder = CollabModule.Instance.Session.GymExitSaveAllowed;
-                }
+                setUpReturnToLobby(data.Get<ChapterPanelTrigger.ReturnToLobbyMode>("returnToLobbyMode"),
+                    data.Get<bool>("saveAndReturnToLobbyAllowed"), gymExitMapSID, gymExitSaveAllowed);
             } else {
                 // current chapter panel isn't in-game: make sure the "temporary" variables are empty.
                 temporaryLobbySIDHolder = null;
@@ -118,6 +90,50 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 // we want to initialize the session even when we selected "Continue", since we want to use the chapter panel settings
                 // instead of whatever we had in our session last time.
                 OnSessionCreated();
+            }
+        }
+
+        private static void setUpReturnToLobby(ChapterPanelTrigger.ReturnToLobbyMode returnToLobbyMode,
+            bool saveAndReturnToLobbyAllowed, string gymExitMapSID, bool gymExitSaveAllowed) {
+
+            temporarySaveAllowedHolder = saveAndReturnToLobbyAllowed;
+
+            if (returnToLobbyMode == ChapterPanelTrigger.ReturnToLobbyMode.DoNotChangeReturn) {
+                // carry over current values.
+                temporaryLobbySIDHolder = CollabModule.Instance.Session.LobbySID;
+                temporaryRoomHolder = CollabModule.Instance.Session.LobbyRoom;
+                temporarySpawnPointHolder = new Vector2(CollabModule.Instance.Session.LobbySpawnPointX, CollabModule.Instance.Session.LobbySpawnPointY);
+            } else if (returnToLobbyMode == ChapterPanelTrigger.ReturnToLobbyMode.SetReturnToHere) {
+                // set the values to the current map, the current room, and the nearest spawn point.
+                temporaryLobbySIDHolder = (Engine.Scene as Level)?.Session?.MapData?.Area.GetSID();
+                temporaryRoomHolder = (Engine.Scene as Level)?.Session?.LevelData?.Name;
+
+                // and save the spawn point closest to the player.
+                Player player = Engine.Scene.Tracker.GetEntity<Player>();
+                if (player != null) {
+                    temporarySpawnPointHolder = (Engine.Scene as Level).GetSpawnPoint(player.Position);
+                } else {
+                    // player is dead, presumably? AAAAA
+                    // let's use camera position instead.
+                    temporarySpawnPointHolder = (Engine.Scene as Level).GetSpawnPoint((Engine.Scene as Level).Camera.Position + new Vector2(320 / 2, 180 / 2));
+                }
+            } else if (returnToLobbyMode == ChapterPanelTrigger.ReturnToLobbyMode.RemoveReturn) {
+                // make sure the "temporary" variables are empty.
+                temporaryLobbySIDHolder = null;
+                temporaryRoomHolder = null;
+                temporarySpawnPointHolder = Vector2.Zero;
+            }
+
+            if (LobbyHelper.IsCollabLobby((Engine.Scene as Level)?.Session?.MapData?.Area.GetSID() ?? "")) {
+                // be sure to grab the gym map SID if there is one!
+                if (gymExitMapSID != null) {
+                    temporaryGymExitMapSIDHolder = gymExitMapSID;
+                    temporaryGymExitSaveAllowedHolder = gymExitSaveAllowed;
+                }
+            } else {
+                // be sure to carry over the gym map SID, especially if we're going from gym to gym.
+                temporaryGymExitMapSIDHolder = CollabModule.Instance.Session.GymExitMapSID;
+                temporaryGymExitSaveAllowedHolder = CollabModule.Instance.Session.GymExitSaveAllowed;
             }
         }
 
@@ -446,6 +462,70 @@ namespace Celeste.Mod.CollabUtils2.UI {
             forceInitializeModSession = false;
 
             orig(self);
+        }
+
+        // ModInterop exports
+
+        [ModExportName("CollabUtils2.ReturnToLobbyHelper")]
+        private static class ModExports {
+            /// <summary>
+            /// Indicates whether there is a saved state for the given map
+            /// (Collab Utils would display a "Continue" option on its chapter panel.)
+            /// </summary>
+            public static bool HasSavedState(string mapSID) {
+                return CollabModule.Instance.SaveData.SessionsPerLevel.ContainsKey(mapSID);
+            }
+
+            /// <summary>
+            /// Teleports to a map, making sure "Return to Lobby" is properly set up.
+            /// </summary>
+            /// <param name="mapSID">The map to teleport to</param>
+            /// <param name="checkpoint">The checkpoint to teleport to (room name), or null to start from the beginning</param>
+            /// <param name="returnToLobbyMode">SetReturnToHere = 0, RemoveReturn = 1, DoNotChangeReturn = 2</param>
+            /// <param name="saveAndReturnToLobbyAllowed">Whether the player can save and return to lobby (if false, the player will only be able to return to lobby without saving)</param>
+            /// <param name="continueSession">Whether the saved state for this map should be loaded, if any exists (if false, the player will start over)</param>
+            public static void TeleportToMapWithReturnToLobby(string mapSID, string checkpoint, int returnToLobbyMode, bool saveAndReturnToLobbyAllowed, bool continueSession) {
+                TeleportToMapWithReturnToLobbyAndGym(mapSID, checkpoint, returnToLobbyMode, saveAndReturnToLobbyAllowed, continueSession, null, false);
+            }
+
+            /// <summary>
+            /// Teleports to a gym, making sure "Return to Lobby" and the teleport to the map are properly set up.
+            /// </summary>
+            /// <param name="mapSID">The gym to teleport to</param>
+            /// <param name="checkpoint">The checkpoint to teleport to (room name), or null to start from the beginning</param>
+            /// <param name="returnToLobbyMode">SetReturnToHere = 0, RemoveReturn = 1, DoNotChangeReturn = 2</param>
+            /// <param name="saveAndReturnToLobbyAllowed">Whether the player can save and return to lobby in the gym (if false, the player will only be able to return to lobby without saving)</param>
+            /// <param name="continueSession">Whether the saved state for this map should be loaded, if any exists (if false, the player will start over)</param>
+            /// <param name="gymExitMapSID">The map to teleport to when the player is done with the gym</param>
+            /// <param name="gymExitSaveAllowed">Whether the player can save and return to lobby once in the map (if false, the player will only be able to return to lobby without saving)</param>
+            public static void TeleportToMapWithReturnToLobbyAndGym(string mapSID, string checkpoint, int returnToLobbyMode, bool saveAndReturnToLobbyAllowed, bool continueSession,
+                string gymExitMapSID, bool gymExitSaveAllowed) {
+
+                // set up "return to lobby" in the same way as in-game chapter panels.
+                setUpReturnToLobby((ChapterPanelTrigger.ReturnToLobbyMode) returnToLobbyMode, saveAndReturnToLobbyAllowed, gymExitMapSID, gymExitSaveAllowed);
+
+                if (!continueSession) {
+                    // "continue" was not selected, so drop the saved state to start over.
+                    CollabModule.Instance.SaveData.SessionsPerLevel.Remove(mapSID);
+                    CollabModule.Instance.SaveData.ModSessionsPerLevel.Remove(mapSID);
+                    CollabModule.Instance.SaveData.ModSessionsPerLevelBinary.Remove(mapSID);
+                }
+
+                if (Engine.Scene is Level level) {
+                    // we're exiting the lobby, so we need to make sure mods are aware we're exiting the level!
+                    // calling the LevelExit constructor triggers the Level.Exit Everest event, so that makes mods less confused about what's going on.
+                    new LevelExit(LevelExit.Mode.GiveUp, level.Session);
+                }
+
+                // actually teleport to the level
+                LevelEnter.Go(new Session(AreaData.Get(mapSID).ToKey(), checkpoint), fromSaveData: false);
+
+                if (forceInitializeModSession) {
+                    // we want to initialize the session even when we selected "Continue", since we want to use the chapter panel settings
+                    // instead of whatever we had in our session last time.
+                    OnSessionCreated();
+                }
+            }
         }
     }
 }
