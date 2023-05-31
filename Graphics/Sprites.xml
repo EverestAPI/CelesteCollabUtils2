@@ -79,4 +79,13 @@
     <Anim id="sit" path="sitBench" delay=".08" frames="0-17"/>
     <Anim id="sitHair" path="sitBenchHair" delay=".08" frames="0-17"/>
   </CollabUtils2_sitBench>
+
+  <!-- Warp Pedestal placeholder orb animation -->
+  <CollabUtils2_placeholderOrb path="CollabUtils2/placeholderorb/" start="empty">
+    <Justify x="0.5" y="0.92"/>
+    <Loop id="empty" path="placeholderorb" frames="0"/>
+    <Anim id="before_fill" path="placeholderorb" delay="1" frames="0*2" goto="fill"/>
+    <Anim id="fill" path="placeholderorb" frames="1-11" delay="0.1" goto="full"/>
+    <Loop id="full" path="placeholderorb" frames="12"/>
+  </CollabUtils2_placeholderOrb>
 </Sprites>

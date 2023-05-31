@@ -99,3 +99,11 @@ placements.entities.CollabUtils2/LobbyMapWarp.tooltips.wipeType=The wipe to use 
 
 # Lobby Map Marker
 placements.entities.CollabUtils2/LobbyMapMarker.tooltips.icon=The icon to display for this simple map marker.
+
+# Warp Pedestal
+placements.entities.CollabUtils2/WarpPedestal.tooltips.map=The SID (string ID) of the map that will be entered with the pedestal.
+placements.entities.CollabUtils2/WarpPedestal.tooltips.returnToLobbyMode=Determines how "Return to Lobby" will behave after entering this map.\n- SetReturnToHere: the Return to Lobby button will return the player to the nearest spawn point in the current map.\n- RemoveReturn: the Return to Lobby button will disappear from the pause menu.\n- DoNotChangeReturn: the current Return to Lobby button will not be changed.
+placements.entities.CollabUtils2/WarpPedestal.tooltips.allowSaving=If selected, the player will be allowed to save and return to the lobby in the map this pedestal teleports to, by selecting "Save" when returning to lobby. Not compatible with maps that have checkpoints.
+placements.entities.CollabUtils2/WarpPedestal.tooltips.sprite=The sprite to use for the pedestal, from your map's Sprites.xml.\nYou can use "CollabUtils2_placeholderOrb" in Collab Utils' own Sprites.xml as a reference.
+placements.entities.CollabUtils2/WarpPedestal.tooltips.bubbleOffsetY=The Y offset of the speech bubble above the pedestal. Bigger values will move the bubble up.
+placements.entities.CollabUtils2/WarpPedestal.tooltips.fillSoundEffect=The sound effect to play when the pedestal fills up / activates after beating a map for the first time.

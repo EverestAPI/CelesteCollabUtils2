@@ -179,7 +179,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         if (foundEntity == null) {
                             // search for helper entities from Strawberry Jam and the FLCC collab
                             foreach (EntityData entity in room.Entities) {
-                                if ((entity.Name == "SJ2021/StrawberryJamJar" || entity.Name == "FlushelineCollab/LevelEntrance")
+                                if ((entity.Name == "SJ2021/StrawberryJamJar" || entity.Name == "CollabUtils2/WarpPedestal" || entity.Name == "FlushelineCollab/LevelEntrance")
                                     && entity.Attr("map") == session.Area.GetSID()) {
 
                                     foundEntity = entity;

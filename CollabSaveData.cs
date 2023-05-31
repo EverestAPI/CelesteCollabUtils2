@@ -14,6 +14,9 @@ namespace Celeste.Mod.CollabUtils2 {
         // flag used to show the "you can change the speed berry timer position in Mod Options" message only once per save
         public bool SpeedberryOptionMessageShown { get; set; } = false;
 
+        // list of SIDs of maps that had the fill animation of their warp pedestal happen
+        public HashSet<string> CompletedWarpPedestalSIDs { get; set; } = new HashSet<string>();
+
         // sessions saved when using "save and return to lobby"
         // - vanilla session, in XML format (all annotations are set up to (de)serialize properly into XML)
         public Dictionary<string, string> SessionsPerLevel = new Dictionary<string, string>();
