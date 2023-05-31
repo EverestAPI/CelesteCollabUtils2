@@ -60,7 +60,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             orig(self);
 
             // when the level is over and the poem pops up on-screen, the area complete info should also pop up if enabled.
-            if (CollabModule.Instance.Settings.DisplayEndScreenForAllMaps && self.Tracker.CountEntities<AreaCompleteInfoInLevel>() == 0) {
+            if (Settings.Instance.SpeedrunClock > SpeedrunType.Off && self.Tracker.CountEntities<AreaCompleteInfoInLevel>() == 0) {
                 self.Add(new AreaCompleteInfoInLevel());
             }
         }
