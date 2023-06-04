@@ -19,6 +19,7 @@ If anything is wrong or unclear, yell at Maddie (maddie480#4596 on [the Celeste 
   - [Mini Heart Doors](#mini-heart-doors)
   - [Rainbow Berries](#rainbow-berries)
   - [Speed Berries](#speed-berries)
+  - [Warp Pedestals](#warp-pedestals)
 - [Triggers](#triggers)
   - [Chapter Panel Trigger](#chapter-panel-trigger)
   - [Journal Trigger](#journal-trigger)
@@ -210,6 +211,26 @@ To stop the timer and collect the berry, you need to place a **Speed Berry Colle
 
 :warning: If the player crosses a Golden Berry Collect Trigger, the speed berry will collect but the timer will not stop. This is an odd interaction, and you should make sure to have the player cross a speed berry collect trigger first.
 
+### Warp Pedestals
+
+Those are pedestals that teleport you to a specific map, just like Chapter Panel Triggers. The fields that set up the warp itself are the same as Chapter Panel Triggers ([see below](#chapter-panel-trigger) for more info on their setup). The only difference is that it has visuals that indicate whether the map was completed or not, and an animation when completing a map for the first time and returning to the lobby (just like the jam jars in the [Strawberry Jam](https://gamebanana.com/mods/424541) collab).
+
+To set up a custom sprite for it, you need to add an entry for it in your map's `Sprites.xml`:
+```xml
+<CollabUtils2_placeholderOrb path="CollabUtils2/placeholderorb/" start="empty">
+    <Justify x="0.5" y="0.92"/>
+    <Loop id="empty" path="placeholderorb" frames="0"/>
+    <Anim id="before_fill" path="placeholderorb" delay="1" frames="0*2" goto="fill"/>
+    <Anim id="fill" path="placeholderorb" frames="1-11" delay="0.1" goto="full"/>
+    <Loop id="full" path="placeholderorb" frames="12"/>
+</CollabUtils2_placeholderOrb>
+```
+You would then fill the "Sprite" field in your map editor with `CollabUtils2_placeholderOrb`.
+
+- `empty` is the animation that plays when the map was not completed yet.
+- `full` is the animation that plays when the map was already completed.
+- `before_fill` is the animation that plays right when you return to the lobby after you completed a map for the first time. It should switch to the `fill` animation once done, the switch between the animations is when the "Fill Sound Effect" is played.
+
 ## Triggers
 
 ### Chapter Panel Trigger
@@ -223,7 +244,7 @@ The "Map" setting should be the path to your bin, without the .bin at the end. I
 The chapter panel works in the same way as the ones in chapter select (for chapter naming, the icon and colors). The only differences are:
 - Instead of showing a chapter number, it will display **a map author**. To define that, use English.txt and define a new dialog with the same ID as the map name + an `_author` suffix:
 ```
-2021SeasonCollab_1_Spring_map1_author= by Matt Makes Games
+2021SeasonCollab_1_Spring_map1_author= by EXOK Games
 ```
 
 - Instead of showing checkpoints, it will display **credits**. To define them, use English.txt and define a new dialog with the same ID as the map name + a `_collabcredits` suffix:
