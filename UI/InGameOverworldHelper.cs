@@ -77,7 +77,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
 
             public static List<CreditsTag> Parse(string dialog) {
-                return dialog.Split('\n').Select(line => new CreditsTag(line.Trim())).ToList();
+                return dialog.Replace("{break}", "\n").Split('\n').Select(line => new CreditsTag(line.Trim())).ToList();
             }
         }
 
@@ -546,7 +546,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
             } else {
                 string areaName = new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea").Name;
                 data["collabCredits"] = FancyText.Parse(Dialog.Get(areaName + "_collabcredits").Replace("{break}", "{n}"), int.MaxValue, int.MaxValue, defaultColor: Color.Black);
-                data["collabCreditsTags"] = CreditsTag.Parse(Dialog.Get(areaName + "_collabcreditstags"));
+
+                if (Dialog.Has(areaName + "_collabcreditstags")) {
+                    data["collabCreditsTags"] = CreditsTag.Parse(Dialog.Get(areaName + "_collabcreditstags"));
+                } else {
+                    data["collabCreditsTags"] = new List<CreditsTag>();
+                }
+
                 self.Focused = false;
                 self.Overworld.ShowInputUI = !selectingMode;
                 self.Add(new Coroutine(ChapterPanelSwapRoutine(self, data)));
