@@ -765,7 +765,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         if (tag.BorderTexture != null) {
                             for (int tex_x = 0; tex_x < width + 20; tex_x += tag.BorderTexture.Width)
                                 tag.BorderTexture.Draw(new Vector2(x - 10 + tex_x, y - 6), Vector2.Zero, (tag.BorderColor ?? Color.White) * alphaTags, Vector2.One, 0f,
-                                                       new Rectangle(0, 0, (int) width + 20, 44));
+                                                       new Rectangle(0, 0, (int) width + 20 - tex_x, 44));
                         } else {
                             Draw.Rect(x - 10, y - 6, width + 20, 44, (tag.BorderColor ?? Color.Black) * alphaTags);
                         }
@@ -773,7 +773,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         if (tag.FillTexture != null) {
                             for (int tex_x = 0; tex_x < width + 12; tex_x += tag.FillTexture.Width)
                                 tag.FillTexture.Draw(new Vector2(x - 6 + tex_x, y - 2), Vector2.Zero, (tag.FillColor ?? Color.White) * alphaTags, Vector2.One, 0f,
-                                                     new Rectangle(0, 0, (int) width + 12, 36));
+                                                     new Rectangle(0, 0, (int) width + 12 - tex_x, 36));
                         } else {
                             Draw.Rect(x - 6, y - 2, width + 12, 36, (tag.FillColor ?? self.Data.TitleBaseColor) * alphaTags);
                         }

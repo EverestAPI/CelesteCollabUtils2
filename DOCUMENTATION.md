@@ -265,6 +265,18 @@ If you don't define this dialog ID, the credits page will be skipped.
   Tag 3
 ```
 
+You can also customize the tag using this `{cu2_tag}` syntax:
+
+```
+areaname_collabcreditstags=
+  Unmodified
+  {cu2_tag color="000000"}Custom Color
+  {cu2_tag color="ff0000" borderColor="aaee00" fillColor="000055"}Custom Colors
+  {cu2_tag color="000000" borderColor="000000" fillTexture="CollabUtils2/chapterCard/tag_golden"}Custom Texture
+```
+
+3 textures are provided with the mod: `CollabUtils2/chapterCard/tag_golden`, `CollabUtils2/chapterCard/tag_rainbow` and `CollabUtils2/chapterCard/tag_silver`.
+
 #### The "Return to Lobby" option
 
 When using a Chapter Panel Trigger, you can make a "Return to Lobby" button appear in the pause menu. This depends on the "return to lobby mode" you set on the chapter panel trigger:
