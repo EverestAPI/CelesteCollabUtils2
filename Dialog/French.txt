@@ -1,0 +1,67 @@
+modname_collabutils2= Collab Utils 2
+modoptions_collab_title= Collab Utils 2
+
+collabutils2_returntolobby= Retourner au Lobby
+collabutils2_restartspeedberry= Recommencer la Fraise Contre-la-montre
+
+collabutils2_returntolobby_confirm_title= RETOURNER AU LOBBY ?
+collabutils2_returntolobby_confirm_note1= Si tu sélectionnes « Sauvergarder », tu pourras reprendre d'où tu en étais
+collabutils2_returntolobby_confirm_note2= en revenant à la map via le lobby et en choisissant « Continuer ».
+collabutils2_returntolobby_confirm_save= Sauvegarder
+collabutils2_returntolobby_confirm_donotsave= Ne Pas Sauvegarder
+collabutils2_returntolobby_confirm_cancel= Annuler
+
+collabutils2_speedberry_gold= Or :
+collabutils2_speedberry_silver= Argent :
+collabutils2_speedberry_bronze= Bronze :
+collabutils2_speedberry_timeranout= Temps écoulé !
+
+collabutils2_difficulty_beginner= Débutant
+collabutils2_difficulty_intermediate= Intermédiaire
+collabutils2_difficulty_advanced= Avancé
+collabutils2_difficulty_expert= Expert
+collabutils2_difficulty_grandmaster= Grand-Maître
+
+collabutils2_overworld_gym=APPRENDRE
+collabutils2_overworld_exit=RETOURNER AU LOBBY
+
+collabutils2_chapterpanel_continue= Continuer
+collabutils2_chapterpanel_start= Recommencer
+
+collabutils2_speedberry_optionmessage=
+    La position du chronomètre des fraises contre-la-montre peut être changé dans les {# 9B3FB5}Options des Mods{#}.
+
+modoptions_collab_speedberrytimerposition= Chronomètre des Fraises Contre-la-montre
+modoptions_collab_speedberrytimerposition_topleft= En Haut à Gauche
+modoptions_collab_speedberrytimerposition_topcenter= En Haut au Milieu
+modoptions_collab_hidespeedberrytimerduringgameplay= Cacher le chronomètre en jeu
+
+modoptions_collab_displayendscreenforallmaps= Afficher l'Écran de Fin pour toutes les maps
+modoptions_collab_displayendscreenforallmaps_description= Nécessaire pour la vérification des temps de speedrun.com
+
+modoptions_collab_besttimetodisplayinjournal= Meilleur Temps à Afficher dans le Journal
+modoptions_collab_besttimetodisplayinjournal_speedberry= Fraise Contre-la-montre
+modoptions_collab_besttimetodisplayinjournal_chaptertimer= Temps du Chapitre
+
+modoptions_collab_savebydefaultwhenreturningtolobby= Sauvegarder et Retourner au Lobby par Défaut
+
+modoptions_collab_displaylobbymap= Afficher la Carte du Lobby
+modoptions_collab_holdtopan= Maintenir pour Déplacer la Carte du Lobby
+modoptions_collab_panlobbymapup= Déplacer la Carte du Lobby vers le Haut
+modoptions_collab_panlobbymapdown= Déplacer la Carte du Lobby vers le Bas
+modoptions_collab_panlobbymapleft= Déplacer la Carte du Lobby vers la Gauche
+modoptions_collab_panlobbymapright= Déplacer la Carte du Lobby vers la Droite
+
+collabutils2_assist_skip= Ouvrir le Portail des Cœurs
+collabutils2_assist_skip_confirm= Cela ouvrira le Portail des Cœurs définitivement.{n}En-es tu sûr ?
+collabutils2_assist_skip_confirm_yes= Oui
+collabutils2_assist_skip_confirm_no= Non
+
+collabutils2_lobbymap_change_destination= Changer de Destination
+collabutils2_lobbymap_change_lobby= Changer de Lobby
+collabutils2_lobbymap_close= Fermer
+collabutils2_lobbymap_confirm= Confirmer
+collabutils2_lobbymap_hold_to_pan= Maintenir pour Déplacer
+collabutils2_lobbymap_pan= Déplacer
+collabutils2_lobbymap_zoom= Zoom
+collabutils2_lobbymap_notify_keybinds= De nouveaux boutons peuvent être assignés dans les Options des Mods !
