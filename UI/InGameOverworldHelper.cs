@@ -12,9 +12,75 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace Celeste.Mod.CollabUtils2.UI {
     public static class InGameOverworldHelper {
+
+        private struct CreditsTag {
+            private static readonly Regex ParseRegex = new Regex("^{cu2_tag(\\s+(?<key>\\w+)=\"(?<value>[^\"]+)\")*}\\s*(?<text>.*)$", RegexOptions.Compiled);
+
+            public string Text;
+            public Color? TextColor;
+
+            public MTexture BorderTexture;
+            public Color? BorderColor;
+
+            public MTexture FillTexture;
+            public Color? FillColor;
+
+            public CreditsTag(string text) {
+                Text = text;
+                TextColor = null;
+
+                BorderTexture = null;
+                BorderColor = null;
+
+                FillTexture = null;
+                FillColor = null;
+
+                Match match = ParseRegex.Match(Text);
+                if (match.Success) {
+                    Text = match.Groups["text"].Value;
+
+                    CaptureCollection keys = match.Groups["key"].Captures;
+                    CaptureCollection values = match.Groups["value"].Captures;
+
+                    if (keys.Count != values.Count)
+                        throw new IndexOutOfRangeException("credits tag keys and values mismatched!");
+
+                    for (int i = 0; i < keys.Count; i++) {
+                        switch (keys[i].Value) {
+                            case "color":
+                                TextColor = Calc.HexToColor(values[i].Value);
+                                break;
+
+                            case "borderColor":
+                                BorderColor = Calc.HexToColor(values[i].Value);
+                                break;
+                            case "borderTexture":
+                                BorderTexture = GFX.Gui[values[i].Value];
+                                break;
+
+                            case "fillColor":
+                                FillColor = Calc.HexToColor(values[i].Value);
+                                break;
+                            case "fillTexture":
+                                FillTexture = GFX.Gui[values[i].Value];
+                                break;
+
+                            default:
+                                continue;
+                        }
+                    }
+                }
+            }
+
+            public static List<CreditsTag> Parse(string dialog) {
+                return dialog.Replace("{break}", "\n").Split('\n').Select(line => new CreditsTag(line.Trim())).ToList();
+            }
+        }
+
         public static bool IsOpen => overworldWrapper?.Scene == Engine.Scene;
 
         private static SceneWrappingEntity<Overworld> overworldWrapper;
@@ -480,7 +546,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
             } else {
                 string areaName = new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea").Name;
                 data["collabCredits"] = FancyText.Parse(Dialog.Get(areaName + "_collabcredits").Replace("{break}", "{n}"), int.MaxValue, int.MaxValue, defaultColor: Color.Black);
-                data["collabCreditsTags"] = (areaName + "_collabcreditstags").DialogCleanOrNull();
+
+                if (Dialog.Has(areaName + "_collabcreditstags")) {
+                    data["collabCreditsTags"] = CreditsTag.Parse(Dialog.Get(areaName + "_collabcreditstags"));
+                } else {
+                    data["collabCreditsTags"] = new List<CreditsTag>();
+                }
+
                 self.Focused = false;
                 self.Overworld.ShowInputUI = !selectingMode;
                 self.Add(new Coroutine(ChapterPanelSwapRoutine(self, data)));
@@ -643,21 +715,18 @@ namespace Celeste.Mod.CollabUtils2.UI {
             float heightTakenByTags = 0f;
 
             // draw tags.
-            string collabCreditsTagsString = selfData.Get<string>("collabCreditsTags");
-            if (collabCreditsTagsString != null) {
-                // split on newlines to separate tags.
-                string[] collabCreditsTags = collabCreditsTagsString.Split('\n');
-
+            List<CreditsTag> collabCreditsTags = selfData.Get<List<CreditsTag>>("collabCreditsTags");
+            if (collabCreditsTags != null) {
                 // split tags in lines, fitting as many tags as possible on each line.
-                List<List<string>> lines = new List<List<string>>();
+                List<List<CreditsTag>> lines = new List<List<CreditsTag>>();
                 List<float> lineWidths = new List<float>();
 
                 // this block is responsible for splitting tags in lines.
                 {
-                    List<string> line = new List<string>();
+                    List<CreditsTag> line = new List<CreditsTag>();
                     float lineWidth = 0f;
-                    for (int i = 0; i < collabCreditsTags.Length; i++) {
-                        float advanceX = ActiveFont.Measure(collabCreditsTags[i].Trim()).X * 0.5f + 30f; // 30 = margin between tags
+                    for (int i = 0; i < collabCreditsTags.Count; i++) {
+                        float advanceX = ActiveFont.Measure(collabCreditsTags[i].Text).X * 0.5f + 30f; // 30 = margin between tags
                         if (lineWidth + advanceX > 800f) {
                             // we exceeded the limit. we need a line break!
                             lines.Add(line.ToList());
@@ -668,7 +737,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         }
 
                         // add the tag to the current line.
-                        line.Add(collabCreditsTags[i].Trim());
+                        line.Add(collabCreditsTags[i]);
                         lineWidth += advanceX;
                     }
 
@@ -689,12 +758,27 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     // starting position is all the way left.
                     float x = center.X - (lineWidths[i] / 2f) + 15f;
 
-                    foreach (string tag in lines[i]) {
+                    foreach (CreditsTag tag in lines[i]) {
                         // black edge > BaseColor text background > TextColor tag text
-                        float width = ActiveFont.Measure(tag).X * 0.5f;
-                        Draw.Rect(x - 10, y - 6, width + 20, 44, Color.Black * alphaTags);
-                        Draw.Rect(x - 6, y - 2, width + 12, 36, self.Data.TitleBaseColor * alphaTags);
-                        ActiveFont.Draw(tag, new Vector2(x, y), Vector2.Zero, Vector2.One * 0.5f, self.Data.TitleTextColor * alphaTags);
+                        float width = ActiveFont.Measure(tag.Text).X * 0.5f;
+
+                        if (tag.BorderTexture != null) {
+                            for (int tex_x = 0; tex_x < width + 20; tex_x += tag.BorderTexture.Width)
+                                tag.BorderTexture.Draw(new Vector2(x - 10 + tex_x, y - 6), Vector2.Zero, (tag.BorderColor ?? Color.White) * alphaTags, Vector2.One, 0f,
+                                                       new Rectangle(0, 0, (int) width + 20, 44));
+                        } else {
+                            Draw.Rect(x - 10, y - 6, width + 20, 44, (tag.BorderColor ?? Color.Black) * alphaTags);
+                        }
+
+                        if (tag.FillTexture != null) {
+                            for (int tex_x = 0; tex_x < width + 12; tex_x += tag.FillTexture.Width)
+                                tag.FillTexture.Draw(new Vector2(x - 6 + tex_x, y - 2), Vector2.Zero, (tag.FillColor ?? Color.White) * alphaTags, Vector2.One, 0f,
+                                                     new Rectangle(0, 0, (int) width + 12, 36));
+                        } else {
+                            Draw.Rect(x - 6, y - 2, width + 12, 36, (tag.FillColor ?? self.Data.TitleBaseColor) * alphaTags);
+                        }
+
+                        ActiveFont.Draw(tag.Text, new Vector2(x, y), Vector2.Zero, Vector2.One * 0.5f, (tag.TextColor ?? self.Data.TitleTextColor) * alphaTags);
 
                         // advance the position to the next tag.
                         x += width + 30f;
