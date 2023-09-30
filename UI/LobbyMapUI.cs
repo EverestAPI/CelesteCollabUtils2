@@ -433,8 +433,19 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
 
             // sort lobbies by SID and room
-            lobbySelections.Sort((lhs, rhs) =>
-                string.Compare($"{lhs.SID}/{lhs.Room}", $"{rhs.SID}/{rhs.Room}", StringComparison.Ordinal));
+            lobbySelections.Sort((lhs, rhs) => {
+                // sort first by sid
+                var compareSid = string.CompareOrdinal(lhs.SID, rhs.SID);
+                if (compareSid != 0) return compareSid;
+
+                // then by room index
+                var compareRoomIndex = Math.Sign(lhs.RoomIndex - rhs.RoomIndex);
+                if (compareRoomIndex != 0) return compareRoomIndex;
+
+                // then by room name
+                return string.CompareOrdinal(lhs.Room, rhs.Room);
+            });
+
             selectedWarpIndexes = new int[lobbySelections.Count];
 
             // select the current lobby
@@ -1194,6 +1205,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             public readonly EntityData Data;
             public readonly string SID;
             public readonly string Room;
+            public readonly int RoomIndex;
             public LobbyMapController.MarkerInfo[] Markers;
 
             public LobbySelection(EntityData data, MapData map) {
@@ -1201,6 +1213,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 Data = data;
                 SID = map.Area.SID;
                 Room = data.Level.Name;
+                RoomIndex = Info.RoomIndex;
             }
         }
 
