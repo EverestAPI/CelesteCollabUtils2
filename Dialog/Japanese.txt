@@ -64,4 +64,4 @@ collabutils2_lobbymap_confirm= OK
 collabutils2_lobbymap_hold_to_pan= 長押しでロビーマップの画面移動
 collabutils2_lobbymap_pan= 画面移動
 collabutils2_lobbymap_zoom= 倍率を変える
-collabutils2_lobbymap_notify_keybinds= 「MOD設定」から新しいキーを設定をしましょう！
+collabutils2_lobbymap_notify_keybinds= MOD設定 > Collab Utils 2からマップのキー設定をしましょう！
