@@ -45,6 +45,13 @@ modoptions_collab_besttimetodisplayinjournal_chaptertimer= チャプタータイ
 
 modoptions_collab_savebydefaultwhenreturningtolobby= セーブしてロビーに戻るをデフォルトにする
 
+modoptions_collab_displaylobbymap= ロビーマップを表示する
+modoptions_collab_holdtopan= 長押しでロビーマップの画面移動
+modoptions_collab_panlobbymapup= ロビーマップの上移動
+modoptions_collab_panlobbymapdown= ロビーマップの下移動
+modoptions_collab_panlobbymapleft= ロビーマップの左移動
+modoptions_collab_panlobbymapright= ロビーマップの右移動
+
 collabutils2_assist_skip= ハートゲートを開ける
 collabutils2_assist_skip_confirm= ハートゲートをずっと開けておくようにします。{n}よろしいですか？
 collabutils2_assist_skip_confirm_yes= はい
@@ -54,4 +61,7 @@ collabutils2_lobbymap_change_destination= 行き先を選ぶ
 collabutils2_lobbymap_change_lobby= ロビーを選ぶ
 collabutils2_lobbymap_close= キャンセル
 collabutils2_lobbymap_confirm= OK
+collabutils2_lobbymap_hold_to_pan= 長押しでロビーマップの画面移動
+collabutils2_lobbymap_pan= 画面移動
 collabutils2_lobbymap_zoom= 倍率を変える
+collabutils2_lobbymap_notify_keybinds= 「MOD設定」から新しいキーを設定をしましょう！
