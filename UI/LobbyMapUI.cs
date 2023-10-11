@@ -432,16 +432,28 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 }
             }
 
-            // sort lobbies by SID
-            lobbySelections.Sort((lhs, rhs) => string.Compare(lhs.SID, rhs.SID, StringComparison.Ordinal));
+            // sort lobbies by SID and room
+            lobbySelections.Sort((lhs, rhs) => {
+                // sort first by sid
+                var compareSid = string.CompareOrdinal(lhs.SID, rhs.SID);
+                if (compareSid != 0) return compareSid;
+
+                // then by room index
+                var compareRoomIndex = Math.Sign(lhs.RoomIndex - rhs.RoomIndex);
+                if (compareRoomIndex != 0) return compareRoomIndex;
+
+                // then by room name
+                return string.CompareOrdinal(lhs.Room, rhs.Room);
+            });
+
             selectedWarpIndexes = new int[lobbySelections.Count];
 
             // select the current lobby
-            selectedLobbyIndex = lobbySelections.FindIndex(s => s.SID == level.Session.Area.SID);
+            selectedLobbyIndex = lobbySelections.FindIndex(s => s.SID == level.Session.Area.SID && s.Room == level.Session.Level);
 
             // verify selection
             if (selectedLobbyIndex < 0) {
-                Logger.Log(LogLevel.Warn, "CollabUtils2/LobbyMapUI", $"getLobbyControllers: Couldn't find map for {level.Session.Area.SID}, defaulting to first");
+                Logger.Log(LogLevel.Warn, "CollabUtils2/LobbyMapUI", $"getLobbyControllers: Couldn't find map for {level.Session.Area.SID}/{level.Session.Level}, defaulting to first");
                 selectedLobbyIndex = 0;
             }
         }
@@ -555,7 +567,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             actualScale = zoomLevels[zoomLevel];
             shouldCentreOrigin = zoomLevel == 0;
 
-            var isCurrentLobby = selection.SID == level.Session.Area.SID;
+            var isCurrentLobby = selection.SID == level.Session.Area.SID && selection.Room == level.Session.Level;
             shouldShowMaddy = !viewOnly || isCurrentLobby;
 
             if (!viewOnly) {
@@ -1193,6 +1205,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             public readonly EntityData Data;
             public readonly string SID;
             public readonly string Room;
+            public readonly int RoomIndex;
             public LobbyMapController.MarkerInfo[] Markers;
 
             public LobbySelection(EntityData data, MapData map) {
@@ -1200,6 +1213,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 Data = data;
                 SID = map.Area.SID;
                 Room = data.Level.Name;
+                RoomIndex = Info.RoomIndex;
             }
         }
 
