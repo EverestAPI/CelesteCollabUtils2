@@ -7,11 +7,13 @@ namespace Celeste.Mod.CollabUtils2.Entities {
     public class FakeMiniHeart : AbstractMiniHeart {
         private float respawnTimer;
         private bool playBreakSound;
+        private string flagOnBreak;
 
         public FakeMiniHeart(EntityData data, Vector2 position, EntityID gid)
             : base(data, position, gid) {
 
             playBreakSound = data.Bool("playBreakSound", false);
+            flagOnBreak = data.Attr("flagOnBreak");
         }
 
         public override void Update() {
@@ -45,6 +47,10 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
                 if (playBreakSound) {
                     Audio.Play("event:/game/general/diamond_touch", Position);
+                }
+
+                if (!string.IsNullOrEmpty(flagOnBreak)) {
+                    SceneAs<Level>().Session.SetFlag(flagOnBreak, true);
                 }
             }
         }

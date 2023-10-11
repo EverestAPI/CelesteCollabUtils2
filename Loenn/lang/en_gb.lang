@@ -21,6 +21,7 @@ entities.CollabUtils2/FakeMiniHeart.attributes.description.noGhostSprite=If chec
 entities.CollabUtils2/FakeMiniHeart.attributes.description.particleColor=The color of the particles emitted by the fake mini heart. Leave empty to use default colors.
 entities.CollabUtils2/FakeMiniHeart.attributes.description.playPulseSound=Whether the heart should play a sound along with its pulse.
 entities.CollabUtils2/FakeMiniHeart.attributes.description.playBreakSound=Whether the heart should play a refill sound when broken.
+entities.CollabUtils2/FakeMiniHeart.attributes.description.flagOnBreak=If filled out, the given flag will be set when the fake mini heart is broken.
 
 # Mini Heart Door
 entities.CollabUtils2/MiniHeartDoor.placements.name.door=Mini Heart Door
@@ -109,6 +110,7 @@ entities.CollabUtils2/LobbyMapController.attributes.description.showMaps=Whether
 entities.CollabUtils2/LobbyMapController.attributes.description.showJournals=Whether journals should be shown on the lobby map.
 entities.CollabUtils2/LobbyMapController.attributes.description.showHeartCount=Whether the currently collected heart count should appear in the top left.
 entities.CollabUtils2/LobbyMapController.attributes.description.revealWhenAllMarkersFound=Whether the entire map should be revealed once every marker has been uncovered.
+entities.CollabUtils2/LobbyMapController.attributes.description.roomIndex=The index to use when sorting rooms within a single map.\nIf there is more than one room in a map with the same index, they will be sorted by room name.
 
 # Lobby Map Warp
 entities.CollabUtils2/LobbyMapWarp.placements.name.default=Lobby Map Warp
