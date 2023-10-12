@@ -4,7 +4,10 @@ lobbyMapController.depth = -100
 lobbyMapController.fieldInformation = {
     totalMaps = {
         fieldType = "integer",
-    }
+    },
+    roomIndex = {
+        fieldType = "integer",
+    },
 }
 lobbyMapController.placements = {
     {
@@ -12,6 +15,7 @@ lobbyMapController.placements = {
         data = {
             mapTexture = "",
             totalMaps = 10,
+            roomIndex = 0,
             customMarkers = "",
             warpIcon = "CollabUtils2/lobbies/warp",
             rainbowBerryIcon = "CollabUtils2/lobbies/rainbowBerry",

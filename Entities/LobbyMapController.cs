@@ -122,6 +122,12 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             public int TotalMaps;
 
             /// <summary>
+            /// The index to use when sorting rooms within a single map.  Defaults to 0.
+            /// If there is more than one room in a map with the same index, they will be sorted by room name.
+            /// </summary>
+            public int RoomIndex;
+
+            /// <summary>
             /// An array of custom entity names that should be considered <see cref="MarkerType.Map"/> markers.
             /// These entities must have a "map" attribute containing the SID of the target map.
             /// </summary>
@@ -155,6 +161,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             public ControllerInfo(EntityData data, MapData mapData = null) {
                 MapTexture = data.Attr("mapTexture");
                 TotalMaps = data.Int("totalMaps");
+                RoomIndex = data.Int("roomIndex", 0);
 
                 WarpIcon = data.Attr("warpIcon", "CollabUtils2/lobbies/warp");
                 RainbowBerryIcon = data.Attr("rainbowBerryIcon", "CollabUtils2/lobbies/rainbowBerry");

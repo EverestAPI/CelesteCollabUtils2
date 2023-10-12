@@ -3,7 +3,8 @@ module CollabUtils2MiniHeart
 using ..Ahorn, Maple
 
 @mapdef Entity "CollabUtils2/MiniHeart" MiniHeart(x::Integer, y::Integer, sprite::String="beginner", refillDash::Bool=true, requireDashToBreak::Bool=true, noGhostSprite::Bool=false, particleColor::String="", playPulseSound::Bool=true)
-@mapdef Entity "CollabUtils2/FakeMiniHeart" FakeMiniHeart(x::Integer, y::Integer, sprite::String="beginner", refillDash::Bool=true, requireDashToBreak::Bool=true, noGhostSprite::Bool=false, particleColor::String="", playPulseSound::Bool=true, playBreakSound::Bool=false)
+@mapdef Entity "CollabUtils2/FakeMiniHeart" FakeMiniHeart(x::Integer, y::Integer, sprite::String="beginner", refillDash::Bool=true, requireDashToBreak::Bool=true,
+    noGhostSprite::Bool=false, particleColor::String="", playPulseSound::Bool=true, playBreakSound::Bool=false, flagOnBreak::String="")
 
 heartUnion = Union{MiniHeart, FakeMiniHeart}
 

@@ -64,4 +64,4 @@ collabutils2_lobbymap_confirm= Confirm
 collabutils2_lobbymap_hold_to_pan= Hold to Pan
 collabutils2_lobbymap_pan= Pan
 collabutils2_lobbymap_zoom= Zoom
-collabutils2_lobbymap_notify_keybinds= New keybinds are available in Mod Options!
+collabutils2_lobbymap_notify_keybinds= Map keybinds are available under Mod Options > Collab Utils 2

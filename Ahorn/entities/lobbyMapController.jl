@@ -4,7 +4,7 @@ using ..Ahorn, Maple
 
 @mapdef Entity "CollabUtils2/LobbyMapController" LobbyMapController(
     x::Integer, y::Integer,
-    mapTexture::String="", totalMaps::Integer=10, customMarkers::String="",
+    mapTexture::String="", totalMaps::Integer=10, roomIndex::Integer=0, customMarkers::String="",
     warpIcon::String="CollabUtils2/lobbies/warp", rainbowBerryIcon::String="CollabUtils2/lobbies/rainbowBerry",
     heartGateIcon::String="CollabUtils2/lobbies/heartgate", gymIcon::String="CollabUtils2/lobbies/gym",
     mapIcon::String="CollabUtils2/lobbies/map", journalIcon::String="CollabUtils2/lobbies/journal",

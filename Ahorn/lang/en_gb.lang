@@ -25,6 +25,7 @@ placements.entities.CollabUtils2/FakeMiniHeart.tooltips.noGhostSprite=If checked
 placements.entities.CollabUtils2/FakeMiniHeart.tooltips.particleColor=The color of the particles emitted by the fake mini heart. Leave empty to use default colors.
 placements.entities.CollabUtils2/FakeMiniHeart.tooltips.playPulseSound=Whether the heart should play a sound along with its pulse.
 placements.entities.CollabUtils2/FakeMiniHeart.tooltips.playBreakSound=Whether the heart should play a refill sound when broken.
+placements.entities.CollabUtils2/FakeMiniHeart.tooltips.flagOnBreak=If filled out, the given flag will be set when the fake mini heart is broken.
 
 # Rainbow Berry
 placements.entities.CollabUtils2/RainbowBerry.tooltips.levelSet=The rainbow berry will only spawn if all silver berries in this level set have been collected.
@@ -82,6 +83,7 @@ placements.entities.CollabUtils2/LobbyMapController.tooltips.showMaps=Whether ma
 placements.entities.CollabUtils2/LobbyMapController.tooltips.showJournals=Whether journals should be shown on the lobby map.
 placements.entities.CollabUtils2/LobbyMapController.tooltips.showHeartCount=Whether the currently collected heart count should appear in the top left.
 placements.entities.CollabUtils2/LobbyMapController.tooltips.revealWhenAllMarkersFound=Whether the entire map should be revealed once every marker has been uncovered.
+placements.entities.CollabUtils2/LobbyMapController.tooltips.roomIndex=The index to use when sorting rooms within a single map.\nIf there is more than one room in a map with the same index, they will be sorted by room name.
 
 # Lobby Map Warp
 placements.entities.CollabUtils2/LobbyMapWarp.tooltips.warpId=A unique identifier to represent this warp point. It will be used to sort the warps when selecting.
