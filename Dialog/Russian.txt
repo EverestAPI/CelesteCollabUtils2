@@ -1,0 +1,67 @@
+modname_collabutils2= Collab Utils 2
+modoptions_collab_title= Collab Utils 2
+
+collabutils2_returntolobby=     Вернуться в Лобби
+collabutils2_restartspeedberry= Перезапустить Скоростную Ягоду
+
+collabutils2_returntolobby_confirm_title=       ВЕРНУТЬСЯ В ЛОББИ?
+collabutils2_returntolobby_confirm_note1=       Если вы выберите "Сохранить", вы сможете продолжить с места на котором остановились,
+collabutils2_returntolobby_confirm_note2=       вернувшись к карте в лобби и выбрав "Продолжить".
+collabutils2_returntolobby_confirm_save=        Сохранить
+collabutils2_returntolobby_confirm_donotsave=   Не сохранять
+collabutils2_returntolobby_confirm_cancel=      Отмена
+
+collabutils2_speedberry_gold=       Золото:
+collabutils2_speedberry_silver=     Серебро:
+collabutils2_speedberry_bronze=     Бронза:
+collabutils2_speedberry_timeranout= Время вышло!
+
+collabutils2_difficulty_beginner=       Бегинер
+collabutils2_difficulty_intermediate=   Интермедиэйт
+collabutils2_difficulty_advanced=       Адвансед
+collabutils2_difficulty_expert=         Эксперт
+collabutils2_difficulty_grandmaster=    Грандмастер
+
+collabutils2_overworld_gym=     ИЗУЧИТЬ
+collabutils2_overworld_exit=    ВЕРНУТЬСЯ В ЛОББИ
+
+collabutils2_chapterpanel_continue= Продолжить
+collabutils2_chapterpanel_start=    Начать с Начала
+
+collabutils2_speedberry_optionmessage=
+    Вы можете изменить положение таймера скоростной ягоды в {# 9B3FB5}Настроках Модов{#}.
+
+modoptions_collab_speedberrytimerposition=              Позиция Таймера Скоростной Ягоды
+modoptions_collab_speedberrytimerposition_topleft=      Верх-Лево
+modoptions_collab_speedberrytimerposition_topcenter=    Верх-Центр
+modoptions_collab_hidespeedberrytimerduringgameplay=    Скрывать Таймер во Время Игры
+
+modoptions_collab_displayendscreenforallmaps= Показывать Финальный Экран для Всех Карт
+modoptions_collab_displayendscreenforallmaps_description= Необходимо для верефикации забегов на speedrun.com
+
+modoptions_collab_besttimetodisplayinjournal=               Лучшее Время Для Отображения в Журнале
+modoptions_collab_besttimetodisplayinjournal_speedberry=    Скоростная Ягода
+modoptions_collab_besttimetodisplayinjournal_chaptertimer=  Время Главы
+
+modoptions_collab_savebydefaultwhenreturningtolobby= Всегда Сохранять и Выходить в Лобби
+
+modoptions_collab_displaylobbymap=  Показать Карту Лобби
+modoptions_collab_holdtopan=        Удерживать Для Прокрутки
+modoptions_collab_panlobbymapup=    Прокрутить Вниз
+modoptions_collab_panlobbymapdown=  Прокрутить Вверх
+modoptions_collab_panlobbymapleft=  Прокрутить Влево
+modoptions_collab_panlobbymapright= Прокрутить Вправо
+
+collabutils2_assist_skip=               Открыть Врата Сердец
+collabutils2_assist_skip_confirm=       Это навсегда откроет Врата Сердец.{n}Вы уверены?
+collabutils2_assist_skip_confirm_yes=   Да
+collabutils2_assist_skip_confirm_no=    Нет
+
+collabutils2_lobbymap_change_destination=   Сменить Скамейку
+collabutils2_lobbymap_change_lobby=         Сменить Лобби
+collabutils2_lobbymap_close=                Закрыть
+collabutils2_lobbymap_confirm=              Принять
+collabutils2_lobbymap_hold_to_pan=          Удерживать Для Прокрутки
+collabutils2_lobbymap_pan=                  Прокрутка
+collabutils2_lobbymap_zoom=                 Отдаление
+collabutils2_lobbymap_notify_keybinds=      Новые Кнопки доступны в Настройках Модов!
