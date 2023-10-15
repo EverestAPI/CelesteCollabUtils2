@@ -321,7 +321,7 @@ namespace Celeste.Mod.CollabUtils2 {
             // target check: areaData.GetLevelSet() != levelSet
             if (cursor.TryGotoNext(MoveType.After,
                 instr => instr.MatchLdloc(6), // AreaData getting considered
-                instr => instr.MatchCall(typeof(AreaDataExt), "GetLevelSet"),
+                instr => instr.MatchCall(typeof(AreaDataExt), "GetLevelSet") || instr.MatchCallvirt<AreaData>("get_LevelSet"),
                 instr => instr.MatchLdloc(3), // current level set
                 instr => instr.MatchCall<string>("op_Inequality"))) {
 
