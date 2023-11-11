@@ -56,7 +56,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (CollabModule.Instance.Settings.BestTimeToDisplayInJournal == CollabSettings.BestTimeInJournal.SpeedBerry) {
                 // start going through all maps belonging to our assigned level set.
                 foreach (AreaStats item in SaveData.Instance.Areas_Safe) {
-                    if (item.LevelSet == levelSet && CollabMapDataProcessor.SpeedBerries.ContainsKey(item.GetSID())) {
+                    if (item.LevelSet == levelSet && CollabMapDataProcessor.SpeedBerries.ContainsKey(item.SID)) {
                         // this level has a speed berry!
                         return true;
                     }
@@ -120,8 +120,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     AreaData adata = AreaData.Get(a);
                     AreaData bdata = AreaData.Get(b);
 
-                    bool aHeartSide = LobbyHelper.IsHeartSide(a.GetSID());
-                    bool bHeartSide = LobbyHelper.IsHeartSide(b.GetSID());
+                    bool aHeartSide = LobbyHelper.IsHeartSide(a.SID);
+                    bool bHeartSide = LobbyHelper.IsHeartSide(b.SID);
 
                     // heart sides should appear last.
                     if (aHeartSide && !bHeartSide)
@@ -136,7 +136,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             foreach (AreaStats item in sortedMaps) {
                 AreaData areaData = AreaData.Get(item.ID_Safe);
-                if (LobbyHelper.IsHeartSide(areaData.GetSID())) {
+                if (LobbyHelper.IsHeartSide(areaData.SID)) {
                     if (allMapsDone || item.TotalTimePlayed > 0) {
                         // add a separator, like the one between regular maps and Farewell
                         currentPage.table.AddRow();
@@ -183,8 +183,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 }
 
                 AreaStats stats = SaveData.Instance.GetAreaStatsFor(areaData.ToKey());
-                if (CollabMapDataProcessor.SilverBerries.TryGetValue(areaData.GetLevelSet(), out Dictionary<string, EntityID> levelSetBerries)
-                    && levelSetBerries.TryGetValue(areaData.GetSID(), out EntityID berryID)
+                if (CollabMapDataProcessor.SilverBerries.TryGetValue(areaData.LevelSet, out Dictionary<string, EntityID> levelSetBerries)
+                    && levelSetBerries.TryGetValue(areaData.SID, out EntityID berryID)
                     && stats.Modes[0].Strawberries.Contains(berryID)) {
 
                     // silver berry was obtained!
@@ -218,8 +218,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 }
 
                 if (displaySpeedBerryColumn) {
-                    if (CollabMapDataProcessor.SpeedBerries.TryGetValue(item.GetSID(), out CollabMapDataProcessor.SpeedBerryInfo speedBerryInfo)
-                        && CollabModule.Instance.SaveData.SpeedBerryPBs.TryGetValue(item.GetSID(), out long speedBerryPB)) {
+                    if (CollabMapDataProcessor.SpeedBerries.TryGetValue(item.SID, out CollabMapDataProcessor.SpeedBerryInfo speedBerryInfo)
+                        && CollabModule.Instance.SaveData.SpeedBerryPBs.TryGetValue(item.SID, out long speedBerryPB)) {
 
                         row.Add(new TextCell(Dialog.Time(speedBerryPB), currentPage.TextJustify, 0.5f, getRankColor(speedBerryInfo, speedBerryPB)));
                         row.Add(new IconCell(getRankIcon(speedBerryInfo, speedBerryPB)));

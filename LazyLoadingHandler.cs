@@ -44,9 +44,10 @@ namespace Celeste.Mod.CollabUtils2 {
         private static string latestMapSID = null;
         private static bool preloadingTextures = false;
         private static ILHook hookOnTextureSafe;
+        private static ILHook hookOnContentCrawl;
 
         public static void Load() {
-            IL.Celeste.Mod.Everest.Content.Crawl += registerLazyLoadingModsOnLoad;
+            hookOnContentCrawl = new ILHook(typeof(Everest.Content).GetMethod("Crawl"), registerLazyLoadingModsOnLoad);
             IL.Monocle.VirtualTexture.Preload += turnOnLazyLoadingSelectively;
             On.Celeste.LevelLoader.ctor += lazilyLoadTextures;
             On.Monocle.VirtualTexture.Reload += onTextureLazyLoad;
@@ -61,7 +62,9 @@ namespace Celeste.Mod.CollabUtils2 {
         }
 
         public static void Unload() {
-            IL.Celeste.Mod.Everest.Content.Crawl -= registerLazyLoadingModsOnLoad;
+            hookOnContentCrawl?.Dispose();
+            hookOnContentCrawl = null;
+
             IL.Monocle.VirtualTexture.Preload -= turnOnLazyLoadingSelectively;
             On.Celeste.LevelLoader.ctor -= lazilyLoadTextures;
             On.Monocle.VirtualTexture.Reload -= onTextureLazyLoad;

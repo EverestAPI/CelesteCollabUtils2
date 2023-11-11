@@ -47,12 +47,12 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         belongsToCollab = true;
                     } else {
                         string lobby = LobbyHelper.GetLobbyForLevelSet(item.LevelSet);
-                        if (lobby != null && AreaData.Get(lobby).GetLevelSet() == SaveData.Instance.LevelSet) {
+                        if (lobby != null && AreaData.Get(lobby).LevelSet == SaveData.Instance.LevelSet) {
                             belongsToCollab = true;
                         }
                     }
 
-                    if (belongsToCollab && CollabMapDataProcessor.SpeedBerries.ContainsKey(item.GetSID())) {
+                    if (belongsToCollab && CollabMapDataProcessor.SpeedBerries.ContainsKey(item.SID)) {
                         // this level has a speed berry!
                         return true;
                     }
@@ -99,8 +99,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             foreach (AreaStats item in SaveData.Instance.Areas_Safe) {
                 AreaData areaData = AreaData.Get(item.ID_Safe);
-                if (areaData.GetLevelSet() == SaveData.Instance.LevelSet) {
-                    string lobbyMapLevelSetName = LobbyHelper.GetLobbyLevelSet(areaData.GetSID());
+                if (areaData.LevelSet == SaveData.Instance.LevelSet) {
+                    string lobbyMapLevelSetName = LobbyHelper.GetLobbyLevelSet(areaData.SID);
                     LevelSetStats lobbyMapLevelSet = null;
                     if (lobbyMapLevelSetName != null) {
                         lobbyMapLevelSet = SaveData.Instance.GetLevelSetStatsFor(lobbyMapLevelSetName);
@@ -127,8 +127,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         lobbyAllMapsCompletedInSingleRun &= lobbyMap.Modes[0].SingleRunCompleted;
 
                         if (displaySpeedBerryColumn) {
-                            if (CollabMapDataProcessor.SpeedBerries.TryGetValue(lobbyMap.GetSID(), out CollabMapDataProcessor.SpeedBerryInfo mapSpeedBerryInfo)
-                                && CollabModule.Instance.SaveData.SpeedBerryPBs.TryGetValue(lobbyMap.GetSID(), out long mapSpeedBerryPB)) {
+                            if (CollabMapDataProcessor.SpeedBerries.TryGetValue(lobbyMap.SID, out CollabMapDataProcessor.SpeedBerryInfo mapSpeedBerryInfo)
+                                && CollabModule.Instance.SaveData.SpeedBerryPBs.TryGetValue(lobbyMap.SID, out long mapSpeedBerryPB)) {
 
                                 lobbySpeedBerryLevel = Math.Max(getRankLevel(mapSpeedBerryInfo, mapSpeedBerryPB), lobbySpeedBerryLevel);
                                 lobbySumOfBestTimes += mapSpeedBerryPB;
@@ -144,8 +144,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         }
 
                         bool goldenBerryNotObtained = !lobbyMap.Modes[0].Strawberries.Any(berry => lobbyAreaData.Mode[0].MapData.Goldenberries.Any(golden => golden.ID == berry.ID && golden.Level.Name == berry.Level));
-                        bool silverBerryNotObtained = !CollabMapDataProcessor.SilverBerries.TryGetValue(lobbyMap.GetLevelSet(), out Dictionary<string, EntityID> levelSetBerries)
-                            || !levelSetBerries.TryGetValue(lobbyMap.GetSID(), out EntityID berryID)
+                        bool silverBerryNotObtained = !CollabMapDataProcessor.SilverBerries.TryGetValue(lobbyMap.LevelSet, out Dictionary<string, EntityID> levelSetBerries)
+                            || !levelSetBerries.TryGetValue(lobbyMap.SID, out EntityID berryID)
                             || !lobbyMap.Modes[0].Strawberries.Contains(berryID);
 
                         if (goldenBerryNotObtained && silverBerryNotObtained) {
@@ -170,7 +170,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         strawberryText = "-";
                     }
 
-                    string heartTexturePath = lobbyMapLevelSetName ?? areaData.GetSID();
+                    string heartTexturePath = lobbyMapLevelSetName ?? areaData.SID;
                     string heartTexture = MTN.Journal.Has("CollabUtils2Hearts/" + heartTexturePath) ? "CollabUtils2Hearts/" + heartTexturePath : "heartgem0";
 
                     string areaName = Dialog.Clean(areaData.Name);

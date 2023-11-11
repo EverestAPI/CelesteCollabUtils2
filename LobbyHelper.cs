@@ -28,6 +28,13 @@ namespace Celeste.Mod.CollabUtils2 {
         private static ILHook hookOnLevelSetSwitch;
         private static ILHook hookOnOuiFileSelectSlotRender;
 
+        private static ILHook hookMapSearchReloadItems;
+        private static ILHook hookMapListReloadItems;
+        private static ILHook hookMapListCreateMenu;
+        private static ILHook hookLevelSetPicker;
+        private static Hook hookGetMapIconURL;
+        private static ILHook hookUpdatePresence;
+
         private static HashSet<string> collabNames = new HashSet<string>();
 
         internal static void OnInitialize() {
@@ -171,10 +178,12 @@ namespace Celeste.Mod.CollabUtils2 {
 
             // hiding collab maps from chapter select
             hookOnLevelSetSwitch = HookHelper.HookCoroutine(typeof(OuiHelper_ChapterSelect_LevelSet).FullName, "Enter", modLevelSetSwitch);
-            IL.Celeste.Mod.UI.OuiMapSearch.ReloadItems += modMapSearch;
-            IL.Celeste.Mod.UI.OuiMapList.ReloadItems += modMapListReloadItems;
-            IL.Celeste.Mod.UI.OuiMapList.CreateMenu += modMapListCreateMenu;
-            IL.Celeste.Mod.UI.OuiFileSelectSlotLevelSetPicker.changeStartingLevelSet += modFileSelectChangeStartingLevelSet;
+            hookMapSearchReloadItems = new ILHook(typeof(OuiMapSearch).GetMethod("ReloadItems", BindingFlags.NonPublic | BindingFlags.Instance), modMapSearch);
+            hookMapListReloadItems = new ILHook(typeof(OuiMapList).GetMethod("ReloadItems", BindingFlags.NonPublic | BindingFlags.Instance), modMapListReloadItems);
+            hookMapListCreateMenu = new ILHook(typeof(OuiMapList).GetMethod("CreateMenu", BindingFlags.NonPublic | BindingFlags.Instance), modMapListCreateMenu);
+            hookLevelSetPicker = new ILHook(
+                typeof(Everest).Assembly.GetType("Celeste.Mod.UI.OuiFileSelectSlotLevelSetPicker").GetMethod("changeStartingLevelSet", BindingFlags.NonPublic | BindingFlags.Instance),
+                modFileSelectChangeStartingLevelSet);
 
             On.Celeste.SaveData.RegisterHeartGem += onRegisterHeartGem;
             On.Celeste.SaveData.RegisterPoemEntry += onRegisterPoemEntry;
@@ -192,8 +201,10 @@ namespace Celeste.Mod.CollabUtils2 {
             hookOnOuiFileSelectSlotGolden = new ILHook(typeof(OuiFileSelectSlot).GetMethod("get_Golden", BindingFlags.NonPublic | BindingFlags.Instance), modSelectSlotCollectedStrawberries);
             hookOnOuiFileSelectSlotRender = new ILHook(typeof(OuiFileSelectSlot).GetMethod("orig_Render"), modOuiFileSelectSlotRender);
 
-            On.Celeste.Mod.Everest.DiscordSDK.GetMapIconURLCached += onDiscordGetPresenceIcon;
-            IL.Celeste.Mod.Everest.DiscordSDK.UpdatePresence += modDiscordChangePresence;
+            hookGetMapIconURL = new Hook(
+                typeof(Everest.DiscordSDK).GetMethod("GetMapIconURLCached", BindingFlags.NonPublic | BindingFlags.Instance),
+                typeof(LobbyHelper).GetMethod("onDiscordGetPresenceIcon", BindingFlags.NonPublic | BindingFlags.Static));
+            hookUpdatePresence = new ILHook(typeof(Everest.DiscordSDK).GetMethod("UpdatePresence", BindingFlags.NonPublic | BindingFlags.Instance), modDiscordChangePresence);
 
             typeof(ModExports).ModInterop();
         }
@@ -203,10 +214,15 @@ namespace Celeste.Mod.CollabUtils2 {
             On.Celeste.Player.Update -= onPlayerUpdate;
 
             hookOnLevelSetSwitch?.Dispose();
-            IL.Celeste.Mod.UI.OuiMapSearch.ReloadItems -= modMapSearch;
-            IL.Celeste.Mod.UI.OuiMapList.ReloadItems -= modMapListReloadItems;
-            IL.Celeste.Mod.UI.OuiMapList.CreateMenu -= modMapListCreateMenu;
-            IL.Celeste.Mod.UI.OuiFileSelectSlotLevelSetPicker.changeStartingLevelSet -= modFileSelectChangeStartingLevelSet;
+            hookOnLevelSetSwitch = null;
+            hookMapSearchReloadItems?.Dispose();
+            hookMapSearchReloadItems = null;
+            hookMapListReloadItems?.Dispose();
+            hookMapListReloadItems = null;
+            hookMapListCreateMenu?.Dispose();
+            hookMapListCreateMenu = null;
+            hookLevelSetPicker?.Dispose();
+            hookLevelSetPicker = null;
 
             On.Celeste.SaveData.RegisterHeartGem -= onRegisterHeartGem;
             On.Celeste.SaveData.RegisterPoemEntry -= onRegisterPoemEntry;
@@ -224,8 +240,10 @@ namespace Celeste.Mod.CollabUtils2 {
             hookOnOuiFileSelectSlotGolden?.Dispose();
             hookOnOuiFileSelectSlotRender?.Dispose();
 
-            On.Celeste.Mod.Everest.DiscordSDK.GetMapIconURLCached -= onDiscordGetPresenceIcon;
-            IL.Celeste.Mod.Everest.DiscordSDK.UpdatePresence -= modDiscordChangePresence;
+            hookGetMapIconURL?.Dispose();
+            hookGetMapIconURL = null;
+            hookUpdatePresence?.Dispose();
+            hookUpdatePresence = null;
 
             if (Everest.Loader.DependencyLoaded(new EverestModuleMetadata() { Name = "CelesteNet.Client", Version = new Version(2, 0, 0) })) {
                 teardownAdjustCollabIcon();
@@ -250,7 +268,7 @@ namespace Celeste.Mod.CollabUtils2 {
             }
         }
 
-        private static string onDiscordGetPresenceIcon(On.Celeste.Mod.Everest.DiscordSDK.orig_GetMapIconURLCached orig, Everest.DiscordSDK self, AreaData areaData) {
+        private static string onDiscordGetPresenceIcon(Func<Everest.DiscordSDK, AreaData, string> orig, Everest.DiscordSDK self, AreaData areaData) {
             // if we are in a collab map, change the icon displayed in Discord Rich Presence to the lobby icon.
             string lobbySID = GetLobbyForMap(areaData.SID);
             if (lobbySID != null) {
@@ -269,7 +287,7 @@ namespace Celeste.Mod.CollabUtils2 {
 
                 cursor.Emit(OpCodes.Ldarg_1);
                 cursor.EmitDelegate<Func<int, Session, int>>((orig, session) => {
-                    if (IsCollabMap(session.Area.GetSID())) {
+                    if (IsCollabMap(session.Area.SID)) {
                         // prevent Everest from displaying the chapter number
                         return -1;
                     }
@@ -280,13 +298,13 @@ namespace Celeste.Mod.CollabUtils2 {
 
         public static void OnSessionCreated() {
             Session session = SaveData.Instance.CurrentSession_Safe;
-            string levelSet = GetLobbyLevelSet(session.Area.GetSID());
+            string levelSet = GetLobbyLevelSet(session.Area.SID);
             if (levelSet != null && SaveData.Instance.GetLevelSetStatsFor(levelSet) != null) {
                 // set session flags for each completed map in the level set.
                 // this will allow, for example, stylegrounds to get activated after completing a map.
                 foreach (string mapName in SaveData.Instance.GetLevelSetStatsFor(levelSet).Areas
                     .Where(area => area.Modes[0].HeartGem)
-                    .Select(area => area.GetSID().Substring(levelSet.Length + 1))) {
+                    .Select(area => area.SID.Substring(levelSet.Length + 1))) {
 
                     session.SetFlag($"CollabUtils2_MapCompleted_{mapName}");
                 }
@@ -318,7 +336,7 @@ namespace Celeste.Mod.CollabUtils2 {
         private static void modLevelSetSwitch(ILContext il) {
             ILCursor cursor = new ILCursor(il);
 
-            // target check: areaData.GetLevelSet() != levelSet
+            // target check: areaData.LevelSet != levelSet
             if (cursor.TryGotoNext(MoveType.After,
                 instr => instr.MatchLdloc(6), // AreaData getting considered
                 instr => instr.MatchCall(typeof(AreaDataExt), "GetLevelSet") || instr.MatchCallvirt<AreaData>("get_LevelSet"),
@@ -327,10 +345,10 @@ namespace Celeste.Mod.CollabUtils2 {
 
                 Logger.Log("CollabUtils2/LobbyHelper", $"Making chapter select skip hidden collab level sets at {cursor.Index} in IL for OuiHelper_ChapterSelect_LevelSet.Enter");
 
-                // becomes: areaData.GetLevelSet() != levelSet && !IsCollabLevelSet(areaData.GetLevelSet())
+                // becomes: areaData.LevelSet != levelSet && !IsCollabLevelSet(areaData.LevelSet)
                 cursor.Emit(OpCodes.Ldloc_S, (byte) 6);
                 cursor.EmitDelegate<Func<bool, AreaData, bool>>((orig, areaData) =>
-                    orig && !IsCollabLevelSet(areaData.GetLevelSet()));
+                    orig && !IsCollabLevelSet(areaData.LevelSet));
             }
         }
 
@@ -347,11 +365,11 @@ namespace Celeste.Mod.CollabUtils2 {
 
                 Logger.Log("CollabUtils2/LobbyHelper", $"Hiding collab entries in map search at {cursor.Index} in IL for OuiMapSearch.ReloadItems");
 
-                // becomes: area.HasMode(AreaMode.Normal) && !IsCollabLevelSet(area.GetLevelSet())
+                // becomes: area.HasMode(AreaMode.Normal) && !IsCollabLevelSet(area.LevelSet)
                 cursor.Emit(OpCodes.Ldloc_S, (byte) 13);
                 cursor.Emit(OpCodes.Ldfld, cursor.Instrs[cursor.Index - 4].Operand as FieldReference);
                 cursor.EmitDelegate<Func<bool, AreaData, bool>>((orig, areaData) =>
-                    orig && !IsCollabLevelSet(areaData.GetLevelSet()));
+                    orig && !IsCollabLevelSet(areaData.LevelSet));
             }
         }
 
@@ -369,11 +387,11 @@ namespace Celeste.Mod.CollabUtils2 {
 
                 Logger.Log("CollabUtils2/LobbyHelper", $"Hiding collab entries from map list at {cursor.Index} in IL for OuiMapList.ReloadItems");
 
-                // becomes: area.HasMode((AreaMode)side) && !IsCollabLevelSet(area.GetLevelSet())
+                // becomes: area.HasMode((AreaMode)side) && !IsCollabLevelSet(area.LevelSet)
                 cursor.Emit(OpCodes.Ldloc_S, (byte) 12);
                 cursor.Emit(OpCodes.Ldfld, cursor.Instrs[cursor.Index - 5].Operand as FieldReference);
                 cursor.EmitDelegate<Func<bool, AreaData, bool>>((orig, areaData) =>
-                    orig && !IsCollabLevelSet(areaData.GetLevelSet()));
+                    orig && !IsCollabLevelSet(areaData.LevelSet));
             }
         }
 
@@ -392,14 +410,14 @@ namespace Celeste.Mod.CollabUtils2 {
                 cursor.Emit(OpCodes.Ldloc_0);
                 cursor.Emit(OpCodes.Ldarg_1);
                 cursor.EmitDelegate<Func<int, int, int>>((id, direction) => {
-                    string currentLevelSet = AreaData.Areas[id].GetLevelSet();
+                    string currentLevelSet = AreaData.Areas[id].LevelSet;
 
                     // repeat the move until the current level set isn't a collab level set anymore.
                     while (IsCollabLevelSet(currentLevelSet)) {
                         if (direction > 0) {
-                            id = AreaData.Areas.FindLastIndex(area => area.GetLevelSet() == currentLevelSet) + direction;
+                            id = AreaData.Areas.FindLastIndex(area => area.LevelSet == currentLevelSet) + direction;
                         } else {
-                            id = AreaData.Areas.FindIndex(area => area.GetLevelSet() == currentLevelSet) + direction;
+                            id = AreaData.Areas.FindIndex(area => area.LevelSet == currentLevelSet) + direction;
                         }
 
                         if (id >= AreaData.Areas.Count)
@@ -407,7 +425,7 @@ namespace Celeste.Mod.CollabUtils2 {
                         if (id < 0)
                             id = AreaData.Areas.Count - 1;
 
-                        currentLevelSet = AreaData.Areas[id].GetLevelSet();
+                        currentLevelSet = AreaData.Areas[id].LevelSet;
                     }
 
                     return id;
@@ -437,8 +455,8 @@ namespace Celeste.Mod.CollabUtils2 {
         private static void onRegisterHeartGem(On.Celeste.SaveData.orig_RegisterHeartGem orig, SaveData self, AreaKey area) {
             orig(self, area);
 
-            if (IsHeartSide(area.GetSID())) {
-                string lobby = GetLobbyForLevelSet(area.GetLevelSet());
+            if (IsHeartSide(area.SID)) {
+                string lobby = GetLobbyForLevelSet(area.LevelSet);
                 if (lobby != null) {
                     // register the heart gem for the lobby as well.
                     self.RegisterHeartGem(AreaData.Get(lobby).ToKey());
@@ -450,11 +468,11 @@ namespace Celeste.Mod.CollabUtils2 {
             bool result = orig(self, id);
 
             AreaKey currentArea = (Engine.Scene as Level)?.Session?.Area ?? AreaKey.Default;
-            if (IsHeartSide(currentArea.GetSID())) {
-                string lobby = GetLobbyForLevelSet(currentArea.GetLevelSet());
+            if (IsHeartSide(currentArea.SID)) {
+                string lobby = GetLobbyForLevelSet(currentArea.LevelSet);
                 if (lobby != null) {
                     // register the poem for the lobby level set as well.
-                    List<string> levelSetPoem = self.GetLevelSetStatsFor(AreaData.Get(lobby).GetLevelSet()).Poem;
+                    List<string> levelSetPoem = self.GetLevelSetStatsFor(AreaData.Get(lobby).LevelSet).Poem;
                     if (!levelSetPoem.Contains(id)) {
                         levelSetPoem.Add(id);
                     }
@@ -468,8 +486,8 @@ namespace Celeste.Mod.CollabUtils2 {
             orig(self, session);
 
             AreaKey currentArea = session.Area;
-            if (IsHeartSide(currentArea.GetSID())) {
-                string lobby = GetLobbyForLevelSet(currentArea.GetLevelSet());
+            if (IsHeartSide(currentArea.SID)) {
+                string lobby = GetLobbyForLevelSet(currentArea.LevelSet);
                 if (lobby != null) {
                     // completing the heart side should also complete the lobby.
                     AreaModeStats areaModeStats = SaveData.Instance.Areas_Safe[AreaData.Get(lobby).ID].Modes[0];
@@ -491,7 +509,7 @@ namespace Celeste.Mod.CollabUtils2 {
 
             if (self.CurrentSession_Safe == null || !self.CurrentSession_Safe.InArea) {
                 // we aren't in a level; check if we have a hidden level set selected (this should only happen with Alt-F4).
-                string lobby = GetLobbyForLevelSet(self.LastArea_Safe.GetLevelSet());
+                string lobby = GetLobbyForLevelSet(self.LastArea_Safe.LevelSet);
                 if (lobby != null) {
                     // we are! we should change the selected level to the matching lobby instead.
                     self.LastArea_Safe = AreaData.Get(lobby).ToKey();
@@ -503,7 +521,7 @@ namespace Celeste.Mod.CollabUtils2 {
             orig(self);
 
             // hide the (!) icon on collab lobbies.
-            if (self.New && IsCollabLobby(AreaData.Areas[self.Area].GetSID())) {
+            if (self.New && IsCollabLobby(AreaData.Areas[self.Area].SID)) {
                 self.New = false;
             }
         }
@@ -514,7 +532,7 @@ namespace Celeste.Mod.CollabUtils2 {
                 yield return origRoutine.Current;
             }
 
-            string collab = collabNames.FirstOrDefault(collabName => AreaData.Get(self.Area).GetLevelSet() == $"{collabName}/0-Lobbies");
+            string collab = collabNames.FirstOrDefault(collabName => AreaData.Get(self.Area).LevelSet == $"{collabName}/0-Lobbies");
             if (collab != null) {
                 // we just assist unlocked the lobbies!
                 LevelSetStats stats = SaveData.Instance.GetLevelSetStatsFor($"{collab}/0-Lobbies");
@@ -528,7 +546,7 @@ namespace Celeste.Mod.CollabUtils2 {
         }
 
         private static void onJournalEnter(OuiJournal journal, Oui from) {
-            if (collabNames.Any(collabName => SaveData.Instance.GetLevelSet() == $"{collabName}/0-Lobbies")) {
+            if (collabNames.Any(collabName => SaveData.Instance.LevelSet == $"{collabName}/0-Lobbies")) {
                 // customize the journal in the overworld for the collab.
                 for (int i = 0; i < journal.Pages.Count; i++) {
                     if (journal.Pages[i].GetType() != typeof(OuiJournalCover) && journal.Pages[i].GetType() != typeof(OuiJournalPoem)) {
@@ -547,7 +565,7 @@ namespace Celeste.Mod.CollabUtils2 {
             AreaKey? savedLastArea = null;
             string collab = collabNames.FirstOrDefault(collabName => self.SaveData?.LevelSet != null && self.SaveData.LevelSet.StartsWith($"{collabName}/") && self.SaveData.LevelSet != $"{collabName}/0-Lobbies");
             if (collab != null) {
-                AreaData firstMapFromCollab = AreaData.Areas.FirstOrDefault(area => area.GetLevelSet() == $"{collab}/0-Lobbies");
+                AreaData firstMapFromCollab = AreaData.Areas.FirstOrDefault(area => area.LevelSet == $"{collab}/0-Lobbies");
                 if (firstMapFromCollab != null) {
                     savedLastArea = self.SaveData.LastArea_Safe;
                     self.SaveData.LastArea_Safe = firstMapFromCollab.ToKey();
@@ -614,7 +632,7 @@ namespace Celeste.Mod.CollabUtils2 {
                         break;
                     }
                     if (!AreaData.Areas[item.ID_Safe].Interlude_Safe && AreaData.Areas[item.ID_Safe].CanFullClear) {
-                        string lobbyLevelSetName = GetLobbyLevelSet(item.GetSID());
+                        string lobbyLevelSetName = GetLobbyLevelSet(item.SID);
                         if (lobbyLevelSetName != null && MTN.Journal.Has("CollabUtils2Hearts/" + lobbyLevelSetName)) {
                             customJournalHearts.Add("CollabUtils2Hearts/" + lobbyLevelSetName);
                         } else {
@@ -644,7 +662,7 @@ namespace Celeste.Mod.CollabUtils2 {
         private static int countTotalHeartGemsForMapsThatHaveHearts(LevelSetStats levelSetStats) {
             return levelSetStats.AreasIncludingCeleste.Sum((AreaStats area) => {
                 int totalHeartGems = 0;
-                ModeProperties[] propertiesOfAllModes = AreaData.Get(area.GetSID())?.Mode ?? new ModeProperties[0];
+                ModeProperties[] propertiesOfAllModes = AreaData.Get(area.SID)?.Mode ?? new ModeProperties[0];
                 for (int i = 0; i < propertiesOfAllModes.Length && i < area.Modes.Length; i++) {
                     if (area.Modes[i].HeartGem) {
                         // the crystal heart of this map/mode was collected, so check if it has one before counting it in.
@@ -746,7 +764,7 @@ namespace Celeste.Mod.CollabUtils2 {
                 cursor.EmitDelegate<Func<string, string, string>>((orig, poem) => {
                     if (collabNames.Any(collabName => SaveData.Instance?.LevelSet == $"{collabName}/0-Lobbies")) {
                         foreach (AreaData area in AreaData.Areas) {
-                            string levelSetName = GetLobbyLevelSet(area.GetSID());
+                            string levelSetName = GetLobbyLevelSet(area.SID);
                             if (levelSetName != null
                                 && Dialog.Clean("poem_" + levelSetName + "_ZZ_HeartSide_A") == poem
                                 && MTN.Journal.Has("CollabUtils2Hearts/" + levelSetName)) {

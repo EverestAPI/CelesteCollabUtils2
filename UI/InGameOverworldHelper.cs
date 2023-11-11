@@ -109,6 +109,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private static bool presenceLock = false;
 
+        private static Hook onReloadLevelHook;
+        private static Hook onChangePresenceHook;
+
         internal static void Load() {
             Everest.Events.Level.OnPause += OnPause;
             On.Celeste.Audio.SetMusic += OnSetMusic;
@@ -125,11 +128,17 @@ namespace Celeste.Mod.CollabUtils2.UI {
             IL.Celeste.StrawberriesCounter.Render += ModStrawberriesCounterRender;
             On.Celeste.OuiChapterPanel.Start += OnOuiChapterPanelStart;
             On.Celeste.Player.Die += OnPlayerDie;
-            On.Celeste.Mod.AssetReloadHelper.ReloadLevel += OnReloadLevel;
+
+            onReloadLevelHook = new Hook(
+                typeof(AssetReloadHelper).GetMethod("ReloadLevel", new Type[0]),
+                typeof(InGameOverworldHelper).GetMethod("OnReloadLevel", BindingFlags.NonPublic | BindingFlags.Static));
+
             IL.Celeste.OuiChapterPanel._FixTitleLength += ModFixTitleLength;
             On.Celeste.OuiMainMenu.CreateButtons += OnOuiMainMenuCreateButtons;
 
-            On.Celeste.Mod.Everest.DiscordSDK.UpdatePresence += OnDiscordChangePresence;
+            onChangePresenceHook = new Hook(
+                typeof(Everest.DiscordSDK).GetMethod("UpdatePresence", BindingFlags.NonPublic | BindingFlags.Instance),
+                typeof(InGameOverworldHelper).GetMethod("OnDiscordChangePresence", BindingFlags.NonPublic | BindingFlags.Static));
 
             hookOnMapDataOrigLoad = new Hook(
                 typeof(MapData).GetMethod("orig_Load", BindingFlags.NonPublic | BindingFlags.Instance),
@@ -168,7 +177,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
             IL.Celeste.StrawberriesCounter.Render -= ModStrawberriesCounterRender;
             On.Celeste.OuiChapterPanel.Start -= OnOuiChapterPanelStart;
             On.Celeste.Player.Die -= OnPlayerDie;
-            On.Celeste.Mod.AssetReloadHelper.ReloadLevel -= OnReloadLevel;
+
+            onReloadLevelHook?.Dispose();
+            onReloadLevelHook = null;
+
             IL.Celeste.OuiChapterPanel._FixTitleLength -= ModFixTitleLength;
             On.Celeste.OuiMainMenu.CreateButtons -= OnOuiMainMenuCreateButtons;
 
@@ -180,7 +192,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
             hookOnMapDataOrigLoad?.Dispose();
             hookOnMapDataOrigLoad = null;
 
-            On.Celeste.Mod.Everest.DiscordSDK.UpdatePresence -= OnDiscordChangePresence;
+            onChangePresenceHook?.Dispose();
+            onChangePresenceHook = null;
         }
 
         private static void OnOuiChapterPanelStart(On.Celeste.OuiChapterPanel.orig_Start orig, OuiChapterPanel self, string checkpoint) {
@@ -192,7 +205,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 if (gymSubmenuSelected(self)) {
                     // We picked a map in the second menu: this is a gym.
                     self.Area.Mode = AreaMode.Normal;
-                    overworldData["gymExitMapSID"] = overworldData.Get<AreaData>("collabInGameForcedArea").GetSID();
+                    overworldData["gymExitMapSID"] = overworldData.Get<AreaData>("collabInGameForcedArea").SID;
                     overworldData["gymExitSaveAllowed"] = overworldData.Get<bool>("saveAndReturnToLobbyAllowed");
                     overworldData["saveAndReturnToLobbyAllowed"] = false;
                 } else if (returnToLobbySelected(self)) {
@@ -204,9 +217,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     return;
                 } else if (checkpoint != "collabutils_continue") {
                     // "continue" was not selected, so drop the saved state to start over.
-                    CollabModule.Instance.SaveData.SessionsPerLevel.Remove(self.Area.GetSID());
-                    CollabModule.Instance.SaveData.ModSessionsPerLevel.Remove(self.Area.GetSID());
-                    CollabModule.Instance.SaveData.ModSessionsPerLevelBinary.Remove(self.Area.GetSID());
+                    CollabModule.Instance.SaveData.SessionsPerLevel.Remove(self.Area.SID);
+                    CollabModule.Instance.SaveData.ModSessionsPerLevel.Remove(self.Area.SID);
+                    CollabModule.Instance.SaveData.ModSessionsPerLevelBinary.Remove(self.Area.SID);
                 }
             }
 
@@ -248,7 +261,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             return result;
         }
 
-        private static void OnReloadLevel(On.Celeste.Mod.AssetReloadHelper.orig_ReloadLevel orig) {
+        private static void OnReloadLevel(Action orig) {
             if (overworldWrapper != null) {
                 if (!(Engine.Scene is Level level)) {
                     level = AssetReloadHelper.ReturnToScene as Level;
@@ -268,7 +281,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
 
-        private static void OnDiscordChangePresence(On.Celeste.Mod.Everest.DiscordSDK.orig_UpdatePresence orig, Everest.DiscordSDK self, Session session) {
+        private static void OnDiscordChangePresence(Action<Everest.DiscordSDK, Session> orig, Everest.DiscordSDK self, Session session) {
             if (!presenceLock) {
                 orig(self, session);
             }
@@ -328,8 +341,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (!isPanelShowingLobby()) {
                 data["chapter"] = (new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea").Name + "_author").DialogCleanOrNull() ?? "";
 
-                if (CollabMapDataProcessor.GymLevels.ContainsKey(forceArea.GetSID())) {
-                    CollabMapDataProcessor.GymLevelInfo info = CollabMapDataProcessor.GymLevels[forceArea.GetSID()];
+                if (CollabMapDataProcessor.GymLevels.ContainsKey(forceArea.SID)) {
+                    CollabMapDataProcessor.GymLevelInfo info = CollabMapDataProcessor.GymLevels[forceArea.SID];
 
                     if (info.Tech.Any(name => CollabMapDataProcessor.GymTech.ContainsKey(name))) {
                         // some of the tech used here exists in gyms! be sure to display the "tech" tab.
@@ -368,7 +381,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             data["contentOffset"] = new Vector2(440f, data.Get<Vector2>("contentOffset").Y);
             data["height"] = 730f;
             data["option"] = 0;
-            data["gymTech"] = CollabMapDataProcessor.GymLevels[new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea").GetSID()].Tech;
+            data["gymTech"] = CollabMapDataProcessor.GymLevels[new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea").SID].Tech;
 
             IList checkpoints = data.Get<IList>("checkpoints");
             checkpoints.Clear();
@@ -390,7 +403,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 new DynamicData(checkpoint).Set("gymTechDifficulty", techInfo.Difficulty);
                 checkpoints.Add(checkpoint);
 
-                string currentSid = SaveData.Instance.CurrentSession_Safe.Area.GetSID();
+                string currentSid = SaveData.Instance.CurrentSession_Safe.Area.SID;
                 string currentRoom = SaveData.Instance.CurrentSession_Safe.Level;
 
                 if (techInfo.AreaSID == currentSid && techInfo.Level == currentRoom) {
@@ -428,7 +441,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private static void customizeCrystalHeart(OuiChapterPanel panel) {
             // customize heart gem icon
-            string sid = panel.Area.GetSID();
+            string sid = panel.Area.SID;
 
             Sprite[] heartSprites = new DynData<OuiChapterPanel>(panel).Get<HeartGemDisplay>("heart").Sprites;
             for (int side = 0; side < 3; side++) {
@@ -452,7 +465,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         /// <param name="side">The side to get the heart sprite for</param>
         /// <returns>The sprite ID to pass to HeartSpriteBank.Create to get the custom heart sprite, or null if none was found</returns>
         public static string GetGuiHeartSpriteId(string mapSID, AreaMode side) {
-            string mapLevelSet = AreaData.Get(mapSID)?.GetLevelSet().DialogKeyify();
+            string mapLevelSet = AreaData.Get(mapSID)?.LevelSet.DialogKeyify();
 
             string sideName = mapSID.DialogKeyify();
             if (side == AreaMode.BSide) {
@@ -499,7 +512,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 return orig(self, area) ||
                     Dialog.Has(new DynData<Overworld>(overworldWrapper.WrappedScene).Get<AreaData>("collabInGameForcedArea").Name + "_collabcredits") ||
                     Dialog.Has(new DynData<Overworld>(overworldWrapper.WrappedScene).Get<AreaData>("collabInGameForcedArea").Name + "_collabcreditstags") ||
-                    CollabModule.Instance.SaveData.SessionsPerLevel.ContainsKey(area.GetSID());
+                    CollabModule.Instance.SaveData.SessionsPerLevel.ContainsKey(area.SID);
             }
 
             return orig(self, area);
@@ -510,7 +523,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             // because in these cases we have stuff to display in the chapter panel, and vanilla wouldn't display anything.
             AreaModeStats areaModeStats = self.RealStats.Modes[(int) self.Area.Mode];
             if (Engine.Scene == overworldWrapper?.Scene && !AreaData.Get(self.Area).Interlude_Safe
-                && (areaModeStats.Deaths > 0 || CollabModule.Instance.SaveData.SpeedBerryPBs.ContainsKey(self.Area.GetSID()))) {
+                && (areaModeStats.Deaths > 0 || CollabModule.Instance.SaveData.SpeedBerryPBs.ContainsKey(self.Area.SID))) {
 
                 return 540;
             }
@@ -522,7 +535,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (Engine.Scene != overworldWrapper?.Scene || (!gymSubmenuSelected(self)
                 && !Dialog.Has(new DynData<Overworld>(overworldWrapper.WrappedScene).Get<AreaData>("collabInGameForcedArea").Name + "_collabcredits")
                 && !Dialog.Has(new DynData<Overworld>(overworldWrapper.WrappedScene).Get<AreaData>("collabInGameForcedArea").Name + "_collabcreditstags")
-                && !CollabModule.Instance.SaveData.SessionsPerLevel.ContainsKey(self.Area.GetSID()))) {
+                && !CollabModule.Instance.SaveData.SessionsPerLevel.ContainsKey(self.Area.SID))) {
 
                 // this isn't an in-game chapter panel, or there is no custom second page (no credits, no saved state, no gyms) => use vanilla
                 orig(self);
@@ -538,7 +551,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
 
             if (gymSubmenuSelected(self)) {
-                data["gymTech"] = CollabMapDataProcessor.GymLevels[new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea").GetSID()].Tech;
+                data["gymTech"] = CollabMapDataProcessor.GymLevels[new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea").SID].Tech;
 
                 self.Focused = false;
                 self.Overworld.ShowInputUI = !selectingMode;
@@ -579,7 +592,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             IList checkpoints = data.Get<IList>("checkpoints");
             checkpoints.Clear();
 
-            bool hasContinueOption = CollabModule.Instance.SaveData.SessionsPerLevel.ContainsKey(self.Area.GetSID());
+            bool hasContinueOption = CollabModule.Instance.SaveData.SessionsPerLevel.ContainsKey(self.Area.SID);
 
             checkpoints.Add(DynamicData.New(t_OuiChapterPanelOption)(new {
                 Label = Dialog.Clean(hasContinueOption ? "collabutils2_chapterpanel_start" : "overworld_start", null),
@@ -809,7 +822,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (CollabMapDataProcessor.GymTech.ContainsKey(collabTech[checkpointIndex])) {
                 CollabMapDataProcessor.GymTechInfo techInfo = CollabMapDataProcessor.GymTech[collabTech[checkpointIndex]];
 
-                string imageName = $"{LobbyHelper.GetCollabNameForSID(forcedArea.GetSID())}/Gyms/{collabTech[checkpointIndex]}";
+                string imageName = $"{LobbyHelper.GetCollabNameForSID(forcedArea.SID)}/Gyms/{collabTech[checkpointIndex]}";
                 MTexture imagePreview = MTN.Checkpoints.Has(imageName) ? MTN.Checkpoints[imageName] : null;
                 if (imagePreview != null) {
                     var optionData = new DynamicData(option);
@@ -977,7 +990,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             // mod the death icon: for the path, use the current level set, or for lobbies, the lobby's matching level set.
             string pathToSkull = "CollabUtils2/skulls/" + self.Area.GetLevelSet();
-            string lobbyLevelSet = LobbyHelper.GetLobbyLevelSet(self.Area.GetSID());
+            string lobbyLevelSet = LobbyHelper.GetLobbyLevelSet(self.Area.SID);
             if (lobbyLevelSet != null) {
                 pathToSkull = "CollabUtils2/skulls/" + lobbyLevelSet;
             }
@@ -990,7 +1003,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (isPanelShowingLobby(self) || Engine.Scene == overworldWrapper?.Scene) {
                 // turn strawberry counter into golden if there only are golden berries in the map
                 MapData mapData = AreaData.Get(self.Area).Mode[0].MapData;
-                if (mapData.GetDetectedStrawberriesIncludingUntracked() == mapData.Goldenberries.Count) {
+                if (mapData.DetectedStrawberriesIncludingUntracked == mapData.Goldenberries.Count) {
                     StrawberriesCounter strawberriesCounter = new DynData<OuiChapterPanel>(self).Get<StrawberriesCounter>("strawberries");
                     strawberriesCounter.Golden = true;
                     strawberriesCounter.ShowOutOf = false;
@@ -1186,7 +1199,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (panel == null) {
                 panel = (AssetReloadHelper.ReturnToScene as Overworld).GetUI<OuiChapterPanel>();
             }
-            string sid = panel.Area.GetSID();
+            string sid = panel.Area.SID;
             return sid;
         }
 
@@ -1206,14 +1219,14 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private static bool isPanelShowingLobby(OuiChapterPanel panel = null) {
             panel = panel ?? getChapterPanel();
-            return LobbyHelper.IsCollabLobby(panel?.Area.GetSID() ?? "");
+            return LobbyHelper.IsCollabLobby(panel?.Area.SID ?? "");
         }
 
         private static bool gymSubmenuSelected(OuiChapterPanel panel = null) {
             panel = panel ?? getChapterPanel();
             return panel != null && (new DynData<Overworld>(panel.Overworld).Data.ContainsKey("gymExitMapSID") ||
                 (panel.Area.Mode == AreaMode.BSide && CollabMapDataProcessor.GymLevels.ContainsKey(
-                new DynData<Overworld>(panel.Overworld).Get<AreaData>("collabInGameForcedArea").GetSID())));
+                new DynData<Overworld>(panel.Overworld).Get<AreaData>("collabInGameForcedArea").SID)));
         }
 
         private static bool returnToLobbySelected(OuiChapterPanel panel = null) {

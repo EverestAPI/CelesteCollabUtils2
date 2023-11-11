@@ -31,11 +31,11 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
                 journal.Pages.Add(new OuiJournalCoverWithStickers(journal));
 
                 // then, fill in the journal with our custom pages.
-                journal.Pages.AddRange(OuiJournalCollabProgressInLobby.GeneratePages(journal, forceArea.GetLevelSet(), showOnlyDiscovered));
+                journal.Pages.AddRange(OuiJournalCollabProgressInLobby.GeneratePages(journal, forceArea.LevelSet, showOnlyDiscovered));
 
                 // and add the map if we have it as well.
-                if (MTN.Journal.Has("collabLobbyMaps/" + forceArea.GetLevelSet())) {
-                    journal.Pages.Add(new OuiJournalLobbyMap(journal, MTN.Journal["collabLobbyMaps/" + forceArea.GetLevelSet()]));
+                if (MTN.Journal.Has("collabLobbyMaps/" + forceArea.LevelSet)) {
+                    journal.Pages.Add(new OuiJournalLobbyMap(journal, MTN.Journal["collabLobbyMaps/" + forceArea.LevelSet]));
                 }
 
                 // redraw the first page to include the stickers

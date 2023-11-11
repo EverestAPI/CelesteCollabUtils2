@@ -38,7 +38,7 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
 
             if (trigger != null) {
                 MiniHeartDoor gate = trigger.findHeartGate();
-                TextMenu menu = self.Entities.GetToAdd().OfType<TextMenu>().FirstOrDefault();
+                TextMenu menu = self.Entities.ToAdd.OfType<TextMenu>().FirstOrDefault();
 
                 // check that we have what we need, and that the gate can't open yet.
                 if (menu != null && gate != null && !gate.Opened && gate.HeartGems < gate.Requires) {

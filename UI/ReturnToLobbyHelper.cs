@@ -210,12 +210,12 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private static void onCreatePauseMenuButtons(Level level, TextMenu menu, bool minimal) {
             if (CollabModule.Instance.Session.LobbySID != null) {
                 // find the position just under "Return to Map".
-                int returnToMapIndex = menu.GetItems().FindIndex(item =>
+                int returnToMapIndex = menu.Items.FindIndex(item =>
                     item.GetType() == typeof(TextMenu.Button) && ((TextMenu.Button) item).Label == Dialog.Clean("MENU_PAUSE_RETURN"));
 
                 if (returnToMapIndex == -1) {
                     // fall back to the bottom of the menu.
-                    returnToMapIndex = menu.GetItems().Count - 1;
+                    returnToMapIndex = menu.Items.Count - 1;
                 }
 
                 // instantiate the "Return to Lobby" button

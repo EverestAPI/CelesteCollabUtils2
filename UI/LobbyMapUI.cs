@@ -616,7 +616,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 heartSprite.JustifyOrigin(Vector2.Zero);
                 Add(heartSprite);
 
-                var levelSetStats = SaveData.Instance.GetLevelSets().FirstOrDefault(ls => ls.Name == lobbyMapInfo.LevelSet);
+                var levelSetStats = SaveData.Instance.LevelSets.FirstOrDefault(ls => ls.Name == lobbyMapInfo.LevelSet);
                 heartCount = levelSetStats?.TotalHeartGems ?? 0;
             }
 
