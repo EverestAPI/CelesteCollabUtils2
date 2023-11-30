@@ -2,7 +2,7 @@ module CollabUtils2SpeedBerry
 
 using ..Ahorn, Maple
 
-@mapdef Entity "CollabUtils2/SpeedBerry" SpeedBerry(x::Integer, y::Integer, bronzeTime::Integer=15, silverTime::Integer=10, goldTime::Integer=5)
+@mapdef Entity "CollabUtils2/SpeedBerry" SpeedBerry(x::Integer, y::Integer, bronzeTime::Number=15.0, silverTime::Number=10.0, goldTime::Number=5.0)
 
 const placements = Ahorn.PlacementDict(
     "Speed Berry (Collab Utils 2 / READ DOCS)" => Ahorn.EntityPlacement(

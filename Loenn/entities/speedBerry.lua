@@ -5,9 +5,9 @@ speedBerry.placements = {
     {
         name = "default",
         data = {
-            bronzeTime = 15,
-            silverTime = 10,
-            goldTime = 5,
+            bronzeTime = 15.0,
+            silverTime = 10.0,
+            goldTime = 5.0,
         }
     }
 }
