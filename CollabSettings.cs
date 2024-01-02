@@ -21,9 +21,5 @@ namespace Celeste.Mod.CollabUtils2 {
         public BestTimeInJournal BestTimeToDisplayInJournal { get; set; } = BestTimeInJournal.SpeedBerry;
 
         public bool SaveByDefaultWhenReturningToLobby { get; set; } = true;
-
-        // whether we've notified the user about new lobby map keybinds
-        [SettingIgnore]
-        public bool NewLobbyMapKeybindsNotified { get; set; }
     }
 }
