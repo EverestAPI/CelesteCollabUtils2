@@ -64,4 +64,3 @@ collabutils2_lobbymap_confirm=              Принять
 collabutils2_lobbymap_hold_to_pan=          Удерживать Для Прокрутки
 collabutils2_lobbymap_pan=                  Прокрутка
 collabutils2_lobbymap_zoom=                 Отдаление
-collabutils2_lobbymap_notify_keybinds=      Новые Кнопки доступны в Настройках Модов!

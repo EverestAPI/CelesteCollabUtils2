@@ -62,7 +62,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private readonly Wiggler closeWiggler;
         private readonly Wiggler confirmWiggler;
         private readonly Wiggler zoomWiggler;
-        private readonly SineWave notifySineWave;
 
         // current view
         private readonly float[] zoomLevels = { 1f, 2f, 3f };
@@ -92,7 +91,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private bool openedWithRevealMap;
         private readonly bool viewOnly;
         private Vector2 initialPlayerCenter;
-        private float missingKeybindsTimeRemaining;
 
         #endregion
 
@@ -124,7 +122,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
             Add(closeWiggler = Wiggler.Create(0.4f, 4f));
             Add(confirmWiggler = Wiggler.Create(0.4f, 4f));
             Add(zoomWiggler = Wiggler.Create(0.4f, 4f));
-            Add(notifySineWave = new SineWave(1f));
 
             Add(new BeforeRenderHook(beforeRender));
             Add(new Coroutine(mapFocusRoutine()));
@@ -152,8 +149,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
             base.Added(scene);
 
             openedWithRevealMap = CollabModule.Instance.SaveData.RevealMap;
-            missingKeybindsTimeRemaining = CollabModule.Instance.Settings.NewLobbyMapKeybindsNotified ? 0f : 5f;
-            CollabModule.Instance.Settings.NewLobbyMapKeybindsNotified = true;
 
             if (scene is Level level && level.Tracker.GetEntity<Player>() is Player player) {
                 initialPlayerCenter = player.Center;
@@ -823,16 +818,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
             } else if (hasLatestBinding(CollabModule.Instance.Settings.HoldToPan.Binding)) {
                 // draw the "hold to pan" input if it's bound
                 ButtonHelper.RenderMultiButton(ref buttonPosition, xOffset, holdToPanButtonRenderInfo, buttonScale, panAlpha, justifyX: 1f, wiggle: wiggleAmount);
-            }
-
-            // let the player know that there are new keybinds available
-            if (missingKeybindsTimeRemaining > 0) {
-                missingKeybindsTimeRemaining -= Engine.DeltaTime;
-                var notifyAlpha = Calc.Clamp(missingKeybindsTimeRemaining, 0f, 1f);
-                var notifyText = Dialog.Clean("collabutils2_lobbymap_notify_keybinds");
-                var notifyScale = 0.8f + notifySineWave.Value * 0.05f;
-                const float notifyOffset = 30f;
-                ActiveFont.DrawOutline(notifyText, new Vector2(windowBounds.Center.X, windowBounds.Top + notifyOffset), new Vector2(0.5f), new Vector2(notifyScale), Color.White * notifyAlpha, 2f, Color.Black * notifyAlpha);
             }
         }
 

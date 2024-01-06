@@ -64,4 +64,3 @@ collabutils2_lobbymap_confirm= Confirmer
 collabutils2_lobbymap_hold_to_pan= Maintenir pour Déplacer
 collabutils2_lobbymap_pan= Déplacer
 collabutils2_lobbymap_zoom= Zoom
-collabutils2_lobbymap_notify_keybinds= De nouveaux boutons peuvent être assignés dans les Options des Mods !
