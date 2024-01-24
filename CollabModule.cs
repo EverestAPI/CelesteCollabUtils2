@@ -50,6 +50,7 @@ namespace Celeste.Mod.CollabUtils2 {
             OuiJournalCoverWithStickers.Load();
 
             Everest.Content.OnUpdate += onModAssetUpdate;
+            Everest.Content.OnGuessType += onGuessType;
 
             hookOrigSessionCtor = new Hook(typeof(Session).GetMethod("orig_ctor"), typeof(CollabModule).GetMethod(nameof(onNewSession), BindingFlags.NonPublic | BindingFlags.Static));
         }
@@ -74,6 +75,7 @@ namespace Celeste.Mod.CollabUtils2 {
             OuiJournalCoverWithStickers.Unload();
 
             Everest.Content.OnUpdate -= onModAssetUpdate;
+            Everest.Content.OnGuessType -= onGuessType;
 
             hookOrigSessionCtor?.Dispose();
             hookOrigSessionCtor = null;
@@ -92,6 +94,23 @@ namespace Celeste.Mod.CollabUtils2 {
             }
             if (newAsset != null && newAsset.PathVirtual.StartsWith("Graphics/CollabUtils2/CrystalHeartSwaps_")) {
                 reloadCrystalHeartSwapSpriteBanks();
+            }
+        }
+        
+        private static string onGuessType(string file, out Type type, out string format) {
+            switch (file) {
+                case "CollabUtils2CollabID.txt":
+                    type = typeof(AssetTypeCollabID);
+                    format = "txt";
+                    return "CollabUtils2CollabID";
+                case "CollabUtils2LazyLoading.yaml" or "CollabUtils2LazyLoading.yml":
+                    type = typeof(AssetTypeLazyLoadingYaml);
+                    format = "yml";
+                    return "CollabUtils2LazyLoading";
+                default:
+                    type = null;
+                    format = null;
+                    return null;
             }
         }
 
