@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>net452</TargetFrameworks>
-    <LangVersion>11</LangVersion>
     <AssemblyName>CollabUtils2</AssemblyName>
     <RootNamespace>Celeste.Mod.CollabUtils2</RootNamespace>
   </PropertyGroup>

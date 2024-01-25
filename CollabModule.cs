@@ -96,14 +96,15 @@ namespace Celeste.Mod.CollabUtils2 {
                 reloadCrystalHeartSwapSpriteBanks();
             }
         }
-        
+
         private static string onGuessType(string file, out Type type, out string format) {
             switch (file) {
                 case "CollabUtils2CollabID.txt":
                     type = typeof(AssetTypeCollabID);
                     format = "txt";
                     return "CollabUtils2CollabID";
-                case "CollabUtils2LazyLoading.yaml" or "CollabUtils2LazyLoading.yml":
+                case "CollabUtils2LazyLoading.yaml":
+                case "CollabUtils2LazyLoading.yml":
                     type = typeof(AssetTypeLazyLoadingYaml);
                     format = "yml";
                     return "CollabUtils2LazyLoading";
