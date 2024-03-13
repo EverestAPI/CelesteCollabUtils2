@@ -8,7 +8,6 @@ using MonoMod.Utils;
 using System;
 using System.Collections;
 using System.Linq;
-using System.Reflection;
 
 namespace Celeste.Mod.CollabUtils2.Entities {
     /// <summary>
@@ -24,12 +23,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         internal static void Load() {
             IL.Celeste.Strawberry.Added += modStrawberrySprite;
-            collectRoutineHook = new ILHook(
-                typeof(Strawberry).GetMethod("CollectRoutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget(),
-                modStrawberrySound);
-            playerDeathRoutineHook = new ILHook(
-                typeof(PlayerDeadBody).GetMethod("DeathRoutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget(),
-                modDeathSound);
+            collectRoutineHook = HookHelper.HookCoroutine("Celeste.Strawberry", "CollectRoutine", modStrawberrySound);
+            playerDeathRoutineHook = HookHelper.HookCoroutine("Celeste.PlayerDeadBody", "DeathRoutine", modDeathSound);
             Everest.Events.Level.OnCreatePauseMenuButtons += onCreatePauseMenuButtons;
             On.Celeste.Player.Added += Player_Added;
             On.Celeste.SaveData.AddStrawberry_AreaKey_EntityID_bool += onSaveDataAddStrawberry;

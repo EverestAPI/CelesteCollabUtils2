@@ -177,7 +177,7 @@ namespace Celeste.Mod.CollabUtils2 {
             On.Celeste.Player.Update += onPlayerUpdate;
 
             // hiding collab maps from chapter select
-            hookOnLevelSetSwitch = new ILHook(typeof(OuiHelper_ChapterSelect_LevelSet).GetMethod("Enter").GetStateMachineTarget(), modLevelSetSwitch);
+            hookOnLevelSetSwitch = HookHelper.HookCoroutine(typeof(OuiHelper_ChapterSelect_LevelSet).FullName, "Enter", modLevelSetSwitch);
             hookMapSearchReloadItems = new ILHook(typeof(OuiMapSearch).GetMethod("ReloadItems", BindingFlags.NonPublic | BindingFlags.Instance), modMapSearch);
             hookMapListReloadItems = new ILHook(typeof(OuiMapList).GetMethod("ReloadItems", BindingFlags.NonPublic | BindingFlags.Instance), modMapListReloadItems);
             hookMapListCreateMenu = new ILHook(typeof(OuiMapList).GetMethod("CreateMenu", BindingFlags.NonPublic | BindingFlags.Instance), modMapListCreateMenu);
