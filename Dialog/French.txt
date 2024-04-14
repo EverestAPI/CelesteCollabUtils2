@@ -31,19 +31,19 @@ collabutils2_chapterpanel_start= Recommencer
 collabutils2_speedberry_optionmessage=
     La position du chronomètre des fraises contre-la-montre peut être changé dans les {# 9B3FB5}Options des Mods{#}.
 
-modoptions_collab_speedberrytimerposition= Chronomètre des Fraises Contre-la-montre
+modoptions_collab_speedberrytimerposition= Position Chronomètre Contre-la-montre
 modoptions_collab_speedberrytimerposition_topleft= En Haut à Gauche
 modoptions_collab_speedberrytimerposition_topcenter= En Haut au Milieu
 modoptions_collab_hidespeedberrytimerduringgameplay= Cacher le chronomètre en jeu
 
-modoptions_collab_displayendscreenforallmaps= Afficher l'Écran de Fin pour toutes les maps
+modoptions_collab_displayendscreenforallmaps= Afficher l'Écran de Fin pour les maps
 modoptions_collab_displayendscreenforallmaps_description= Nécessaire pour la vérification des temps de speedrun.com
 
 modoptions_collab_besttimetodisplayinjournal= Meilleur Temps à Afficher dans le Journal
-modoptions_collab_besttimetodisplayinjournal_speedberry= Fraise Contre-la-montre
+modoptions_collab_besttimetodisplayinjournal_speedberry= Contre-la-montre
 modoptions_collab_besttimetodisplayinjournal_chaptertimer= Temps du Chapitre
 
-modoptions_collab_savebydefaultwhenreturningtolobby= Sauvegarder et Retourner au Lobby par Défaut
+modoptions_collab_savebydefaultwhenreturningtolobby= Sauv. et Retourner au Lobby par Défaut
 
 modoptions_collab_displaylobbymap= Afficher la Carte du Lobby
 modoptions_collab_holdtopan= Maintenir pour Déplacer la Carte du Lobby
