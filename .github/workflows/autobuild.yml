@@ -35,7 +35,7 @@ jobs:
       run: msbuild *.sln "/p:Configuration=Release"
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v4.3.4
+      uses: actions/upload-artifact@v4.3.5
       with:
         name: main
         path: bin/Release/net452
