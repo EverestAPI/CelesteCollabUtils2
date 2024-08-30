@@ -61,6 +61,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             yield return null;
             Engine.TimeRate = 0.5f;
             player.Depth = Depths.FormationSequences;
+            Depth = Depths.FormationSequences;
             for (int i = 0; i < 10; i++) {
                 Scene.Add(new AbsorbOrb(Position));
             }
