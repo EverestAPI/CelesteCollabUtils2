@@ -61,7 +61,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             yield return null;
             Engine.TimeRate = 0.5f;
             player.Depth = Depths.FormationSequences;
-            Depth = Depths.FormationSequences;
             for (int i = 0; i < 10; i++) {
                 Scene.Add(new AbsorbOrb(Position));
             }
@@ -78,6 +77,11 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 Engine.TimeRate = Calc.Approach(Engine.TimeRate, 0f, Engine.RawDeltaTime * 0.25f);
                 yield return null;
             }
+
+            // make sure update order with the player is just right
+            Depth = 0;
+            Depth = Depths.FormationSequences;
+
             yield return null;
             if (player.Dead) {
                 yield return 100f;
