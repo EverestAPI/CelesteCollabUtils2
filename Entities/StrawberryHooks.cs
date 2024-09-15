@@ -255,12 +255,11 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
             if (self is RainbowBerry) {
                 // remove the strawberry points
-                StrawberryPoints points = scene.Entities.ToAdd.OfType<StrawberryPoints>().First();
-                Vector2 position = points.Position;
-                scene.Entities.ToAdd.Remove(points);
+                StrawberryPoints points = scene.Entities.ToAdd.OfType<StrawberryPoints>().FirstOrDefault();
+                if (points != null) scene.Entities.ToAdd.Remove(points);
 
                 // spawn a perfect effect instead
-                scene.Add(new RainbowBerryPerfectEffect(position));
+                scene.Add(new RainbowBerryPerfectEffect(self.Position));
             }
         }
 
