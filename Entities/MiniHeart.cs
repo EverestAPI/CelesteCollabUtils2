@@ -22,7 +22,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         public MiniHeart(EntityData data, Vector2 position, EntityID gid)
             : base(data, position, gid) {
 
-			this.flash = data.Bool("flash", defaultValue: true);
+            this.flash = data.Bool("flash", defaultValue: true);
         }
 
         protected override void heartBroken(Player player, Holdable holdable, Level level) {
