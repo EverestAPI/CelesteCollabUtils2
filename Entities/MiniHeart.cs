@@ -13,13 +13,17 @@ namespace Celeste.Mod.CollabUtils2.Entities {
     public class MiniHeart : AbstractMiniHeart {
         private Sprite white;
         private bool inCollectAnimation = false;
+        private readonly bool flash;
 
         private Coroutine smashRoutine;
         private EventInstance pauseMusicSnapshot;
         private SoundEmitter collectSound;
 
         public MiniHeart(EntityData data, Vector2 position, EntityID gid)
-            : base(data, position, gid) { }
+            : base(data, position, gid) {
+
+			this.flash = data.Bool("flash", defaultValue: true);
+        }
 
         protected override void heartBroken(Player player, Holdable holdable, Level level) {
             Add(smashRoutine = new Coroutine(SmashRoutine(player, level)));
@@ -66,7 +70,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             }
             level.Shake();
             Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
-            level.Flash(Color.White);
+            if (flash) level.Flash(Color.White);
             light.Alpha = (bloom.Alpha = 0f);
             level.FormationBackdrop.Display = true;
             level.FormationBackdrop.Alpha = 1f;

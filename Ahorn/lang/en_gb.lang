@@ -16,6 +16,7 @@ placements.entities.CollabUtils2/MiniHeart.tooltips.requireDashToBreak=Whether t
 placements.entities.CollabUtils2/MiniHeart.tooltips.noGhostSprite=If checked, the heart will never use the "ghost" sprite even when already collected.
 placements.entities.CollabUtils2/MiniHeart.tooltips.particleColor=The color of the particles emitted by the mini heart. Leave empty to use default colors.
 placements.entities.CollabUtils2/MiniHeart.tooltips.playPulseSound=Whether the heart should play a sound along with its pulse.
+placements.entities.CollabUtils2/MiniHeart.tooltips.flash=Whether the screen should flash when the heart is collected.
 
 # Fake Mini Heart
 placements.entities.CollabUtils2/FakeMiniHeart.tooltips.sprite=The sprite the fake mini heart should use.
