@@ -11,7 +11,7 @@ miniHeart.placements = {
             noGhostSprite = false,
             particleColor = "",
             playPulseSound = true,
-            flash = false
+            flash = true
         }
     }
 }
