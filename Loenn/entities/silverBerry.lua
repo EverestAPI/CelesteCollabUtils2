@@ -3,7 +3,10 @@ silverBerry.name = "CollabUtils2/SilverBerry"
 silverBerry.depth = -100
 silverBerry.placements = {
     {
-        name = "default"
+        name = "default",
+        data = {
+            alwaysSpawn = false
+        }
     }
 }
 

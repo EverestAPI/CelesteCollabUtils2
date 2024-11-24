@@ -2,7 +2,7 @@ module CollabUtils2SilverBerry
 
 using ..Ahorn, Maple
 
-@mapdef Entity "CollabUtils2/SilverBerry" SilverBerry(x::Integer, y::Integer)
+@mapdef Entity "CollabUtils2/SilverBerry" SilverBerry(x::Integer, y::Integer, alwaysSpawn::Bool=false)
 
 const placements = Ahorn.PlacementDict(
     "Silver Berry (Collab Utils 2 / READ DOCS)" => Ahorn.EntityPlacement(

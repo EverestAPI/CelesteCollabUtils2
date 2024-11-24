@@ -40,6 +40,7 @@ entities.CollabUtils2/RainbowBerry.attributes.description.requires=The amount of
 
 # Silver Berry
 entities.CollabUtils2/SilverBerry.placements.name.default=Silver Berry
+entities.CollabUtils2/SilverBerry.attributes.description.alwaysSpawn=If checked, the silver berry will always spawn, even if the player did not complete the map yet.
 
 # Silver Block
 entities.CollabUtils2/SilverBlock.placements.name.default=Silver Block

@@ -28,6 +28,9 @@ placements.entities.CollabUtils2/FakeMiniHeart.tooltips.playPulseSound=Whether t
 placements.entities.CollabUtils2/FakeMiniHeart.tooltips.playBreakSound=Whether the heart should play a refill sound when broken.
 placements.entities.CollabUtils2/FakeMiniHeart.tooltips.flagOnBreak=If filled out, the given flag will be set when the fake mini heart is broken.
 
+# Silver Berry
+placements.entities.CollabUtils2/SilverBerry.tooltips.alwaysSpawn=If checked, the silver berry will always spawn, even if the player did not complete the map yet.
+
 # Rainbow Berry
 placements.entities.CollabUtils2/RainbowBerry.tooltips.levelSet=The rainbow berry will only spawn if all silver berries in this level set have been collected.
 placements.entities.CollabUtils2/RainbowBerry.tooltips.maps=This setting allows to restrict which maps in the level set this rainbow berry takes into account. To do this, list the map names (.bin names only) separated by commas.\nLeave empty if you want the player to collect all silver berries in the level set to make the rainbow berry spawn.

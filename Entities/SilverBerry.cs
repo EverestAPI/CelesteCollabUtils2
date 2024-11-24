@@ -16,9 +16,11 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private static ParticleType P_OrigGhostGlow;
 
         private bool spawnedThroughGiveSilver = false;
+        private readonly bool alwaysSpawn;
 
         public SilverBerry(EntityData data, Vector2 offset, EntityID gid) : base(data, offset, gid) {
             new DynData<Strawberry>(this)["Golden"] = true;
+            alwaysSpawn = data.Bool("alwaysSpawn");
 
             if (P_SilverGlow == null) {
                 P_SilverGlow = new ParticleType(P_Glow) {
@@ -39,7 +41,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
             Session session = (scene as Level).Session;
             if (!spawnedThroughGiveSilver && ((session.FurthestSeenLevel != session.Level && session.Deaths != 0) ||
-                (!SaveData.Instance.CheatMode && !SaveData.Instance.Areas_Safe[session.Area.ID].Modes[(int) session.Area.Mode].Completed))) {
+                (!alwaysSpawn && !SaveData.Instance.CheatMode && !SaveData.Instance.Areas_Safe[session.Area.ID].Modes[(int) session.Area.Mode].Completed))) {
 
                 // we went in a further screen and die, or didn't complete the level once yet: don't have the berry spawn.
                 RemoveSelf();
