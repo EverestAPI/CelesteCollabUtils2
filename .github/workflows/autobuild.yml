@@ -26,10 +26,10 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v4
 
-    - name: Install dependencies
+    - name: Restore with .NET Core
       run: dotnet restore
 
-    - name: Build
+    - name: Build using .NET Core
       run: dotnet build CollabUtils2.sln --configuration Release --no-restore
 
     - name: Upload artifact
