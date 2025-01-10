@@ -25,17 +25,15 @@ jobs:
 
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 2.2.108
 
     - name: Restore with .NET Core
       run: dotnet restore
 
-    - name: Build using Mono
-      run: msbuild *.sln "/p:Configuration=Release"
+    - name: Build using .NET Core
+      run: dotnet build CollabUtils2.sln --configuration Release --no-restore
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v4.5.0
+      uses: actions/upload-artifact@v4.6.0
       with:
         name: main
         path: bin/Release/net452
