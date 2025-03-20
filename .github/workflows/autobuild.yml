@@ -33,7 +33,7 @@ jobs:
       run: dotnet build CollabUtils2.sln --configuration Release --no-restore
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v4.6.1
+      uses: actions/upload-artifact@v4.6.2
       with:
         name: main
         path: bin/Release/net452
