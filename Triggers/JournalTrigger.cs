@@ -1,7 +1,6 @@
 using Celeste.Mod.CollabUtils2.UI;
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
-using MonoMod.Utils;
 
 namespace Celeste.Mod.CollabUtils2.Triggers {
     [CustomEntity("CollabUtils2/JournalTrigger")]
