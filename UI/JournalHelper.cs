@@ -7,21 +7,19 @@ namespace Celeste.Mod.CollabUtils2.UI {
     public static class JournalHelper {
         private static Dictionary<string, Action<bool, List<OuiJournalPage>>> journalPageEditors = new Dictionary<string, Action<bool, List<OuiJournalPage>>>();
 
-        internal static bool VanillaJournal = true;
+        internal static bool VanillaJournal = true; // default to vanilla journal
         internal static bool ShowOnlyDiscovered = false;
 
         public static void AddJournalPageEditor(string collabID, Action<bool, List<OuiJournalPage>> editor) {
-            if (journalPageEditors.TryGetValue(collabID, out _)) {
+            if (journalPageEditors.TryGetValue(collabID, out _))
                 journalPageEditors[collabID] = editor;
-            } else {
+            else
                 journalPageEditors.Add(collabID, editor);
-            }
         }
         
         public static void RemoveJournalPageEditor(string collabID) {
-            if (journalPageEditors.TryGetValue(collabID, out _)) {
+            if (journalPageEditors.TryGetValue(collabID, out _))
                 journalPageEditors.Remove(collabID);
-            }
         }
         
         internal static void Load() {
@@ -54,14 +52,12 @@ namespace Celeste.Mod.CollabUtils2.UI {
             journal.Pages.AddRange(OuiJournalCollabProgressInLobby.GeneratePages(journal, forceArea.LevelSet, ShowOnlyDiscovered));
 
             // and add the map if we have it as well.
-            if (MTN.Journal.Has("collabLobbyMaps/" + forceArea.LevelSet)) {
+            if (MTN.Journal.Has("collabLobbyMaps/" + forceArea.LevelSet))
                 journal.Pages.Add(new OuiJournalLobbyMap(journal, MTN.Journal["collabLobbyMaps/" + forceArea.LevelSet]));
-            }
 
             // apply custom page editing
-            if (journalPageEditors.TryGetValue(LobbyHelper.GetCollabNameForSID(forceArea.SID), out Action<bool, List<OuiJournalPage>> collabJournalPageEditor)) {
+            if (journalPageEditors.TryGetValue(LobbyHelper.GetCollabNameForSID(forceArea.SID), out Action<bool, List<OuiJournalPage>> collabJournalPageEditor))
                 collabJournalPageEditor(ShowOnlyDiscovered, journal.Pages);
-            }
 
             // if necessary, redraw the first page to include the stickers
             if (journal.Pages.ElementAtOrDefault(0) is OuiJournalCoverWithStickers coverWithStickers)
