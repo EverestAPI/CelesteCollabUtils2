@@ -1,8 +1,9 @@
+using MonoMod.ModInterop;
 using System;
 using System.Collections.Generic;
 
 namespace Celeste.Mod.CollabUtils2 {
-    class CollabMapDataProcessor : EverestMapDataProcessor {
+    public class CollabMapDataProcessor : EverestMapDataProcessor {
         public struct SpeedBerryInfo {
             public EntityID ID;
             public float Gold;

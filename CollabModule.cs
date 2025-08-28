@@ -38,7 +38,7 @@ namespace Celeste.Mod.CollabUtils2 {
             LobbyHelper.Load();
             SpeedBerryTimerDisplay.Load();
             SpeedBerryPBInChapterPanel.Load();
-            JournalTrigger.Load();
+            JournalHelper.Load();
             CustomCrystalHeartHelper.Load();
             GoldenBerryPlayerRespawnPoint.Load();
             SpeedBerry.Load();
@@ -63,7 +63,7 @@ namespace Celeste.Mod.CollabUtils2 {
             LobbyHelper.Unload();
             SpeedBerryTimerDisplay.Unload();
             SpeedBerryPBInChapterPanel.Unload();
-            JournalTrigger.Unload();
+            JournalHelper.Unload();
             CustomCrystalHeartHelper.Unload();
             GoldenBerryPlayerRespawnPoint.Unload();
             SpeedBerry.Unload();

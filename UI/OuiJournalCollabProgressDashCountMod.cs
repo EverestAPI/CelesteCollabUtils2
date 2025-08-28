@@ -6,7 +6,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
     /// in order to enable dash count in the Collab Utils' journals.
     /// (It is simpler to implement them in Collab Utils directly, rather than hooking both journals with IL hooks.)
     /// </summary>
-    static class OuiJournalCollabProgressDashCountMod {
+    public static class OuiJournalCollabProgressDashCountMod {
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static bool IsDashCountEnabled() {
             return false;
