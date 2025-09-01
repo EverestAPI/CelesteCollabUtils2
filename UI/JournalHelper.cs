@@ -1,3 +1,4 @@
+using MonoMod.ModInterop;
 using MonoMod.Utils;
 using System;
 using System.Collections.Generic;
@@ -5,25 +6,25 @@ using System.Linq;
 
 namespace Celeste.Mod.CollabUtils2.UI {
     public static class JournalHelper {
-        private static Dictionary<string, Action<OuiJournal, string, bool>> journalEditors = new Dictionary<string, Action<OuiJournal, string, bool>>();
+        private static Dictionary<string, Action<OuiJournal, string, bool>> JournalEditors = new Dictionary<string, Action<OuiJournal, string, bool>>();
 
         internal static bool VanillaJournal = true; // default to vanilla journal
         internal static bool ShowOnlyDiscovered = false;
 
         public static void AddJournalEditor(string collabID, Action<OuiJournal, string, bool> editor) {
-            if (journalEditors.TryGetValue(collabID, out _))
-                journalEditors[collabID] = editor;
+            if (JournalEditors.TryGetValue(collabID, out _))
+                JournalEditors[collabID] = editor;
             else
-                journalEditors.Add(collabID, editor);
+                JournalEditors.Add(collabID, editor);
         }
         
         public static void RemoveJournalEditor(string collabID) {
-            if (journalEditors.TryGetValue(collabID, out _))
-                journalEditors.Remove(collabID);
+            if (JournalEditors.TryGetValue(collabID, out _))
+                JournalEditors.Remove(collabID);
         }
         
         internal static void Load() {
-            journalEditors.Clear();
+            JournalEditors.Clear();
             
             Everest.Events.Journal.OnEnter += OnJournalEnter;
         }
@@ -56,7 +57,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 journal.Pages.Add(new OuiJournalLobbyMap(journal, MTN.Journal["collabLobbyMaps/" + forceArea.LevelSet]));
 
             // apply custom page editing
-            if (journalEditors.TryGetValue(LobbyHelper.GetCollabNameForSID(forceArea.SID), out Action<OuiJournal, string, bool> collabJournalPageEditor))
+            if (JournalEditors.TryGetValue(LobbyHelper.GetCollabNameForSID(forceArea.SID), out Action<OuiJournal, string, bool> collabJournalPageEditor))
                 collabJournalPageEditor(journal, forceArea.LevelSet, ShowOnlyDiscovered);
 
             // if necessary, redraw the first page to include the stickers
@@ -66,6 +67,18 @@ namespace Celeste.Mod.CollabUtils2.UI {
             // reset journal entry data
             VanillaJournal = true;
             ShowOnlyDiscovered = false;
+        }
+        
+        // ModInterop exports
+
+        [ModExportName("CollabUtils2.JournalHelper")]
+        private static class ModExports {
+            public static void AddJournalEditor(string collabID, Action<OuiJournal, string, bool> editor) {
+                JournalHelper.AddJournalEditor(collabID, editor);
+            }
+            public static void RemoveJournalEditor(string collabID) {
+                JournalHelper.RemoveJournalEditor(collabID);
+            }
         }
     }
 }
