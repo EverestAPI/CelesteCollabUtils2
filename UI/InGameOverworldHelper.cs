@@ -459,6 +459,17 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
         }
 
+        private static string mapSideName(string mapSID, AreaMode side) {
+            string sideName = mapSID.DialogKeyify();
+            if (side == AreaMode.BSide) {
+                sideName += "_B";
+            } else if (side == AreaMode.CSide) {
+                sideName += "_C";
+            }
+            
+            return sideName;
+        }
+
         /// <summary>
         /// Returns the GUI heart sprite ID (for display in the chapter panel) matching the given map and side, to read from the HeartSpriteBank.
         /// </summary>
@@ -467,13 +478,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         /// <returns>The sprite ID to pass to HeartSpriteBank.Create to get the custom heart sprite, or null if none was found</returns>
         public static string GetGuiHeartSpriteId(string mapSID, AreaMode side) {
             string mapLevelSet = AreaData.Get(mapSID)?.LevelSet.DialogKeyify();
-
-            string sideName = mapSID.DialogKeyify();
-            if (side == AreaMode.BSide) {
-                sideName += "_B";
-            } else if (side == AreaMode.CSide) {
-                sideName += "_C";
-            }
+            string sideName = mapSideName(mapSID, side);
 
             if (OverrideHeartSpriteIDs.TryGetValue(sideName, out string spriteID) && HeartSpriteBank.Has(spriteID)) {
                 // this map has an override custom heart registered: use it.
@@ -489,16 +494,32 @@ namespace Celeste.Mod.CollabUtils2.UI {
             return null;
         }
 
-        public static void AddOverrideHeartSpriteID(string mapSID, string spriteID) {
-            if (OverrideHeartSpriteIDs.TryGetValue(mapSID, out _))
-                OverrideHeartSpriteIDs[mapSID] = spriteID;
+        /// <summary>
+        /// Adds an override heart sprite ID to use for a given map.
+        /// Useful when lots of heart sprites need to be overridden and replacing all of those manually in the sprite swap XML is too tedious.
+        /// </summary>
+        /// <param name="mapSID">The map SID to override the heart sprite for</param>
+        /// <param name="side">The side to override the heart sprite for</param>
+        /// <param name="spriteID">The sprite ID to override the map's heart with</param>
+        public static void AddOverrideHeartSpriteID(string mapSID, AreaMode side, string spriteID) {
+            string sideName = mapSideName(mapSID, side);
+            
+            if (OverrideHeartSpriteIDs.TryGetValue(sideName, out _))
+                OverrideHeartSpriteIDs[sideName] = spriteID;
             else
-                OverrideHeartSpriteIDs.Add(mapSID, spriteID);
+                OverrideHeartSpriteIDs.Add(sideName, spriteID);
         }
 
-        public static void RemoveOverrideHeartSpriteID(string mapSID) {
-            if (OverrideHeartSpriteIDs.TryGetValue(mapSID, out _))
-                OverrideHeartSpriteIDs.Remove(mapSID);
+        /// <summary>
+        /// Removes the override heart sprite ID for a given map.
+        /// </summary>
+        /// <param name="mapSID">The map SID to remove the override for</param>
+        /// <param name="side">The side to remove the override for</param>
+        public static void RemoveOverrideHeartSpriteID(string mapSID, AreaMode side) {
+            string sideName = mapSideName(mapSID, side);
+            
+            if (OverrideHeartSpriteIDs.TryGetValue(sideName, out _))
+                OverrideHeartSpriteIDs.Remove(sideName);
         }
 
         // AltSidesHelper does very similar stuff to us, and we want to override what it does if the XMLs are asking for it.
@@ -1284,11 +1305,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
             public static SpriteBank GetHeartSpriteBank() {
                 return HeartSpriteBank;
             }
-            public static void AddOverrideHeartSpriteID(string mapSID, string spriteID) {
-                InGameOverworldHelper.AddOverrideHeartSpriteID(mapSID, spriteID);
+            public static void AddOverrideHeartSpriteID(string mapSID, AreaMode side, string spriteID) {
+                InGameOverworldHelper.AddOverrideHeartSpriteID(mapSID, side, spriteID);
             }
-            public static void RemoveOverrideHeartSpriteID(string mapSID, string spriteID) {
-                InGameOverworldHelper.RemoveOverrideHeartSpriteID(mapSID);
+            public static void RemoveOverrideHeartSpriteID(string mapSID, AreaMode side, string spriteID) {
+                InGameOverworldHelper.RemoveOverrideHeartSpriteID(mapSID, side);
             }
             public static string GetGuiHeartSpriteId(string mapSID, AreaMode side) {
                 return InGameOverworldHelper.GetGuiHeartSpriteId(mapSID, side);
