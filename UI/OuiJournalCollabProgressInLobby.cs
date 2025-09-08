@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace Celeste.Mod.CollabUtils2.UI {
-    class OuiJournalCollabProgressInLobby : OuiJournalPage {
+    public class OuiJournalCollabProgressInLobby : OuiJournalPage {
 
         private Table table;
 
