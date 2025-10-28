@@ -52,11 +52,23 @@ jobs:
         rm Ahorn/triggers/mapSwapTrigger.jl
         ZIPNAME=$ZIPNAME-${GITHUB_SHA:0:8}.zip
         zip -qq -r $ZIPNAME everest.yaml bin/Release/net452 Ahorn Graphics Audio Dialog Loenn documentation.txt
-        url=$(curl -H 'Content-Type: multipart/form-data' -X POST -F "file=@$ZIPNAME" "$DISCORD_WEBHOOK" | grep -Po 'cdn.discordapp.com\/.*?\.zip' | tr -d '\n')
+        url=$(curl -H 'Content-Type: multipart/form-data' -X POST -F "file=@$ZIPNAME" "$DISCORD_WEBHOOK"| jq -r '.attachments[0].url')
         msg=$(git log -n 1 "--format=%B" | head -n 1 | tr -d '\n')
         curl -H 'Content-Type: application/json' -X POST -d "$(jq -n \
           --arg zipname "$ZIPNAME" \
           --arg url "$url" \
           --arg msg "$msg" \
-          '{embeds: [{title: "Install \($zipname)", url: "https://0x0ade.ga/twoclick/?\($url)", description: $msg}]}' \
+          '{embeds: [{title: "Install \($zipname)", url: "https://0x0a.de/twoclick/?\($url)", description: $msg}]}' \
         )" "$DISCORD_WEBHOOK"
+        echo "$url" > zip.url
+
+    - name: TAS Check
+      if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/gh-actions'
+      env:
+        GITHUB_SHA: ${{ github.sha }}
+        DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+      run: |
+        COMMIT_REF="[\`CollabUtils2@${GITHUB_SHA:0:8}\`](<https://github.com/EverestAPI/CelesteCollabUtils2/commit/${GITHUB_SHA}>)"
+        docker run --rm max480/everest:tas-check CollabUtils2 "`cat zip.url`" \
+            && curl -H 'Content-Type: application/json' -d "{\"content\": \":white_check_mark: TAS Check for ${COMMIT_REF} successful.\"}" "$DISCORD_WEBHOOK" \
+            || (curl -H 'Content-Type: application/json' -d "{\"content\": \":x: TAS Check for ${COMMIT_REF} failed!\"}" "$DISCORD_WEBHOOK" && exit 1)
