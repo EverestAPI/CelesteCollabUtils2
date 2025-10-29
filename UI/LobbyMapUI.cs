@@ -595,7 +595,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             if (lobbyMapInfo.ShowHeartCount) {
                 // try to get a custom id
-                var id = InGameOverworldHelper.GetGuiHeartSpriteId(selection.SID, AreaMode.Normal);
+                var id = InGameOverworldHelper.GetGuiHeartSpriteId(selection.SID + "_lobbyMap", AreaMode.Normal)
+                    ?? InGameOverworldHelper.GetGuiHeartSpriteId(selection.SID, AreaMode.Normal);
 
                 if (id == null) {
                     heartSprite = GFX.GuiSpriteBank.Create("heartgem0");
