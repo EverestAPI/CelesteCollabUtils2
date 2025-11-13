@@ -8,19 +8,19 @@ namespace Celeste.Mod.CollabUtils2.UI {
     /// </summary>
     public static class OuiJournalCollabProgressDashCountMod {
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static bool IsDashCountEnabled() {
+        public static bool IsDashCountEnabled() {
             return false;
         }
 
         // those depend on Dash Count Mod settings / save data, and will be implemented by Dash Count Mod itself.
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static bool DisplaysTotalDashes() {
+        public static bool DisplaysTotalDashes() {
             return false;
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static int GetLevelDashesForJournalProgress(AreaStats stats) {
+        public static int GetLevelDashesForJournalProgress(AreaStats stats) {
             return stats.BestTotalDashes;
         }
     }

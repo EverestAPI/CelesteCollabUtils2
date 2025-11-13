@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Celeste.Mod.CollabUtils2.UI {
     public static class JournalHelper {
-        private static Dictionary<string, Action<OuiJournal, string, bool>> JournalEditors = new Dictionary<string, Action<OuiJournal, string, bool>>();
+        private static readonly Dictionary<string, Action<OuiJournal, string, bool>> JournalEditors = new Dictionary<string, Action<OuiJournal, string, bool>>();
 
         internal static bool VanillaJournal = true; // default to vanilla journal
         internal static bool ShowOnlyDiscovered = false;
@@ -70,7 +70,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
         
         // ModInterop exports
-
         [ModExportName("CollabUtils2.JournalHelper")]
         private static class ModExports {
             public static void AddJournalEditor(string collabID, Action<OuiJournal, string, bool> editor) {

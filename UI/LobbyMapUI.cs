@@ -3,6 +3,7 @@ using Celeste.Mod.Helpers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Monocle;
+using MonoMod.ModInterop;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -81,6 +82,19 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private int lastSelectedWarpIndex = -1;
         private float scaleMultiplier = 1f;
         private float finalScale => actualScale * scaleMultiplier;
+        
+        // mod interop
+        private static readonly Dictionary<string, Action<Entity, List<Component>>> CustomRenderActions = new Dictionary<string, Action<Entity, List<Component>>>();
+        public static void AddCustomRenderAction(string collabID, Action<Entity, List<Component>> action) {
+            if (CustomRenderActions.TryGetValue(collabID, out _))
+                CustomRenderActions[collabID] = action;
+            else
+                CustomRenderActions.Add(collabID, action);
+        }
+        public static void RemoveCustomRenderAction(string collabID) {
+            if (CustomRenderActions.TryGetValue(collabID, out _))
+                CustomRenderActions.Remove(collabID);
+        }
 
         private Rectangle windowBounds;
         private Rectangle mapBounds;
@@ -701,6 +715,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (CollabModule.Instance.SaveData.ShowVisitedPoints) {
                 drawVisitedPoints();
             }
+            
+            if (CustomRenderActions.TryGetValue(LobbyHelper.GetCollabNameForSID(lobbyMapInfo.LevelSet), out Action<Entity, List<Component>> customRenderAction))
+                customRenderAction(this, markerComponents);
 
             drawForeground();
         }
@@ -1203,6 +1220,21 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
         }
 
+        #endregion
+        
+        #region ModInterop
+        
+        // ModInterop exports
+        [ModExportName("CollabUtils2.JournalHelper")]
+        private static class ModExports {
+            public static void AddCustomRenderAction(string collabID, Action<Entity, List<Component>> editor) {
+                LobbyMapUI.AddCustomRenderAction(collabID, editor);
+            }
+            public static void RemoveCustomRenderAction(string collabID) {
+                LobbyMapUI.RemoveCustomRenderAction(collabID);
+            }
+        }
+        
         #endregion
     }
 }
