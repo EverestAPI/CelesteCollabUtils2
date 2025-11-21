@@ -715,8 +715,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (CollabModule.Instance.SaveData.ShowVisitedPoints) {
                 drawVisitedPoints();
             }
-            
-            if (CustomRenderActions.TryGetValue(LobbyHelper.GetCollabNameForSID(lobbyMapInfo.LevelSet), out Action<Entity, List<Component>> customRenderAction))
+
+            string currentCollabName = LobbyHelper.GetCollabNameForSID(SceneAs<Level>().Session.Area.SID);
+            if (CustomRenderActions.TryGetValue(currentCollabName, out Action<Entity, List<Component>> customRenderAction))
                 customRenderAction(this, markerComponents);
 
             drawForeground();
@@ -1179,7 +1180,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         /// <summary>
         /// Represents a map marker as an image.
         /// </summary>
-        private class MarkerImage : Image {
+        public class MarkerImage : Image {
             public readonly LobbyMapController.MarkerInfo Info;
 
             public MarkerImage(LobbyMapController.MarkerInfo info) : base(null) {
@@ -1225,7 +1226,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         #region ModInterop
         
         // ModInterop exports
-        [ModExportName("CollabUtils2.JournalHelper")]
+        [ModExportName("CollabUtils2.LobbyMapUI")]
         private static class ModExports {
             public static void AddCustomRenderAction(string collabID, Action<Entity, List<Component>> editor) {
                 LobbyMapUI.AddCustomRenderAction(collabID, editor);
