@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 
 namespace Celeste.Mod.CollabUtils2 {
     // This class allows turning on lazy loading on a map pack by dropping a CollabUtils2LazyLoading.txt file at its root.
@@ -45,15 +46,31 @@ namespace Celeste.Mod.CollabUtils2 {
         private static bool preloadingTextures = false;
         private static ILHook hookOnTextureSafe;
         private static ILHook hookOnContentCrawl;
+        private static EventInfo shouldForceLazyLoadEvent;
+        private static EventInfo onLazyLoadEvent;
+        private static Delegate shouldForceLazyLoadDelegate;
+        private static Delegate onLazyLoadDelegate;
 
         public static void Load() {
             hookOnContentCrawl = new ILHook(typeof(Everest.Content).GetMethod("Crawl"), registerLazyLoadingModsOnLoad);
-            IL.Monocle.VirtualTexture.Preload += turnOnLazyLoadingSelectively;
+            shouldForceLazyLoadEvent = typeof(Everest.Events).GetNestedType("VirtualTexture")?
+                .GetEvent("ShouldForceLazyLoad");
+            if (shouldForceLazyLoadEvent != null) {
+                shouldForceLazyLoadDelegate = Delegate.CreateDelegate(shouldForceLazyLoadEvent.EventHandlerType, typeof(LazyLoadingHandler), "turnOnLazyLoadingSelectively2");
+                shouldForceLazyLoadEvent.AddMethod.Invoke(null, new object[] { shouldForceLazyLoadDelegate });
+
+                onLazyLoadEvent = typeof(Everest.Events).GetNestedType("VirtualTexture")
+                    .GetEvent("OnLazyLoad");
+                onLazyLoadDelegate = Delegate.CreateDelegate(onLazyLoadEvent.EventHandlerType, typeof(LazyLoadingHandler), "onTextureLazyLoadInner");
+                onLazyLoadEvent.AddMethod.Invoke(null, new object[] { onLazyLoadDelegate });
+            } else {
+                IL.Monocle.VirtualTexture.Preload += turnOnLazyLoadingSelectivelyHook;
+                hookOnTextureSafe = new ILHook(typeof(VirtualTexture).GetMethod("get_Texture_Safe"), lazyLoadTexturesOnAccess);
+                On.Monocle.VirtualTexture.Reload += onTextureLazyLoadHook;
+            }
             On.Celeste.LevelLoader.ctor += lazilyLoadTextures;
-            On.Monocle.VirtualTexture.Reload += onTextureLazyLoad;
             Everest.Events.Level.OnExit += saveNewLazilyLoadedPaths;
 
-            hookOnTextureSafe = new ILHook(typeof(VirtualTexture).GetMethod("get_Texture_Safe"), lazyLoadTexturesOnAccess);
 
             // check all mods that were registered before us.
             foreach (ModContent modContent in Everest.Content.Mods) {
@@ -65,9 +82,14 @@ namespace Celeste.Mod.CollabUtils2 {
             hookOnContentCrawl?.Dispose();
             hookOnContentCrawl = null;
 
-            IL.Monocle.VirtualTexture.Preload -= turnOnLazyLoadingSelectively;
+            if (shouldForceLazyLoadEvent != null) {
+                shouldForceLazyLoadEvent.RemoveMethod.Invoke(null, new object[] { shouldForceLazyLoadDelegate });
+                onLazyLoadEvent.RemoveMethod.Invoke(null, new object[] { onLazyLoadDelegate });
+            }
+
+            IL.Monocle.VirtualTexture.Preload -= turnOnLazyLoadingSelectivelyHook;
             On.Celeste.LevelLoader.ctor -= lazilyLoadTextures;
-            On.Monocle.VirtualTexture.Reload -= onTextureLazyLoad;
+            On.Monocle.VirtualTexture.Reload -= onTextureLazyLoadHook;
             Everest.Events.Level.OnExit -= saveNewLazilyLoadedPaths;
 
             hookOnTextureSafe?.Dispose();
@@ -168,41 +190,56 @@ namespace Celeste.Mod.CollabUtils2 {
         }
 
         // this turns on or off lazy loading based on which texture is being loaded.
-        private static void turnOnLazyLoadingSelectively(ILContext il) {
+        private static void turnOnLazyLoadingSelectivelyHook(ILContext il) {
             ILCursor cursor = new ILCursor(il);
             cursor.GotoNext(MoveType.After, instr => instr.MatchCallvirt<CoreModuleSettings>("get_LazyLoading"));
 
             cursor.Emit(OpCodes.Ldarg_0);
-            cursor.EmitDelegate<Func<bool, VirtualTexture, bool>>((orig, self) => {
-                // don't do anything if lazy loading is actually turned on or for textures with (somehow) no name.
-                if (orig || self.Name == null)
-                    return orig;
+            cursor.EmitDelegate<Func<bool, VirtualTexture, bool>>(turnOnLazyLoadingSelectively1);
+        }
 
-                string name = self.Name;
-                if (lazilyLoadedTextures.Contains(name)) {
-                    Logger.Log(LogLevel.Debug, "CollabUtils2/LazyLoadingHandler", name + " was skipped and will be lazily loaded later");
+        private static bool turnOnLazyLoadingSelectively1(bool orig, VirtualTexture self) {
+            bool? ret = turnOnLazyLoadingSelectivelyInner(self);
+            if (ret == null) return orig;
+            return ret.Value;
+        }
 
-                    // look for maps that use this, so that we can fill out texturesPerMap as we go through all textures.
-                    foreach (KeyValuePair<string, HashSet<string>> mapGraphics in pathsPerMap) {
-                        if (mapGraphics.Value.Contains(name)) {
-                            Logger.Log("CollabUtils2/LazyLoadingHandler", name + " is associated to map " + mapGraphics.Key);
+        private static bool turnOnLazyLoadingSelectively2(VirtualTexture self) {
+            bool? ret = turnOnLazyLoadingSelectivelyInner(self);
+            // The newer implementation does not allow force not lazy loading a texture in the callback (just call Reload on the VirtualTexture to ensure that)
+            // so treat null as false
+            return ret == null ? false : ret.Value;
+        }
 
-                            // associate the (non-loaded) texture to the map so that it can be loaded more easily later.
-                            if (!texturesPerMap.TryGetValue(mapGraphics.Key, out HashSet<VirtualTexture> list)) {
-                                list = new HashSet<VirtualTexture>();
-                                texturesPerMap[mapGraphics.Key] = list;
-                            }
-                            list.Add(self);
+        private static bool? turnOnLazyLoadingSelectivelyInner(VirtualTexture self) {
+            // don't do anything if lazy loading is actually turned on or for textures with (somehow) no name.
+            if (self.Name == null)
+                return null; // null means keep original behaviour
+
+            string name = self.Name;
+            if (lazilyLoadedTextures.Contains(name)) {
+                Logger.Log(LogLevel.Debug, "CollabUtils2/LazyLoadingHandler", name + " was skipped and will be lazily loaded later");
+
+                // look for maps that use this, so that we can fill out texturesPerMap as we go through all textures.
+                foreach (KeyValuePair<string, HashSet<string>> mapGraphics in pathsPerMap) {
+                    if (mapGraphics.Value.Contains(name)) {
+                        Logger.Log("CollabUtils2/LazyLoadingHandler", name + " is associated to map " + mapGraphics.Key);
+
+                        // associate the (non-loaded) texture to the map so that it can be loaded more easily later.
+                        if (!texturesPerMap.TryGetValue(mapGraphics.Key, out HashSet<VirtualTexture> list)) {
+                            list = new HashSet<VirtualTexture>();
+                            texturesPerMap[mapGraphics.Key] = list;
                         }
+                        list.Add(self);
                     }
-
-                    // this triggers lazy loading: preload of the texture, but not actually load it in video RAM.
-                    return true;
                 }
 
-                // this disables lazy loading, and the game will actually load the texture.
-                return false;
-            });
+                // this triggers lazy loading: preload of the texture, but not actually load it in video RAM.
+                return true;
+            }
+
+            // this disables lazy loading, and the game will actually load the texture.
+            return false;
         }
 
         private static void lazilyLoadTextures(On.Celeste.LevelLoader.orig_ctor orig, LevelLoader self, Session session, Vector2? startPosition) {
@@ -256,10 +293,18 @@ namespace Celeste.Mod.CollabUtils2 {
             });
         }
 
-        private static void onTextureLazyLoad(On.Monocle.VirtualTexture.orig_Reload orig, VirtualTexture self) {
+        private static void onTextureLazyLoadHook(On.Monocle.VirtualTexture.orig_Reload orig, VirtualTexture self) {
             // this is actually called on every texture load, so we need to check if this is a lazy load or not
+            if (!preloadingTextures) {
+                onTextureLazyLoadInner(self);
+            }
+
+            orig(self);
+        }
+
+        private static void onTextureLazyLoadInner(VirtualTexture self) {
             string name = self.Name;
-            if (!preloadingTextures && lazilyLoadedTextures.Contains(name)) {
+            if (lazilyLoadedTextures.Contains(name)) {
                 string currentMap = (Engine.Scene as Level)?.Session?.Area.GetSID();
 
                 Logger.Log(LogLevel.Debug, "CollabUtils2/LazyLoadingHandler", name + " was lazily loaded by Everest! It will be associated to map " + currentMap + ".");
@@ -280,9 +325,8 @@ namespace Celeste.Mod.CollabUtils2 {
                     texturesForThisMap.Add(self);
                 }
             }
-
-            orig(self);
         }
+
 
         private static void saveNewLazilyLoadedPaths(Level level, LevelExit exit, LevelExit.Mode mode, Session session, HiresSnow snow) {
             writeNewPaths(session.Area.GetSID());
