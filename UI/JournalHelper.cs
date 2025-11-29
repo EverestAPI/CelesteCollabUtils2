@@ -56,8 +56,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (MTN.Journal.Has("collabLobbyMaps/" + forceArea.LevelSet))
                 journal.Pages.Add(new OuiJournalLobbyMap(journal, MTN.Journal["collabLobbyMaps/" + forceArea.LevelSet]));
 
-            // apply custom page editing
-            if (JournalEditors.TryGetValue(LobbyHelper.GetCollabNameForSID(forceArea.SID), out Action<OuiJournal, string, bool> collabJournalPageEditor))
+            // apply custom page editing if in a lobby with a journal page editor set
+            if (LobbyHelper.IsCollabLevelSet(forceArea.LevelSet) && JournalEditors.TryGetValue(LobbyHelper.GetCollabNameForSID(forceArea.SID), out Action<OuiJournal, string, bool> collabJournalPageEditor))
                 collabJournalPageEditor(journal, forceArea.LevelSet, ShowOnlyDiscovered);
 
             // if necessary, redraw the first page to include the stickers
