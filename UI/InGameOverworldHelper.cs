@@ -466,7 +466,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             } else if (side == AreaMode.CSide) {
                 sideName += "_C";
             }
-            
+
             return sideName;
         }
 
@@ -503,7 +503,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         /// <param name="spriteID">The sprite ID to override the map's heart with</param>
         public static void AddOverrideHeartSpriteID(string mapSID, AreaMode side, string spriteID) {
             string sideName = mapSideName(mapSID, side);
-            
+
             if (OverrideHeartSpriteIDs.TryGetValue(sideName, out _))
                 OverrideHeartSpriteIDs[sideName] = spriteID;
             else
@@ -517,7 +517,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         /// <param name="side">The side to remove the override for</param>
         public static void RemoveOverrideHeartSpriteID(string mapSID, AreaMode side) {
             string sideName = mapSideName(mapSID, side);
-            
+
             if (OverrideHeartSpriteIDs.TryGetValue(sideName, out _))
                 OverrideHeartSpriteIDs.Remove(sideName);
         }

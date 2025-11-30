@@ -82,7 +82,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private int lastSelectedWarpIndex = -1;
         private float scaleMultiplier = 1f;
         private float finalScale => actualScale * scaleMultiplier;
-        
+
         // mod interop
         private static readonly Dictionary<string, Action<Entity, List<Component>>> CustomRenderActions = new Dictionary<string, Action<Entity, List<Component>>>();
         public static void AddCustomRenderAction(string collabID, Action<Entity, List<Component>> action) {
@@ -280,7 +280,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         translateTimeRemaining = translate_time_seconds;
                     }
                 } else if (!shouldCentreOrigin && translateTimeRemaining <= 0 && scaleTimeRemaining <= 0 && aiming && mapTexture != null) {
-                    var aspectRatio = (float)mapTexture.Width / mapTexture.Height;
+                    var aspectRatio = (float) mapTexture.Width / mapTexture.Height;
                     var offset = aim.SafeNormalize() * 2f / actualScale;
                     if (aspectRatio > 0) {
                         offset.X /= aspectRatio;
@@ -373,7 +373,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         /// Returns true if the given position has been revealed in the current lobby.
         /// </summary>
         private bool isVisited(Vector2 position, byte threshold = 0x7F) =>
-            visitedTiles.TryGet((int)(position.X / 8), (int)(position.Y / 8), out var value) && value > threshold;
+            visitedTiles.TryGet((int) (position.X / 8), (int) (position.Y / 8), out var value) && value > threshold;
 
         /// <summary>
         /// Calculates the correct origin within the overlay texture for a given level coordinate.
@@ -1222,9 +1222,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         #endregion
-        
+
         #region ModInterop
-        
+
         // ModInterop exports
         [ModExportName("CollabUtils2.LobbyMapUI")]
         private static class ModExports {
@@ -1235,7 +1235,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 LobbyMapUI.RemoveCustomRenderAction(collabID);
             }
         }
-        
+
         #endregion
     }
 }

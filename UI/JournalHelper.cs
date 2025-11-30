@@ -17,15 +17,15 @@ namespace Celeste.Mod.CollabUtils2.UI {
             else
                 JournalEditors.Add(collabID, editor);
         }
-        
+
         public static void RemoveJournalEditor(string collabID) {
             if (JournalEditors.TryGetValue(collabID, out _))
                 JournalEditors.Remove(collabID);
         }
-        
+
         internal static void Load() {
             JournalEditors.Clear();
-            
+
             Everest.Events.Journal.OnEnter += OnJournalEnter;
         }
 
@@ -42,7 +42,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             AreaData forceArea = new DynData<Overworld>(journal.Overworld).Get<AreaData>("collabInGameForcedArea");
             if (forceArea == null)
                 return;
-            
+
             // custom journal: throw away all pages.
             journal.Pages.Clear();
 
@@ -63,12 +63,12 @@ namespace Celeste.Mod.CollabUtils2.UI {
             // if necessary, redraw the first page to include the stickers
             if (journal.Pages.ElementAtOrDefault(0) is OuiJournalCoverWithStickers coverWithStickers)
                 coverWithStickers.Redraw(journal.CurrentPageBuffer);
-            
+
             // reset journal entry data
             VanillaJournal = true;
             ShowOnlyDiscovered = false;
         }
-        
+
         // ModInterop exports
         [ModExportName("CollabUtils2.JournalHelper")]
         private static class ModExports {
