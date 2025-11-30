@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace Celeste.Mod.CollabUtils2.UI {
-    class OuiJournalCoverWithStickers : OuiJournalCover {
+    public class OuiJournalCoverWithStickers : OuiJournalCover {
         private static Dictionary<string, MTexture> textures = new Dictionary<string, MTexture>();
 
         public static void Load() {

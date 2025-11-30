@@ -3,6 +3,7 @@ using Celeste.Mod.Helpers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Monocle;
+using MonoMod.ModInterop;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -81,6 +82,19 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private int lastSelectedWarpIndex = -1;
         private float scaleMultiplier = 1f;
         private float finalScale => actualScale * scaleMultiplier;
+        
+        // mod interop
+        private static readonly Dictionary<string, Action<Entity, List<Component>>> CustomRenderActions = new Dictionary<string, Action<Entity, List<Component>>>();
+        public static void AddCustomRenderAction(string collabID, Action<Entity, List<Component>> action) {
+            if (CustomRenderActions.TryGetValue(collabID, out _))
+                CustomRenderActions[collabID] = action;
+            else
+                CustomRenderActions.Add(collabID, action);
+        }
+        public static void RemoveCustomRenderAction(string collabID) {
+            if (CustomRenderActions.TryGetValue(collabID, out _))
+                CustomRenderActions.Remove(collabID);
+        }
 
         private Rectangle windowBounds;
         private Rectangle mapBounds;
@@ -595,7 +609,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             if (lobbyMapInfo.ShowHeartCount) {
                 // try to get a custom id
-                var id = InGameOverworldHelper.GetGuiHeartSpriteId(selection.SID, AreaMode.Normal);
+                var id = InGameOverworldHelper.GetGuiHeartSpriteId(selection.SID + "_lobbyMap", AreaMode.Normal)
+                    ?? InGameOverworldHelper.GetGuiHeartSpriteId(selection.SID, AreaMode.Normal);
 
                 if (id == null) {
                     heartSprite = GFX.GuiSpriteBank.Create("heartgem0");
@@ -700,6 +715,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (CollabModule.Instance.SaveData.ShowVisitedPoints) {
                 drawVisitedPoints();
             }
+
+            string currentCollabName = LobbyHelper.GetCollabNameForSID(SceneAs<Level>().Session.Area.SID);
+            if (CustomRenderActions.TryGetValue(currentCollabName, out Action<Entity, List<Component>> customRenderAction))
+                customRenderAction(this, markerComponents);
 
             drawForeground();
         }
@@ -1161,7 +1180,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         /// <summary>
         /// Represents a map marker as an image.
         /// </summary>
-        private class MarkerImage : Image {
+        public class MarkerImage : Image {
             public readonly LobbyMapController.MarkerInfo Info;
 
             public MarkerImage(LobbyMapController.MarkerInfo info) : base(null) {
@@ -1202,6 +1221,21 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
         }
 
+        #endregion
+        
+        #region ModInterop
+        
+        // ModInterop exports
+        [ModExportName("CollabUtils2.LobbyMapUI")]
+        private static class ModExports {
+            public static void AddCustomRenderAction(string collabID, Action<Entity, List<Component>> editor) {
+                LobbyMapUI.AddCustomRenderAction(collabID, editor);
+            }
+            public static void RemoveCustomRenderAction(string collabID) {
+                LobbyMapUI.RemoveCustomRenderAction(collabID);
+            }
+        }
+        
         #endregion
     }
 }

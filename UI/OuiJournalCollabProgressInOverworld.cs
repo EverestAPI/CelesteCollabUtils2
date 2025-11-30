@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace Celeste.Mod.CollabUtils2.UI {
-    class OuiJournalCollabProgressInOverworld : OuiJournalPage {
+    public class OuiJournalCollabProgressInOverworld : OuiJournalPage {
 
         private Table table;
 
