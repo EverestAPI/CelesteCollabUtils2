@@ -105,28 +105,9 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             Audio.SetMusic(null);
             Audio.SetAmbience(null);
 
-            // display an endscreen if enabled in mod options AND speedrun timer is enabled (or else the endscreen won't show anything anyway).
-            if (CollabModule.Instance.Settings.DisplayEndScreenForAllMaps && Settings.Instance.SpeedrunClock != SpeedrunType.Off) {
-                Scene.Add(new AreaCompleteInfoInLevel());
-
-                // force the player to wait a bit, so that the info shows up
-                yield return 0.5f;
-
-                // wait for an input
-                while (!Input.MenuConfirm.Pressed && !Input.MenuCancel.Pressed) {
-                    yield return null;
-                }
-            } else {
-                // wait 1 second max
-                float timer = 0f;
-                while (!Input.MenuConfirm.Pressed && !Input.MenuCancel.Pressed && timer <= 1f) {
-                    yield return null;
-                    timer += Engine.DeltaTime;
-                }
-            }
-
-            // get out of here, back to the lobby
-            level.DoScreenWipe(false, () => Engine.Scene = new LevelExitToLobby(LevelExit.Mode.Completed, level.Session));
+            // display the end screen and get out of here!
+            yield return new SwapImmediately(ReturnToLobbyHelper.DisplayCollabMapEndScreenIfEnabled());
+            ReturnToLobbyHelper.TriggerReturnToLobby();
         }
 
         public override void Update() {

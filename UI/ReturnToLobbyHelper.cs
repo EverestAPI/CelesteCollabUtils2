@@ -464,6 +464,33 @@ namespace Celeste.Mod.CollabUtils2.UI {
             orig(self);
         }
 
+        public static IEnumerator DisplayCollabMapEndScreenIfEnabled() {
+            // display an endscreen if enabled in mod options AND speedrun timer is enabled (or else the endscreen won't show anything anyway).
+            if (CollabModule.Instance.Settings.DisplayEndScreenForAllMaps && Settings.Instance.SpeedrunClock != SpeedrunType.Off) {
+                Engine.Scene.Add(new AreaCompleteInfoInLevel());
+
+                // force the player to wait a bit, so that the info shows up
+                yield return 0.5f;
+
+                // wait for an input
+                while (!Input.MenuConfirm.Pressed && !Input.MenuCancel.Pressed) {
+                    yield return null;
+                }
+            } else {
+                // wait 1 second max
+                float timer = 0f;
+                while (!Input.MenuConfirm.Pressed && !Input.MenuCancel.Pressed && timer <= 1f) {
+                    yield return null;
+                    timer += Engine.DeltaTime;
+                }
+            }
+        }
+
+        public static void TriggerReturnToLobby() {
+            Level level = (Level) Engine.Scene;
+            level.DoScreenWipe(false, () => Engine.Scene = new LevelExitToLobby(LevelExit.Mode.Completed, level.Session));
+        }
+
         // ModInterop exports
 
         [ModExportName("CollabUtils2.ReturnToLobbyHelper")]
@@ -525,6 +552,23 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     // instead of whatever we had in our session last time.
                     OnSessionCreated();
                 }
+            }
+
+            /// <summary>
+            /// Displays the endscreen of the individual collab map if the player enabled it, pauses for up to 1 second otherwise.
+            /// This is the same behavior as mini hearts.
+            /// </summary>
+            /// <returns>A coroutine that should be run through in order to show the endscreen and wait for user input</returns>
+            public static IEnumerator DisplayCollabMapEndScreenIfEnabled() {
+                return ReturnToLobbyHelper.DisplayCollabMapEndScreenIfEnabled();
+            }
+
+            /// <summary>
+            /// Triggers the transition that sends the player back to the lobby from an individual collab map,
+            /// like mini hearts do.
+            /// </summary>
+            public static void TriggerReturnToLobby() {
+                ReturnToLobbyHelper.TriggerReturnToLobby();
             }
         }
     }
