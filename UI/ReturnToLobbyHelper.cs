@@ -47,8 +47,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private static IEnumerator modChapterPanelStartRoutine(On.Celeste.OuiChapterPanel.orig_StartRoutine orig, OuiChapterPanel self, string checkpoint) {
-            DynData<Overworld> data = new DynData<Overworld>(self.Overworld);
-            AreaData forceArea = self.Overworld == null ? null : data.Get<AreaData>("collabInGameForcedArea");
+            AreaData forceArea = self.Overworld == null ? null : InGameOverworldHelper.collabInGameForcedArea;
 
             // wait for the "chapter start" animation to finish.
             IEnumerator origRoutine = orig(self, checkpoint);
@@ -68,13 +67,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 string gymExitMapSID = null;
                 bool gymExitSaveAllowed = false;
 
-                if (data.Data.TryGetValue("gymExitMapSID", out object gymExitMapSIDRaw)) {
-                    gymExitMapSID = (string) gymExitMapSIDRaw;
-                    gymExitSaveAllowed = data.Get<bool>("gymExitSaveAllowed");
+                if (InGameOverworldHelper.gymExitMapSID != null) {
+                    gymExitMapSID = InGameOverworldHelper.gymExitMapSID;
+                    gymExitSaveAllowed = InGameOverworldHelper.gymExitSaveAllowed;
                 }
 
-                setUpReturnToLobby(data.Get<ChapterPanelTrigger.ReturnToLobbyMode>("returnToLobbyMode"),
-                    data.Get<bool>("saveAndReturnToLobbyAllowed"), gymExitMapSID, gymExitSaveAllowed);
+                setUpReturnToLobby(InGameOverworldHelper.returnToLobbyMode,
+                    InGameOverworldHelper.saveAndReturnToLobbyAllowed, gymExitMapSID, gymExitSaveAllowed);
             } else {
                 // current chapter panel isn't in-game: make sure the "temporary" variables are empty.
                 temporaryLobbySIDHolder = null;

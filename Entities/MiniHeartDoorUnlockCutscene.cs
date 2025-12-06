@@ -34,8 +34,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             door.ForceTrigger = true;
 
             // wait for door to be open.
-            DynData<HeartGemDoor> doorData = new DynData<HeartGemDoor>(door);
-            while (doorData.Get<float>("openPercent") < 1f) {
+            while (door.openPercent < 1f) {
                 yield return null;
             }
             yield return 1f;
@@ -56,11 +55,10 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 level.Camera.Position = player.CameraTarget;
 
                 // instant open the door
-                DynData<HeartGemDoor> doorData = new DynData<HeartGemDoor>(door);
-                doorData["openPercent"] = 1f;
-                doorData["Opened"] = true;
-                doorData["Counter"] = door.Requires;
-                float openDistance = doorData.Get<float>("openDistance");
+                door.openPercent = 1f;
+                door.Opened = true;
+                door.Counter = door.Requires;
+                float openDistance = door.openDistance;
                 door.TopSolid.Bottom = door.Y - openDistance;
                 door.BotSolid.Top = door.Y + openDistance;
 

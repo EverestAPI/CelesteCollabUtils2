@@ -45,8 +45,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             base.Added(scene);
 
             // fix the bloom to match golden alpha
-            DynData<Strawberry> self = new DynData<Strawberry>(this);
-            self.Get<BloomPoint>("bloom").Alpha = 0.5f;
+            bloom.Alpha = 0.5f;
 
             if (CollabMapDataProcessor.SilverBerries.ContainsKey(levelSet)) {
                 int missingBerries = 0;
@@ -90,7 +89,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                         // make rainbow berry invisible for now...
                         Visible = false;
                         Collidable = false;
-                        self.Get<BloomPoint>("bloom").Visible = (self.Get<VertexLight>("light").Visible = false);
+                        bloom.Visible = (light.Visible = false);
 
                         // now we wait for the player to enter the trigger. filling the HologramForCutscene field will tell the trigger to create the cutscene.
                         HologramForCutscene = hologram;

@@ -54,7 +54,7 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
 
                                 // usual "close pause menu" stuff (minus the sound).
                                 self.Paused = false;
-                                new DynData<Level>(self)["unpauseTimer"] = 0.15f;
+                                self.unpauseTimer = 0.15f;
                                 menu.Close();
                             },
 

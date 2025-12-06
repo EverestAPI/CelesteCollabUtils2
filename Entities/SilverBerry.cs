@@ -19,7 +19,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private readonly bool alwaysSpawn;
 
         public SilverBerry(EntityData data, Vector2 offset, EntityID gid) : base(data, offset, gid) {
-            new DynData<Strawberry>(this)["Golden"] = true;
+            Golden = true;
             alwaysSpawn = data.Bool("alwaysSpawn");
 
             if (P_SilverGlow == null) {

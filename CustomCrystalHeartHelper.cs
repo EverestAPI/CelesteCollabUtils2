@@ -22,21 +22,20 @@ namespace Celeste.Mod.CollabUtils2 {
 
             if (!self.IsGhost && LobbyHelper.IsHeartSide(self.SceneAs<Level>().Session.Area.GetSID())) {
                 // we are in a heartside: make the heart particles match the heart sprite.
-                DynData<HeartGem> selfData = new DynData<HeartGem>(self);
-                switch (selfData.Get<Sprite>("sprite").Texture.AtlasPath) {
+                switch (self.sprite.Texture.AtlasPath) {
                     case "collectables/heartGem/1/00":
-                        selfData["shineParticle"] = HeartGem.P_RedShine;
+                        self.shineParticle = HeartGem.P_RedShine;
                         break;
                     case "collectables/heartGem/2/00":
-                        selfData["shineParticle"] = HeartGem.P_GoldShine;
+                        self.shineParticle = HeartGem.P_GoldShine;
                         break;
                     case "CollabUtils2/crystalHeart/expert/00":
-                        selfData["shineParticle"] = new ParticleType(HeartGem.P_BlueShine) {
+                        self.shineParticle = new ParticleType(HeartGem.P_BlueShine) {
                             Color = Color.Orange
                         };
                         break;
                     case "CollabUtils2/crystalHeart/grandmaster/00":
-                        selfData["shineParticle"] = new ParticleType(HeartGem.P_BlueShine) {
+                        self.shineParticle = new ParticleType(HeartGem.P_BlueShine) {
                             Color = Color.DarkViolet
                         };
                         break;
@@ -54,24 +53,23 @@ namespace Celeste.Mod.CollabUtils2 {
                 self.Heart.Play("spin");
 
                 // and adjust the screen color to the heart.
-                DynData<Poem> selfData = new DynData<Poem>(self);
                 switch (self.Heart.Texture.AtlasPath) {
                     case "collectables/heartgem/1/spin00":
-                        selfData["Color"] = Calc.HexToColor("ff668a");
+                        self.Color = Calc.HexToColor("ff668a");
                         break;
                     case "collectables/heartgem/2/spin00":
-                        selfData["Color"] = Calc.HexToColor("D2AD01");
+                        self.Color = Calc.HexToColor("D2AD01");
                         break;
                     case "CollabUtils2/crystalHeart/expert/spin00":
-                        selfData["Color"] = Color.Orange;
+                        self.Color = Color.Orange;
                         break;
                     case "CollabUtils2/crystalHeart/grandmaster/spin00":
-                        selfData["Color"] = Calc.HexToColor("d9a2ff");
+                        self.Color = Calc.HexToColor("d9a2ff");
                         break;
                     default:
                         Match match = Regex.Match(self.Heart.Texture.AtlasPath, "poemtextcolor_([0-9a-fA-F]{6})");
                         if (match.Success) {
-                            selfData["Color"] = Calc.HexToColor(match.Groups[1].Value);
+                            self.Color = Calc.HexToColor(match.Groups[1].Value);
                         }
                         break;
                 }

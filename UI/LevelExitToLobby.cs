@@ -83,7 +83,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 Engine.Scene = new OverworldLoader(
                     exitMode == LevelExit.Mode.Completed ? Overworld.StartMode.AreaComplete : Overworld.StartMode.AreaQuit);
             } else {
-                new DynData<Session>(newSession)["pauseTimerUntilAction"] = true;
+                LobbyHelper.pauseTimerUntilAction = true;
                 LevelEnter.Go(newSession, false);
             }
         }

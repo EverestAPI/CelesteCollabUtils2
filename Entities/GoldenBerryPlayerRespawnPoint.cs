@@ -23,7 +23,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private static Session onSessionRestart(On.Celeste.Session.orig_Restart orig, Session self, string intoLevel) {
             Session restartSession = orig(self, intoLevel);
 
-            if (intoLevel != null && Engine.Scene is LevelExit exit && new DynData<LevelExit>(exit).Get<LevelExit.Mode>("mode") == LevelExit.Mode.GoldenBerryRestart) {
+            if (intoLevel != null && Engine.Scene is LevelExit exit && exit.mode == LevelExit.Mode.GoldenBerryRestart) {
                 // we are doing a golden berry restart! look for a golden berry player respawn point.
                 LevelData levelData = restartSession.MapData.Levels.Find(level => level.Name == intoLevel);
                 EntityData goldenRespawn = levelData.Entities.FirstOrDefault(entityData => entityData.Name == "CollabUtils2/GoldenBerryPlayerRespawnPoint");

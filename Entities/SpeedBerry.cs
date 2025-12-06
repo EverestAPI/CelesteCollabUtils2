@@ -62,7 +62,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         public SpeedBerry(EntityData data, Vector2 offset, EntityID id, bool restored) : base(data, offset, id) {
             EntityData = data;
-            new DynData<Strawberry>(this)["Golden"] = true;
+            Golden = true;
             BronzeTime = data.Float("bronzeTime", 15f);
             SilverTime = data.Float("silverTime", 10f);
             GoldTime = data.Float("goldTime", 5f);

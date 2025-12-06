@@ -39,7 +39,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 return;
 
             // get current area
-            AreaData forceArea = new DynData<Overworld>(journal.Overworld).Get<AreaData>("collabInGameForcedArea");
+            AreaData forceArea = InGameOverworldHelper.collabInGameForcedArea;
             if (forceArea == null)
                 return;
 

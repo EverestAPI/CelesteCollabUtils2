@@ -20,6 +20,7 @@ using System.Reflection;
 namespace Celeste.Mod.CollabUtils2 {
     public static class LobbyHelper {
 
+        internal static bool pauseTimerUntilAction = false;
         private static bool unpauseTimerOnNextAction = false;
 
         private static ILHook hookOnOuiFileSelectRenderDisplayName;
@@ -196,6 +197,9 @@ namespace Celeste.Mod.CollabUtils2 {
             On.Celeste.OuiFileSelectSlot.Show += onOuiFileSelectSlotShow;
             On.Celeste.OuiChapterPanel.UpdateStats += onChapterPanelUpdateStats;
 
+            On.Monocle.Entity.Removed += onEntityRemoved;
+            On.Celeste.Overworld.End += onOverworldEnd;
+
             hookOnOuiFileSelectRenderDisplayName = new ILHook(typeof(OuiFileSelectSlot).GetMethod("orig_Render"), modSelectSlotLevelSetDisplayName);
             hookOnOuiFileSelectRenderStrawberryStamp = new ILHook(typeof(OuiFileSelectSlot).GetMethod("orig_Render"), modSelectSlotCollectedStrawberries);
             hookOnOuiJournalPoemLines = new ILHook(typeof(OuiJournalPoem).GetNestedType("PoemLine", BindingFlags.NonPublic).GetMethod("Render"), modJournalPoemHeartColors);
@@ -234,6 +238,9 @@ namespace Celeste.Mod.CollabUtils2 {
             Everest.Events.Journal.OnEnter -= onJournalEnter;
             On.Celeste.OuiFileSelectSlot.Show -= onOuiFileSelectSlotShow;
             On.Celeste.OuiChapterPanel.UpdateStats -= onChapterPanelUpdateStats;
+
+            On.Monocle.Entity.Removed -= onEntityRemoved;
+            On.Celeste.Overworld.End -= onOverworldEnd;
 
             hookOnOuiFileSelectRenderDisplayName?.Dispose();
             hookOnOuiFileSelectRenderStrawberryStamp?.Dispose();
@@ -317,9 +324,8 @@ namespace Celeste.Mod.CollabUtils2 {
         private static void onLoadLevel(On.Celeste.Level.orig_LoadLevel orig, Level self, Player.IntroTypes playerIntro, bool isFromLoader) {
             orig(self, playerIntro, isFromLoader);
 
-            DynData<Session> sessionData = new DynData<Session>(self.Session);
-            if (sessionData.Data.ContainsKey("pauseTimerUntilAction") && sessionData.Get<bool>("pauseTimerUntilAction")) {
-                sessionData["pauseTimerUntilAction"] = false;
+            if (pauseTimerUntilAction) {
+                pauseTimerUntilAction = false;
                 self.TimerStopped = true;
                 unpauseTimerOnNextAction = true;
             }
@@ -550,7 +556,7 @@ namespace Celeste.Mod.CollabUtils2 {
                 // we just assist unlocked the lobbies!
                 LevelSetStats stats = SaveData.Instance.GetLevelSetStatsFor($"{collab}/0-Lobbies");
                 stats.UnlockedAreas = stats.Areas.Count - 1;
-                List<OuiChapterSelectIcon> icons = new DynData<OuiChapterSelect>((self.Scene as Overworld).GetUI<OuiChapterSelect>()).Get<List<OuiChapterSelectIcon>>("icons");
+                List<OuiChapterSelectIcon> icons = (self.Scene as Overworld).GetUI<OuiChapterSelect>().icons;
                 icons[self.Area + 1].AssistModeUnlockable = false;
                 for (int i = self.Area + 2; i <= SaveData.Instance.MaxArea; i++) {
                     icons[i].Show();
@@ -572,6 +578,21 @@ namespace Celeste.Mod.CollabUtils2 {
                 journal.Pages.Insert(1, new OuiJournalCollabProgressInOverworld(journal));
             }
         }
+
+        // those are Everest fields, so they aren't publicized :despair:
+        private static readonly FieldInfo f_totalGoldenStrawberries = typeof(OuiFileSelectSlot).GetField("totalGoldenStrawberries", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static readonly FieldInfo f_totalHeartGems = typeof(OuiFileSelectSlot).GetField("totalHeartGems", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static readonly FieldInfo f_totalCassettes = typeof(OuiFileSelectSlot).GetField("totalCassettes", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static readonly FieldInfo f_maxStrawberryCount = typeof(OuiFileSelectSlot).GetField("maxStrawberryCount", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static readonly FieldInfo f_maxGoldenStrawberryCount = typeof(OuiFileSelectSlot).GetField("maxGoldenStrawberryCount", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static readonly FieldInfo f_maxStrawberryCountIncludingUntracked = typeof(OuiFileSelectSlot).GetField("maxStrawberryCountIncludingUntracked", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static readonly FieldInfo f_maxCassettes = typeof(OuiFileSelectSlot).GetField("maxCassettes", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static readonly FieldInfo f_maxCrystalHearts = typeof(OuiFileSelectSlot).GetField("maxCrystalHearts", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static readonly FieldInfo f_maxCrystalHeartsExcludingCSides = typeof(OuiFileSelectSlot).GetField("maxCrystalHeartsExcludingCSides", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static readonly FieldInfo f_summitStamp = typeof(OuiFileSelectSlot).GetField("false", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static readonly FieldInfo f_farewellStamp = typeof(OuiFileSelectSlot).GetField("false", BindingFlags.NonPublic | BindingFlags.Instance);
+
+        private static readonly Dictionary<OuiFileSelectSlot, List<string>> customHeartsPerSaveFileSlot = new Dictionary<OuiFileSelectSlot, List<string>>();
 
         private static void onOuiFileSelectSlotShow(On.Celeste.OuiFileSelectSlot.orig_Show orig, OuiFileSelectSlot self) {
             // If we are currently in a collab map, display the lobby level set stats instead.
@@ -618,24 +639,23 @@ namespace Celeste.Mod.CollabUtils2 {
                     }
                 }
 
-                DynData<OuiFileSelectSlot> slotData = new DynData<OuiFileSelectSlot>(self);
-                slotData["totalGoldenStrawberries"] = totalGoldenStrawberries;
-                slotData["totalHeartGems"] = totalHeartGems;
-                slotData["totalCassettes"] = totalCassettes;
-                slotData["maxStrawberryCount"] = maxStrawberryCount;
-                slotData["maxGoldenStrawberryCount"] = maxGoldenStrawberryCount;
-                slotData["maxStrawberryCountIncludingUntracked"] = maxStrawberryCountIncludingUntracked;
-                slotData["maxCassettes"] = maxCassettes;
-                slotData["maxCrystalHearts"] = maxCrystalHearts;
-                slotData["maxCrystalHeartsExcludingCSides"] = maxCrystalHeartsExcludingCSides;
-                slotData["summitStamp"] = false;
-                slotData["farewellStamp"] = false;
+                f_totalGoldenStrawberries.SetValue(self, totalGoldenStrawberries);
+                f_totalHeartGems.SetValue(self, totalHeartGems);
+                f_totalCassettes.SetValue(self, totalCassettes);
+                f_maxStrawberryCount.SetValue(self, maxStrawberryCount);
+                f_maxGoldenStrawberryCount.SetValue(self, maxGoldenStrawberryCount);
+                f_maxStrawberryCountIncludingUntracked.SetValue(self, maxStrawberryCountIncludingUntracked);
+                f_maxCassettes.SetValue(self, maxCassettes);
+                f_maxCrystalHearts.SetValue(self, maxCrystalHearts);
+                f_maxCrystalHeartsExcludingCSides.SetValue(self, maxCrystalHeartsExcludingCSides);
+                f_summitStamp.SetValue(self, false);
+                f_farewellStamp.SetValue(self, false);
 
                 self.Strawberries.Amount = totalStrawberries;
                 self.Strawberries.OutOf = maxStrawberryCount;
             }
 
-            // figure out if some hearts are customized, and store it in DynData so that a IL hook can access it later.
+            // figure out if some hearts are customized, and store it in a static variable so that an IL hook can access it later.
             SaveData oldInstance = SaveData.Instance;
             SaveData.Instance = self.SaveData;
             List<string> customJournalHearts = new List<string>();
@@ -654,7 +674,7 @@ namespace Celeste.Mod.CollabUtils2 {
                     }
                 }
             }
-            new DynData<OuiFileSelectSlot>(self)["collabutils2_customhearts"] = customJournalHearts;
+            customHeartsPerSaveFileSlot[self] = customJournalHearts;
             SaveData.Instance = oldInstance;
 
             // Restore the last area if it was replaced at the beginning of this method.
@@ -668,7 +688,7 @@ namespace Celeste.Mod.CollabUtils2 {
 
             if (IsCollabLobby(self.Area.SID)) {
                 // hide the deaths counter for collab lobbies.
-                new DynData<OuiChapterPanel>(self).Get<DeathsCounter>("deaths").Visible = false;
+                self.deaths.Visible = false;
             }
         }
 
@@ -763,11 +783,21 @@ namespace Celeste.Mod.CollabUtils2 {
         }
 
         private static MTexture reskinJournalHearts(MTexture orig, OuiFileSelectSlot self, int index) {
-            List<string> customJournalHearts = new DynData<OuiFileSelectSlot>(self).Get<List<string>>("collabutils2_customhearts");
+            List<string> customJournalHearts = customHeartsPerSaveFileSlot.GetValueOrDefault(self);
             if (customJournalHearts != null && customJournalHearts[index] != null) {
                 return MTN.Journal[customJournalHearts[index]]; // "Journal" and not "FileSelect" because it re-uses the setup people made for their custom journals.
             }
             return orig;
+        }
+
+        private static void onEntityRemoved(On.Monocle.Entity.orig_Removed orig, Monocle.Entity self, Scene scene) {
+            if (self is OuiFileSelectSlot slot) customHeartsPerSaveFileSlot.Remove(slot);
+            orig(self, scene);
+        }
+
+        private static void onOverworldEnd(On.Celeste.Overworld.orig_End orig, Overworld self) {
+            customHeartsPerSaveFileSlot.Clear();
+            orig(self);
         }
 
         private static void modJournalPoemHeartColors(ILContext il) {

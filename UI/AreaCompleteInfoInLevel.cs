@@ -12,6 +12,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
     /// </summary>
     [Tracked]
     public class AreaCompleteInfoInLevel : Entity {
+        // this field is added by Everest, so it isn't publicized
         private static FieldInfo areaCompleteVersionFull = typeof(AreaComplete).GetField("versionFull", BindingFlags.NonPublic | BindingFlags.Static);
 
         private static ILHook versionNumberAndVariantsHook;

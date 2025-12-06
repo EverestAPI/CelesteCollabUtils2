@@ -175,6 +175,9 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         /// </summary>
         private static SpeedBerry storedSpeedBerry;
 
+        private static bool hasSilver;
+        private static bool hasSpeedBerry;
+
         private static PlayerDeadBody onPlayerDie(On.Celeste.Player.orig_Die orig, Player self, Vector2 direction, bool evenIfInvincible, bool registerDeathInStats) {
             bool hasSilver = false;
             SpeedBerry speedBerry = null;
@@ -187,11 +190,10 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                     speedBerry = (SpeedBerry) speedBerryFollower.Entity;
                     // Don't restart the player to the starting room if there's still time left on the speed berry
                     if (!speedBerry.TimeRanOut) {
-                        DynData<Strawberry> data = new DynData<Strawberry>(speedBerry);
-                        data["Golden"] = false;
+                        speedBerry.Golden = false;
                         // set the starting position to the spawn point
                         Level level = self.SceneAs<Level>();
-                        data["start"] = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top)) + new Vector2(8, -16);
+                        speedBerry.start = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top)) + new Vector2(8, -16);
                     }
                 }
             }
@@ -199,10 +201,12 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             PlayerDeadBody body = orig(self, direction, evenIfInvincible, registerDeathInStats);
 
             if (body != null) {
-                DynData<PlayerDeadBody> data = new DynData<PlayerDeadBody>(body);
-                data["hasSilver"] = hasSilver;
-                data["hasSpeedBerry"] = (speedBerry != null);
+                StrawberryHooks.hasSilver = hasSilver;
+                StrawberryHooks.hasSpeedBerry = (speedBerry != null);
                 storedSpeedBerry = speedBerry;
+            } else {
+                StrawberryHooks.hasSilver = false;
+                StrawberryHooks.hasSpeedBerry = false;
             }
             return body;
         }
@@ -222,9 +226,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         }
 
         private static string modGoldenDeathSound(string orig, PlayerDeadBody self) {
-            DynData<PlayerDeadBody> data = new DynData<PlayerDeadBody>(self);
-            bool hasSilver = data.Get<bool>("hasSilver");
-            bool hasSpeedBerry = data.Get<bool>("hasSpeedBerry");
             if (hasSilver && hasSpeedBerry) {
                 return "event:/SC2020_silverTimedBerry_death";
             }

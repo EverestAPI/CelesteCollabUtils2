@@ -91,13 +91,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private static AreaKey? lastArea;
 
-        private static readonly Type t_OuiChapterPanelOption = typeof(OuiChapterPanel)
-            .GetNestedType("Option", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
-        private static MethodInfo m_PlayExpandSfx = typeof(OuiChapterPanel)
-            .GetMethod("PlayExpandSfx", BindingFlags.NonPublic | BindingFlags.Instance);
-        private static readonly MethodInfo m_UpdateStats = typeof(OuiChapterPanel)
-            .GetMethod("UpdateStats", BindingFlags.NonPublic | BindingFlags.Instance);
-
         private static List<Hook> altSidesHelperHooks = new List<Hook>();
         private static Hook hookOnMapDataOrigLoad;
 
@@ -198,23 +191,33 @@ namespace Celeste.Mod.CollabUtils2.UI {
             onChangePresenceHook = null;
         }
 
+        internal static AreaData collabInGameForcedArea;
+        internal static bool saveAndReturnToLobbyAllowed;
+        internal static string gymExitMapSID;
+        internal static bool gymExitSaveAllowed;
+        internal static ChapterPanelTrigger.ReturnToLobbyMode returnToLobbyMode;
+        private static FancyText.Text panelCollabCredits;
+        private static List<CreditsTag> panelCollabCreditsTags;
+        private static bool exitFromGym;
+        private static bool heartDirty;
+        private static string[] activeGymTech;
+        private static readonly HashSet<DeathsCounter> deathsCountersAddedByCollabUtils = new HashSet<DeathsCounter>();
+
         private static void OnOuiChapterPanelStart(On.Celeste.OuiChapterPanel.orig_Start orig, OuiChapterPanel self, string checkpoint) {
             if (overworldWrapper != null) {
                 (overworldWrapper.Scene as Level).PauseLock = true;
 
-                DynData<Overworld> overworldData = new DynData<Overworld>(self.Overworld);
-
                 if (gymSubmenuSelected(self)) {
                     // We picked a map in the second menu: this is a gym.
                     self.Area.Mode = AreaMode.Normal;
-                    overworldData["gymExitMapSID"] = overworldData.Get<AreaData>("collabInGameForcedArea").SID;
-                    overworldData["gymExitSaveAllowed"] = overworldData.Get<bool>("saveAndReturnToLobbyAllowed");
-                    overworldData["saveAndReturnToLobbyAllowed"] = false;
+                    gymExitMapSID = collabInGameForcedArea.SID;
+                    gymExitSaveAllowed = saveAndReturnToLobbyAllowed;
+                    saveAndReturnToLobbyAllowed = false;
                 } else if (returnToLobbySelected(self)) {
                     // The third option is "return to lobby".
                     self.Focused = false;
                     Audio.Play("event:/ui/world_map/chapter/back");
-                    overworldData["returnToLobbyMode"] = ChapterPanelTrigger.ReturnToLobbyMode.RemoveReturn;
+                    returnToLobbyMode = ChapterPanelTrigger.ReturnToLobbyMode.RemoveReturn;
                     self.Add(new Coroutine(ExitFromGymToLobbyRoutine(self)));
                     return;
                 } else if (checkpoint != "collabutils_continue") {
@@ -315,7 +318,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private static void OnChapterPanelReset(On.Celeste.OuiChapterPanel.orig_Reset orig, OuiChapterPanel self) {
             resetCrystalHeart(self);
 
-            AreaData forceArea = self.Overworld == null ? null : new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea");
+            AreaData forceArea = self.Overworld == null ? null : collabInGameForcedArea;
             if (forceArea == null) {
                 orig(self);
                 customizeCrystalHeart(self);
@@ -329,30 +332,27 @@ namespace Celeste.Mod.CollabUtils2.UI {
             save.LastArea = forceArea.ToKey();
             save.CurrentSession = null;
 
-            DynData<OuiChapterSelect> ouiChapterSelect = new DynData<OuiChapterSelect>(self.Overworld.GetUI<OuiChapterSelect>());
-            OuiChapterSelectIcon icon = ouiChapterSelect.Get<List<OuiChapterSelectIcon>>("icons")[save.LastArea.ID];
+            OuiChapterSelect ouiChapterSelect = self.Overworld.GetUI<OuiChapterSelect>();
+            OuiChapterSelectIcon icon = ouiChapterSelect.icons[save.LastArea.ID];
             icon.SnapToSelected();
             icon.Add(new Coroutine(UpdateIconRoutine(self, icon)));
 
             orig(self);
             customizeCrystalHeart(self);
 
-            DynData<OuiChapterPanel> data = new DynData<OuiChapterPanel>(self);
-            data["hasCollabCredits"] = true;
-
             if (!isPanelShowingLobby()) {
-                data["chapter"] = (new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea").Name + "_author").DialogCleanOrNull() ?? "";
+                self.chapter = (collabInGameForcedArea.Name + "_author").DialogCleanOrNull() ?? "";
 
                 if (CollabMapDataProcessor.GymLevels.ContainsKey(forceArea.SID)) {
                     CollabMapDataProcessor.GymLevelInfo info = CollabMapDataProcessor.GymLevels[forceArea.SID];
 
                     if (info.Tech.Any(name => CollabMapDataProcessor.GymTech.ContainsKey(name))) {
                         // some of the tech used here exists in gyms! be sure to display the "tech" tab.
-                        data.Get<IList>("modes").Add(DynamicData.New(t_OuiChapterPanelOption)(new {
+                        self.modes.Add(new OuiChapterPanel.Option {
                             Label = Dialog.Clean("collabutils2_overworld_gym"),
                             BgColor = Calc.HexToColor("FFD07E"),
                             Icon = GFX.Gui["CollabUtils2/menu/ppt"],
-                        }));
+                        });
                     }
                 }
             }
@@ -360,49 +360,52 @@ namespace Celeste.Mod.CollabUtils2.UI {
             // LastArea is also checked in Render.
             save.CurrentSession = session;
 
-            if (new DynData<Overworld>(self.Overworld).Data.TryGetValue("exitFromGym", out object val) && (bool) val) {
-                data.Get<IList>("modes").Add(DynamicData.New(t_OuiChapterPanelOption)(new {
+            if (exitFromGym) {
+                self.modes.Add(new OuiChapterPanel.Option {
                     Label = Dialog.Clean("collabutils2_overworld_exit"),
                     BgColor = Calc.HexToColor("FA5139"),
                     Icon = GFX.Gui["menu/exit"],
-                }));
+                });
 
                 // directly select the current gym.
-                ChapterPanelSwapToGym(self, data);
+                ChapterPanelSwapToGym(self);
             }
         }
 
-        private static void ChapterPanelSwapToGym(OuiChapterPanel self, DynData<OuiChapterPanel> data) {
+        private class OuiChapterPanelGymOption : OuiChapterPanel.Option {
+            public string GymTechDifficuty;
+        }
+
+        private static void ChapterPanelSwapToGym(OuiChapterPanel self) {
             self.Area.Mode = (AreaMode) 1;
             self.Overworld.ShowInputUI = true;
 
-            m_UpdateStats?.Invoke(self, new object[] { false, null, null, null });
+            self.UpdateStats(false);
 
-            data["resizing"] = false;
-            data["selectingMode"] = false;
-            data["contentOffset"] = new Vector2(440f, data.Get<Vector2>("contentOffset").Y);
-            data["height"] = 730f;
-            data["option"] = 0;
-            data["gymTech"] = CollabMapDataProcessor.GymLevels[new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea").SID].Tech;
+            self.resizing = false;
+            self.selectingMode = false;
+            self.contentOffset = new Vector2(440f, self.contentOffset.Y);
+            self.height = 730f;
+            self.option = 0;
+            activeGymTech = CollabMapDataProcessor.GymLevels[collabInGameForcedArea.SID].Tech;
 
-            IList checkpoints = data.Get<IList>("checkpoints");
+            List<OuiChapterPanel.Option> checkpoints = self.checkpoints;
             checkpoints.Clear();
-            string[] tech = data.Get<string[]>("gymTech").Where(name => CollabMapDataProcessor.GymTech.ContainsKey(name)).ToArray();
+            string[] tech = activeGymTech.Where(name => CollabMapDataProcessor.GymTech.ContainsKey(name)).ToArray();
 
             for (int i = 0; i < tech.Length; i++) {
                 string techName = tech[i];
 
                 CollabMapDataProcessor.GymTechInfo techInfo = CollabMapDataProcessor.GymTech[techName];
-                var checkpoint = DynamicData.New(t_OuiChapterPanelOption)(new {
+                var checkpoint = new OuiChapterPanelGymOption {
                     Label = Dialog.Clean($"{LobbyHelper.GetCollabNameForSID(techInfo.AreaSID)}_gym_{techName}_name", null),
                     BgColor = difficultyColors[techInfo.Difficulty],
                     Icon = GFX.Gui[$"CollabUtils2/areaselect/startpoint_{techInfo.Difficulty}"],
                     CheckpointLevelName = $"{techInfo.AreaSID}|{techInfo.Level}",
                     Large = false,
-                    Siblings = tech.Length
-                });
-
-                new DynamicData(checkpoint).Set("gymTechDifficulty", techInfo.Difficulty);
+                    Siblings = tech.Length,
+                    GymTechDifficuty = techInfo.Difficulty
+                };
                 checkpoints.Add(checkpoint);
 
                 string currentSid = SaveData.Instance.CurrentSession_Safe.Area.SID;
@@ -410,34 +413,33 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
                 if (techInfo.AreaSID == currentSid && techInfo.Level == currentRoom) {
                     // this is the one we're currently in! select it
-                    data["option"] = i;
+                    self.option = i;
                 }
             }
 
             for (int i = 0; i < checkpoints.Count; i++) {
-                var option = new DynamicData(checkpoints[i]);
-                option.Set("Pop", data.Get<int>("option") == i ? 1f : 0f);
-                option.Set("Appear", 1f);
-                option.Set("CheckpointSlideOut", data.Get<int>("option") > i ? 1f : 0f);
-                option.Set("Faded", 0f);
-                option.Invoke("SlideTowards", i, checkpoints.Count, true);
+                var option = checkpoints[i];
+                option.Pop = self.option == i ? 1f : 0f;
+                option.Appear = 1f;
+                option.CheckpointSlideOut = self.option > i ? 1f : 0f;
+                option.Faded = 0f;
+                option.SlideTowards(i, checkpoints.Count, true);
             }
 
-            IList modes = data.Get<IList>("modes");
+            List<OuiChapterPanel.Option> modes = self.modes;
             for (int i = 0; i < modes.Count; i++) {
-                new DynamicData(modes[i]).Invoke("SlideTowards", i, modes.Count, true);
+                modes[i].SlideTowards(i, modes.Count, true);
             }
 
             self.Focused = true;
         }
 
         private static void resetCrystalHeart(OuiChapterPanel panel) {
-            DynData<OuiChapterPanel> panelData = new DynData<OuiChapterPanel>(panel);
-            if (panelData.Data.ContainsKey("heartDirty") && panelData.Get<bool>("heartDirty")) {
-                panel.Remove(panelData["heart"] as HeartGemDisplay);
-                panelData["heart"] = new HeartGemDisplay(0, false);
-                panel.Add(panelData["heart"] as HeartGemDisplay);
-                panelData["heartDirty"] = false;
+            if (heartDirty) {
+                panel.Remove(panel.heart);
+                panel.heart = new HeartGemDisplay(0, false);
+                panel.Add(panel.heart);
+                heartDirty = false;
             }
         }
 
@@ -445,7 +447,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             // customize heart gem icon
             string sid = panel.Area.SID;
 
-            Sprite[] heartSprites = new DynData<OuiChapterPanel>(panel).Get<HeartGemDisplay>("heart").Sprites;
+            Sprite[] heartSprites = panel.heart.Sprites;
             for (int side = 0; side < 3; side++) {
                 string animId = GetGuiHeartSpriteId(sid, (AreaMode) side);
 
@@ -455,7 +457,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
                     heartSprites[side] = heartSprite;
                     heartSprite.Play("spin");
-                    new DynData<OuiChapterPanel>(panel)["heartDirty"] = true;
+                    heartDirty = true;
                 }
             }
         }
@@ -548,8 +550,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 // for entering the map, display the second page (containing the credits) if they are defined in English.txt.
                 // otherwise, if there is a saved state, also display the chapter panel.
                 return orig(self, area) ||
-                    Dialog.Has(new DynData<Overworld>(overworldWrapper.WrappedScene).Get<AreaData>("collabInGameForcedArea").Name + "_collabcredits") ||
-                    Dialog.Has(new DynData<Overworld>(overworldWrapper.WrappedScene).Get<AreaData>("collabInGameForcedArea").Name + "_collabcreditstags") ||
+                    Dialog.Has(collabInGameForcedArea.Name + "_collabcredits") ||
+                    Dialog.Has(collabInGameForcedArea.Name + "_collabcreditstags") ||
                     CollabModule.Instance.SaveData.SessionsPerLevel.ContainsKey(area.SID);
             }
 
@@ -571,8 +573,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private static void OnChapterPanelSwap(On.Celeste.OuiChapterPanel.orig_Swap orig, OuiChapterPanel self) {
             if (Engine.Scene != overworldWrapper?.Scene || (!gymSubmenuSelected(self)
-                && !Dialog.Has(new DynData<Overworld>(overworldWrapper.WrappedScene).Get<AreaData>("collabInGameForcedArea").Name + "_collabcredits")
-                && !Dialog.Has(new DynData<Overworld>(overworldWrapper.WrappedScene).Get<AreaData>("collabInGameForcedArea").Name + "_collabcreditstags")
+                && !Dialog.Has(collabInGameForcedArea.Name + "_collabcredits")
+                && !Dialog.Has(collabInGameForcedArea.Name + "_collabcreditstags")
                 && !CollabModule.Instance.SaveData.SessionsPerLevel.ContainsKey(self.Area.SID))) {
 
                 // this isn't an in-game chapter panel, or there is no custom second page (no credits, no saved state, no gyms) => use vanilla
@@ -580,8 +582,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 return;
             }
 
-            DynData<OuiChapterPanel> data = new DynData<OuiChapterPanel>(self);
-            bool selectingMode = data.Get<bool>("selectingMode");
+            bool selectingMode = self.selectingMode;
 
             if (!selectingMode) {
                 orig(self);
@@ -589,50 +590,50 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
 
             if (gymSubmenuSelected(self)) {
-                data["gymTech"] = CollabMapDataProcessor.GymLevels[new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea").SID].Tech;
+                activeGymTech = CollabMapDataProcessor.GymLevels[collabInGameForcedArea.SID].Tech;
 
                 self.Focused = false;
                 self.Overworld.ShowInputUI = !selectingMode;
-                self.Add(new Coroutine(ChapterPanelSwapGymsRoutine(self, data)));
+                self.Add(new Coroutine(ChapterPanelSwapGymsRoutine(self)));
             } else {
-                string areaName = new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea").Name;
-                data["collabCredits"] = FancyText.Parse(Dialog.Get(areaName + "_collabcredits").Replace("{break}", "{n}"), int.MaxValue, int.MaxValue, defaultColor: Color.Black);
+                string areaName = collabInGameForcedArea.Name;
+                panelCollabCredits = FancyText.Parse(Dialog.Get(areaName + "_collabcredits").Replace("{break}", "{n}"), int.MaxValue, int.MaxValue, defaultColor: Color.Black);
 
                 if (Dialog.Has(areaName + "_collabcreditstags")) {
-                    data["collabCreditsTags"] = CreditsTag.Parse(Dialog.Get(areaName + "_collabcreditstags"));
+                    panelCollabCreditsTags = CreditsTag.Parse(Dialog.Get(areaName + "_collabcreditstags"));
                 } else {
-                    data["collabCreditsTags"] = new List<CreditsTag>();
+                    panelCollabCreditsTags = new List<CreditsTag>();
                 }
 
                 self.Focused = false;
                 self.Overworld.ShowInputUI = !selectingMode;
-                self.Add(new Coroutine(ChapterPanelSwapRoutine(self, data)));
+                self.Add(new Coroutine(ChapterPanelSwapRoutine(self)));
             }
         }
 
-        private static IEnumerator ChapterPanelSwapRoutine(OuiChapterPanel self, DynData<OuiChapterPanel> data) {
-            float fromHeight = data.Get<float>("height");
-            string forcedArea = new DynData<Overworld>(overworldWrapper.WrappedScene).Get<AreaData>("collabInGameForcedArea").Name;
+        private static IEnumerator ChapterPanelSwapRoutine(OuiChapterPanel self) {
+            float fromHeight = self.height;
+            string forcedArea = collabInGameForcedArea.Name;
             int toHeight = Dialog.Has(forcedArea + "_collabcredits") ? 730 : (Dialog.Has(forcedArea + "_collabcreditstags") ? 450 : 300);
 
-            data["resizing"] = true;
-            m_PlayExpandSfx.Invoke(self, new object[] { fromHeight, (float) toHeight });
+            self.resizing = true;
+            self.PlayExpandSfx(fromHeight, toHeight);
 
             float offset = 800f;
             for (float p = 0f; p < 1f; p += Engine.DeltaTime * 4f) {
                 yield return null;
-                data["contentOffset"] = new Vector2(440f + offset * Ease.CubeIn(p), data.Get<Vector2>("contentOffset").Y);
-                data["height"] = MathHelper.Lerp(fromHeight, toHeight, Ease.CubeOut(p * 0.5f));
+                self.contentOffset = new Vector2(440f + offset * Ease.CubeIn(p), self.contentOffset.Y);
+                self.height = MathHelper.Lerp(fromHeight, toHeight, Ease.CubeOut(p * 0.5f));
             }
 
-            data["selectingMode"] = false;
+            self.selectingMode = false;
 
-            IList checkpoints = data.Get<IList>("checkpoints");
+            List<OuiChapterPanel.Option> checkpoints = self.checkpoints;
             checkpoints.Clear();
 
             bool hasContinueOption = CollabModule.Instance.SaveData.SessionsPerLevel.ContainsKey(self.Area.SID);
 
-            checkpoints.Add(DynamicData.New(t_OuiChapterPanelOption)(new {
+            checkpoints.Add(new OuiChapterPanel.Option {
                 Label = Dialog.Clean(hasContinueOption ? "collabutils2_chapterpanel_start" : "overworld_start", null),
                 BgColor = Calc.HexToColor("eabe26"),
                 Icon = GFX.Gui["areaselect/startpoint"],
@@ -640,10 +641,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 CheckpointOffset = new Vector2(Calc.Random.Range(-16, 16), Calc.Random.Range(-16, 16)),
                 Large = false,
                 Siblings = hasContinueOption ? 2 : 1
-            }));
+            });
 
             if (hasContinueOption) {
-                checkpoints.Add(DynamicData.New(t_OuiChapterPanelOption)(new {
+                checkpoints.Add(new OuiChapterPanel.Option {
                     Label = Dialog.Clean("collabutils2_chapterpanel_continue", null),
                     Icon = GFX.Gui["areaselect/checkpoint"],
                     CheckpointRotation = Calc.Random.Choose(-1, 1) * Calc.Random.Range(0.05f, 0.2f),
@@ -651,93 +652,91 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     Large = false,
                     Siblings = 2,
                     CheckpointLevelName = "collabutils_continue"
-                }));
+                });
             }
 
-            data["option"] = hasContinueOption ? 1 : 0;
+            self.option = hasContinueOption ? 1 : 0;
 
             for (int i = 0; i < checkpoints.Count; i++) {
-                new DynamicData(checkpoints[i]).Invoke("SlideTowards", i, checkpoints.Count, true);
+                checkpoints[i].SlideTowards(i, checkpoints.Count, true);
             }
 
-            new DynamicData(checkpoints[hasContinueOption ? 1 : 0]).Set("Pop", 1f);
+            checkpoints[hasContinueOption ? 1 : 0].Pop = 1f;
             for (float p = 0f; p < 1f; p += Engine.DeltaTime * 4f) {
                 yield return null;
-                data["height"] = MathHelper.Lerp(fromHeight, toHeight, Ease.CubeOut(Math.Min(1f, 0.5f + p * 0.5f)));
-                data["contentOffset"] = new Vector2(440f + offset * (1f - Ease.CubeOut(p)), data.Get<Vector2>("contentOffset").Y);
+                self.height = MathHelper.Lerp(fromHeight, toHeight, Ease.CubeOut(Math.Min(1f, 0.5f + p * 0.5f)));
+                self.contentOffset = new Vector2(440f + offset * (1f - Ease.CubeOut(p)), self.contentOffset.Y);
             }
 
-            data["contentOffset"] = new Vector2(440f, data.Get<Vector2>("contentOffset").Y);
-            data["height"] = (float) toHeight;
+            self.contentOffset = new Vector2(440f, self.contentOffset.Y);
+            self.height = toHeight;
             self.Focused = true;
-            data["resizing"] = false;
+            self.resizing = false;
         }
 
-        private static IEnumerator ChapterPanelSwapGymsRoutine(OuiChapterPanel self, DynData<OuiChapterPanel> data) {
-            float fromHeight = data.Get<float>("height");
+        private static IEnumerator ChapterPanelSwapGymsRoutine(OuiChapterPanel self) {
+            float fromHeight = self.height;
             int toHeight = 730;
 
-            data["resizing"] = true;
-            m_PlayExpandSfx.Invoke(self, new object[] { fromHeight, (float) toHeight });
+            self.resizing = true;
+            self.PlayExpandSfx(fromHeight, toHeight);
 
             float offset = 800f;
             for (float p = 0f; p < 1f; p += Engine.DeltaTime * 4f) {
                 yield return null;
-                data["contentOffset"] = new Vector2(440f + offset * Ease.CubeIn(p), data.Get<Vector2>("contentOffset").Y);
-                data["height"] = MathHelper.Lerp(fromHeight, toHeight, Ease.CubeOut(p * 0.5f));
+                self.contentOffset = new Vector2(440f + offset * Ease.CubeIn(p), self.contentOffset.Y);
+                self.height = MathHelper.Lerp(fromHeight, toHeight, Ease.CubeOut(p * 0.5f));
             }
 
-            data["selectingMode"] = false;
+            self.selectingMode = false;
 
-            IList checkpoints = data.Get<IList>("checkpoints");
+            List<OuiChapterPanel.Option> checkpoints = self.checkpoints;
             checkpoints.Clear();
 
-            string[] tech = data.Get<string[]>("gymTech").Where(name => CollabMapDataProcessor.GymTech.ContainsKey(name)).ToArray();
+            string[] tech = activeGymTech.Where(name => CollabMapDataProcessor.GymTech.ContainsKey(name)).ToArray();
             foreach (string techName in tech) {
                 CollabMapDataProcessor.GymTechInfo techInfo = CollabMapDataProcessor.GymTech[techName];
-                var checkpoint = DynamicData.New(t_OuiChapterPanelOption)(new {
+                var checkpoint = new OuiChapterPanelGymOption {
                     Label = Dialog.Clean($"{LobbyHelper.GetCollabNameForSID(techInfo.AreaSID)}_gym_{techName}_name", null),
                     BgColor = difficultyColors[techInfo.Difficulty],
                     Icon = GFX.Gui[$"CollabUtils2/areaselect/startpoint_{techInfo.Difficulty}"],
                     CheckpointLevelName = $"{techInfo.AreaSID}|{techInfo.Level}",
                     Large = false,
-                    Siblings = tech.Count()
-                });
-                new DynamicData(checkpoint).Set("gymTechDifficulty", techInfo.Difficulty);
+                    Siblings = tech.Count(),
+                    GymTechDifficuty = techInfo.Difficulty
+                };
                 checkpoints.Add(checkpoint);
             }
 
-            data["option"] = 0;
+            self.option = 0;
 
             for (int i = 0; i < checkpoints.Count; i++) {
-                new DynamicData(checkpoints[i]).Invoke("SlideTowards", i, checkpoints.Count, true);
+                checkpoints[i].SlideTowards(i, checkpoints.Count, true);
             }
 
-            new DynamicData(checkpoints[0]).Set("Pop", 1f);
+            checkpoints[0].Pop = 1f;
             for (float p = 0f; p < 1f; p += Engine.DeltaTime * 4f) {
                 yield return null;
-                data["height"] = MathHelper.Lerp(fromHeight, toHeight, Ease.CubeOut(Math.Min(1f, 0.5f + p * 0.5f)));
-                data["contentOffset"] = new Vector2(440f + offset * (1f - Ease.CubeOut(p)), data.Get<Vector2>("contentOffset").Y);
+                self.height = MathHelper.Lerp(fromHeight, toHeight, Ease.CubeOut(Math.Min(1f, 0.5f + p * 0.5f)));
+                self.contentOffset = new Vector2(440f + offset * (1f - Ease.CubeOut(p)), self.contentOffset.Y);
             }
 
-            data["contentOffset"] = new Vector2(440f, data.Get<Vector2>("contentOffset").Y);
-            data["height"] = (float) toHeight;
+            self.contentOffset = new Vector2(440f, self.contentOffset.Y);
+            self.height = toHeight;
             self.Focused = true;
-            data["resizing"] = false;
+            self.resizing = false;
         }
 
         private static void OnChapterPanelDrawCheckpoint(On.Celeste.OuiChapterPanel.orig_DrawCheckpoint orig, OuiChapterPanel self, Vector2 center, object option, int checkpointIndex) {
             if (overworldWrapper != null) {
-                DynData<OuiChapterPanel> selfData = new DynData<OuiChapterPanel>(self);
-
                 if (gymSubmenuSelected(self)) {
-                    string[] collabTech = selfData.Get<string[]>("gymTech");
+                    string[] collabTech = activeGymTech;
                     if (collabTech != null && collabTech.Length != 0) {
-                        OnChapterPanelDrawGymCheckpoint(self, center, option, checkpointIndex, collabTech);
+                        OnChapterPanelDrawGymCheckpoint(self, center, (OuiChapterPanel.Option) option, checkpointIndex, collabTech);
                         return;
                     }
                 } else {
-                    FancyText.Text collabCredits = selfData.Get<FancyText.Text>("collabCredits");
+                    FancyText.Text collabCredits = panelCollabCredits;
                     if (collabCredits != null) {
                         OnChapterPanelDrawCollabCreditsCheckpoint(self, center, checkpointIndex);
                         return;
@@ -749,24 +748,23 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private static void OnChapterPanelDrawCollabCreditsCheckpoint(OuiChapterPanel self, Vector2 center, int checkpointIndex) {
-            DynData<OuiChapterPanel> selfData = new DynData<OuiChapterPanel>(self);
-            FancyText.Text collabCredits = selfData.Get<FancyText.Text>("collabCredits");
+            FancyText.Text collabCredits = panelCollabCredits;
 
             if (checkpointIndex > 0) {
                 return;
             }
 
-            bool hasCredits = Dialog.Has(new DynData<Overworld>(overworldWrapper.WrappedScene).Get<AreaData>("collabInGameForcedArea").Name + "_collabcredits");
+            bool hasCredits = Dialog.Has(collabInGameForcedArea.Name + "_collabcredits");
 
             // panel height is 730 pixels when completely open, or 450 if there are only tags.
             // Tags should fade out quicker than text, because they are near the bottom of the panel, and it looks bad more quickly when the panel closes.
-            float alphaText = Calc.ClampedMap(selfData.Get<float>("height"), 600, 730);
-            float alphaTags = Calc.ClampedMap(selfData.Get<float>("height"), hasCredits ? 700 : 540, hasCredits ? 730 : 450);
+            float alphaText = Calc.ClampedMap(self.height, 600, 730);
+            float alphaTags = Calc.ClampedMap(self.height, hasCredits ? 700 : 540, hasCredits ? 730 : 450);
 
             float heightTakenByTags = 0f;
 
             // draw tags.
-            List<CreditsTag> collabCreditsTags = selfData.Get<List<CreditsTag>>("collabCreditsTags");
+            List<CreditsTag> collabCreditsTags = panelCollabCreditsTags;
             if (collabCreditsTags != null) {
                 // split tags in lines, fitting as many tags as possible on each line.
                 List<List<CreditsTag>> lines = new List<List<CreditsTag>>();
@@ -854,8 +852,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 0.8f * alphaText);
         }
 
-        private static void OnChapterPanelDrawGymCheckpoint(OuiChapterPanel self, Vector2 center, object option, int checkpointIndex, string[] collabTech) {
-            AreaData forcedArea = new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea");
+        private static void OnChapterPanelDrawGymCheckpoint(OuiChapterPanel self, Vector2 center, OuiChapterPanel.Option option, int checkpointIndex, string[] collabTech) {
+            AreaData forcedArea = collabInGameForcedArea;
 
             if (CollabMapDataProcessor.GymTech.ContainsKey(collabTech[checkpointIndex])) {
                 CollabMapDataProcessor.GymTechInfo techInfo = CollabMapDataProcessor.GymTech[collabTech[checkpointIndex]];
@@ -863,8 +861,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 string imageName = $"{LobbyHelper.GetCollabNameForSID(forcedArea.SID)}/Gyms/{collabTech[checkpointIndex]}";
                 MTexture imagePreview = MTN.Checkpoints.Has(imageName) ? MTN.Checkpoints[imageName] : null;
                 if (imagePreview != null) {
-                    var optionData = new DynamicData(option);
-                    Vector2 vector = center + (Vector2.UnitX * 800f * Ease.CubeIn(optionData.Get<float>("CheckpointSlideOut")));
+                    Vector2 vector = center + (Vector2.UnitX * 800f * Ease.CubeIn(option.CheckpointSlideOut));
                     imagePreview.DrawCentered(vector, Color.White, Vector2.One * 0.5f);
                 }
             }
@@ -931,7 +928,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 instr => instr.MatchLdarg(0),
                 instr => instr.MatchCallvirt<OuiChapterPanel>("get_option"),
                 instr => true,
-                instr => instr.MatchLdfld(t_OuiChapterPanelOption, "Label"))) {
+                instr => instr.MatchLdfld(typeof(OuiChapterPanel.Option), "Label"))) {
                 Logger.Log("CollabUtils2/InGameOverworldHelper", $"Modding chapter option label position at {cursor.Index} in IL for OuiChapterPanel.Render");
 
                 cursor.Emit(OpCodes.Ldarg_0);
@@ -944,7 +941,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private static string modChapterPanelName(string name, OuiChapterPanel self) {
             if (overworldWrapper != null) {
-                AreaData forcedArea = new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea");
+                AreaData forcedArea = collabInGameForcedArea;
                 if (forcedArea != null) {
                     return forcedArea.Name;
                 }
@@ -978,7 +975,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private static bool hideChapterNumberIfNecessary(bool orig, OuiChapterPanel self) {
-            if (Engine.Scene == overworldWrapper?.Scene && new DynData<OuiChapterPanel>(self).Get<string>("chapter").Length == 0) {
+            if (Engine.Scene == overworldWrapper?.Scene && self.chapter.Length == 0) {
                 return true; // interlude!
             } else {
                 return orig;
@@ -987,15 +984,14 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private static bool modChapterOptionLabelPosition(OuiChapterPanel self) {
             if (overworldWrapper != null) {
-                var selfData = new DynData<OuiChapterPanel>(self);
-                if (gymSubmenuSelected(self) && !selfData.Get<bool>("selectingMode")) {
-                    var option = new DynamicData(selfData.Get<IList>("options")[selfData.Get<int>("option")]);
-                    string difficulty = option.Get<string>("gymTechDifficulty");
+                if (gymSubmenuSelected(self) && !self.selectingMode) {
+                    var option = self.options[self.option];
+                    string difficulty = option is OuiChapterPanelGymOption o ? o.GymTechDifficuty : null;
                     if (difficulty != null) {
                         string difficultyLabel = Dialog.Clean($"collabutils2_difficulty_{difficulty}");
-                        Vector2 renderPos = selfData.Get<Vector2>("OptionsRenderPosition");
-                        ActiveFont.Draw(option.Get<string>("Label"), renderPos + new Vector2(0f, -140f), new Vector2(0.5f, 1f), Vector2.One * (1f + selfData.Get<Wiggler>("wiggler").Value * 0.1f), Color.Black * 0.8f);
-                        ActiveFont.Draw(difficultyLabel, renderPos + new Vector2(0f, -140f), new Vector2(0.5f, 0f), Vector2.One * 0.6f * (1f + selfData.Get<Wiggler>("wiggler").Value * 0.1f), Color.Black * 0.8f);
+                        Vector2 renderPos = self.OptionsRenderPosition;
+                        ActiveFont.Draw(option.Label, renderPos + new Vector2(0f, -140f), new Vector2(0.5f, 1f), Vector2.One * (1f + self.wiggler.Value * 0.1f), Color.Black * 0.8f);
+                        ActiveFont.Draw(difficultyLabel, renderPos + new Vector2(0f, -140f), new Vector2(0.5f, 0f), Vector2.One * 0.6f * (1f + self.wiggler.Value * 0.1f), Color.Black * 0.8f);
                         return true;
                     }
                 }
@@ -1007,7 +1003,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             IEnumerator origc = orig(self, from);
 
             SaveData save = SaveData.Instance;
-            AreaData forceArea = new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea");
+            AreaData forceArea = collabInGameForcedArea;
             if (forceArea != null) {
                 lastArea = save.LastArea;
                 save.LastArea = forceArea.ToKey();
@@ -1028,7 +1024,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             orig(self, wiggle, overrideStrawberryWiggle, overrideDeathWiggle, overrideHeartWiggle);
 
-            DeathsCounter deathsCounter = new DynData<OuiChapterPanel>(self).Get<DeathsCounter>("deaths");
+            DeathsCounter deathsCounter = self.deaths;
 
             if (Engine.Scene == overworldWrapper?.Scene) {
                 // within lobbies, death counts always show up, even if you didn't beat the map yet.
@@ -1043,16 +1039,15 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 pathToSkull = "CollabUtils2/skulls/" + lobbyLevelSet;
             }
             if (GFX.Gui.Has(pathToSkull)) {
-                new DynData<DeathsCounter>(deathsCounter)["icon"] = GFX.Gui[pathToSkull];
+                deathsCounter.icon = GFX.Gui[pathToSkull];
+                deathsCountersAddedByCollabUtils.Add(deathsCounter);
             }
-            new DynData<DeathsCounter>(deathsCounter)["modifiedByCollabUtils"] = GFX.Gui.Has(pathToSkull);
-
 
             if (isPanelShowingLobby(self) || Engine.Scene == overworldWrapper?.Scene) {
                 // turn strawberry counter into golden if there only are golden berries in the map
                 MapData mapData = AreaData.Get(self.Area).Mode[0].MapData;
                 if (mapData.DetectedStrawberriesIncludingUntracked == mapData.Goldenberries.Count) {
-                    StrawberriesCounter strawberriesCounter = new DynData<OuiChapterPanel>(self).Get<StrawberriesCounter>("strawberries");
+                    StrawberriesCounter strawberriesCounter = self.strawberries;
                     strawberriesCounter.Golden = true;
                     strawberriesCounter.ShowOutOf = false;
                 }
@@ -1072,8 +1067,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private static float unhardcodeDeathsCounterWidth(float orig, DeathsCounter self, MTexture icon) {
-            DynData<DeathsCounter> data = new DynData<DeathsCounter>(self);
-            if (data.Data.ContainsKey("modifiedByCollabUtils") && data.Get<bool>("modifiedByCollabUtils")) {
+            if (deathsCountersAddedByCollabUtils.Contains(self)) {
                 return icon.Width - 4; // vanilla icons are 66px wide.
             }
             return orig;
@@ -1135,10 +1129,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             Open(player, AreaData.Get(sid) ?? AreaData.Get(0), out OuiHelper_EnterChapterPanel.Start,
                 overworld => {
-                    DynData<Overworld> overworldData = new DynData<Overworld>(overworld);
-                    overworldData.Set("returnToLobbyMode", returnToLobbyMode);
-                    overworldData.Set("saveAndReturnToLobbyAllowed", savingAllowed);
-                    overworldData.Set("exitFromGym", exitFromGym);
+                    InGameOverworldHelper.returnToLobbyMode = returnToLobbyMode;
+                    saveAndReturnToLobbyAllowed = savingAllowed;
+                    InGameOverworldHelper.exitFromGym = exitFromGym;
                 });
         }
 
@@ -1175,11 +1168,24 @@ namespace Celeste.Mod.CollabUtils2.UI {
             overworldWrapper.OnEnd += (overworld) => {
                 if (overworldWrapper?.WrappedScene == overworld) {
                     overworldWrapper = null;
+
+                    // forget everything!
+                    collabInGameForcedArea = null;
+                    saveAndReturnToLobbyAllowed = false;
+                    gymExitMapSID = null;
+                    gymExitSaveAllowed = false;
+                    returnToLobbyMode = default;
+                    panelCollabCredits = null;
+                    panelCollabCreditsTags = null;
+                    exitFromGym = false;
+                    heartDirty = false;
+                    activeGymTech = null;
+                    deathsCountersAddedByCollabUtils.Clear();
                 }
             };
 
             level.Add(overworldWrapper);
-            new DynData<Overworld>(overworldWrapper.WrappedScene).Set("collabInGameForcedArea", area);
+            collabInGameForcedArea = area;
             callback?.Invoke(overworldWrapper.WrappedScene);
 
             overworldWrapper.Add(new Coroutine(UpdateRoutine(overworldWrapper)));
@@ -1276,15 +1282,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private static bool gymSubmenuSelected(OuiChapterPanel panel = null) {
             panel = panel ?? getChapterPanel();
-            return panel != null && (new DynData<Overworld>(panel.Overworld).Data.ContainsKey("gymExitMapSID") ||
-                (panel.Area.Mode == AreaMode.BSide && CollabMapDataProcessor.GymLevels.ContainsKey(
-                new DynData<Overworld>(panel.Overworld).Get<AreaData>("collabInGameForcedArea").SID)));
+            return panel != null && (gymExitMapSID != null ||
+                (panel.Area.Mode == AreaMode.BSide && CollabMapDataProcessor.GymLevels.ContainsKey(collabInGameForcedArea.SID)));
         }
 
         private static bool returnToLobbySelected(OuiChapterPanel panel = null) {
             panel = panel ?? getChapterPanel();
-            return panel != null && panel.Area.Mode == AreaMode.CSide
-                && new DynData<Overworld>(panel.Overworld).Data.TryGetValue("exitFromGym", out object val) && (bool) val;
+            return panel != null && panel.Area.Mode == AreaMode.CSide && exitFromGym;
         }
 
         private static void ModFixTitleLength(ILContext il) {
@@ -1304,7 +1308,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private static float resizeChapterPanelTitleTag(float orig, OuiChapterPanel self) {
             if (Engine.Scene == overworldWrapper?.Scene) {
-                string mapAuthor = DynamicData.For(self).Get<string>("chapter");
+                string mapAuthor = self.chapter;
                 if (mapAuthor?.Length != 0) {
                     // if the map has author, use the wider one between it and the map title
                     float width = ActiveFont.Measure(mapAuthor).X * 0.6f;
