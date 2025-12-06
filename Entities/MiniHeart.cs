@@ -19,8 +19,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private EventInstance pauseMusicSnapshot;
         private SoundEmitter collectSound;
 
-        private TimeRateModifier timeRateModifier;
-
         public MiniHeart(EntityData data, Vector2 position, EntityID gid)
             : base(data, position, gid) {
 
@@ -51,9 +49,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 item.OnCollect();
             }
 
-            timeRateModifier = new TimeRateModifier(1);
-            Add(timeRateModifier);
-
             // play the collect jingle
             collectSound = SoundEmitter.Play("event:/SC2020_heartShard_get", this);
 
@@ -68,7 +63,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             yield return null;
             Celeste.Freeze(0.2f);
             yield return null;
-            timeRateModifier.Multiplier = 0.5f;
+            setTimeRate(0.5f);
             player.Depth = Depths.FormationSequences;
             for (int i = 0; i < 10; i++) {
                 Scene.Add(new AbsorbOrb(Position));
@@ -83,7 +78,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             // slow down time further, to a freeze
             Visible = false;
             for (float time = 0f; time < 2f; time += Engine.RawDeltaTime) {
-                timeRateModifier.Multiplier = Calc.Approach(timeRateModifier.Multiplier, 0f, Engine.RawDeltaTime * 0.25f);
+                setTimeRate(Calc.Approach(getTimeRate(), 0f, Engine.RawDeltaTime * 0.25f));
                 yield return null;
             }
 
@@ -96,7 +91,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 yield return 100f;
             }
 
-            Remove(timeRateModifier);
+            setTimeRate(1f);
             Tag = Tags.FrozenUpdate;
             level.Frozen = true;
 
@@ -114,6 +109,11 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             yield return new SwapImmediately(ReturnToLobbyHelper.DisplayCollabMapEndScreenIfEnabled());
             ReturnToLobbyHelper.TriggerReturnToLobby();
         }
+
+#pragma warning disable CS0618 // Switching to a TimeRateModifier desyncs TASes
+        private static void setTimeRate(float timeRate) => Engine.TimeRate = timeRate;
+        private static float getTimeRate() => Engine.TimeRate;
+#pragma warning restore CS0618
 
         public override void Update() {
             base.Update();
@@ -134,7 +134,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             level.Frozen = false;
             level.CanRetry = true;
             level.FormationBackdrop.Display = false;
-            if (timeRateModifier != null) Remove(timeRateModifier);
+            setTimeRate(1f);
 
             if (collectSound != null) {
                 collectSound.RemoveSelf();
