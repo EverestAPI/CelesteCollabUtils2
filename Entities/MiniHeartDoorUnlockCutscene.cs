@@ -62,7 +62,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 doorData["Counter"] = door.Requires;
                 float openDistance = doorData.Get<float>("openDistance");
                 door.TopSolid.Bottom = door.Y - openDistance;
-                door.BottomSolid.Top = door.Y + openDistance;
+                door.BotSolid.Top = door.Y + openDistance;
 
                 // and throw the open animation out of the window.
                 foreach (Component component in door) {

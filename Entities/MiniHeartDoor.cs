@@ -1,4 +1,5 @@
 using Celeste.Mod.Entities;
+using Celeste.Mod.Helpers;
 using Microsoft.Xna.Framework;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -63,7 +64,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
             // find the "player is on the left side of the door" check
             // FNA version
-            bool hookPointFound = cursor.TryGotoNext(MoveType.After,
+            bool hookPointFound = cursor.TryGotoNextBestFit(MoveType.After,
                 instr => instr.MatchLdarg(0),
                 instr => instr.OpCode == OpCodes.Ldfld && (instr.Operand as FieldReference).Name.Contains("player"),
                 instr => instr.MatchCallvirt<Entity>("get_X"),
@@ -75,7 +76,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 cursor.Index = 0;
 
                 // XNA version
-                hookPointFound = cursor.TryGotoNext(MoveType.After,
+                hookPointFound = cursor.TryGotoNextBestFit(MoveType.After,
                     instr => instr.OpCode == OpCodes.Ldloc_S,
                     instr => instr.MatchCallvirt<Entity>("get_X"),
                     instr => instr.OpCode == OpCodes.Ldloc_1,
@@ -87,20 +88,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 cursor.Index--;
                 cursor.Emit(OpCodes.Dup);
                 cursor.Index++;
-                cursor.EmitDelegate<Func<HeartGemDoor, float, float>>((self, orig) => {
-                    if (self is MiniHeartDoor door) {
-                        // actually check the Y poition of the player instead.
-                        Player player = self.Scene.Tracker.GetEntity<Player>();
-                        if (door.ForceTrigger || (player != null && player.Center.Y > door.Y - door.height && player.Center.Y < door.Y + door.height)) {
-                            // player has same height as door => ok (return MaxValue so that the door is further right than the player)
-                            return float.MaxValue;
-                        } else {
-                            // player has not same height as door => ko (return MinValue so that the door is further left than the player)
-                            return float.MinValue;
-                        }
-                    }
-                    return orig;
-                });
+                cursor.EmitDelegate<Func<HeartGemDoor, float, float>>(patchDoorForApproachOnBothSides);
             }
 
             cursor.Index = 0;
@@ -110,13 +98,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
                 cursor.Emit(OpCodes.Ldarg_0);
                 cursor.Emit(OpCodes.Ldfld, refToThis);
-                cursor.EmitDelegate<Func<float, HeartGemDoor, float>>((orig, self) => {
-                    if (self is MiniHeartDoor door && door.ForceTrigger) {
-                        // force trigger the door by replacing the approach distance by... basically positive infinity.
-                        return float.MaxValue;
-                    }
-                    return orig;
-                });
+                cursor.EmitDelegate<Func<float, HeartGemDoor, float>>(makeDoorOpenOnCommand);
             }
 
             // add a patch at the place where the vanilla opened_heartgem_door_[heartcount] gets set.
@@ -125,13 +107,38 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
                 cursor.Emit(OpCodes.Ldarg_0);
                 cursor.Emit(OpCodes.Ldfld, refToThis);
-                cursor.EmitDelegate<Action<HeartGemDoor>>(self => {
-                    if (self is MiniHeartDoor door) {
-                        // mini heart doors use their own flags, that allow better differenciation between themselves by using entity ID.
-                        (door.Scene as Level).Session.SetFlag("opened_mini_heart_door_" + door.entityID, true);
-                    }
-                });
+                cursor.EmitDelegate<Action<HeartGemDoor>>(modMiniHeartDoorFlag);
             }
+        }
+
+        private static void modMiniHeartDoorFlag(HeartGemDoor self) {
+            if (self is MiniHeartDoor door) {
+                // mini heart doors use their own flags, that allow better differentiation between themselves by using entity ID.
+                (door.Scene as Level).Session.SetFlag("opened_mini_heart_door_" + door.entityID, true);
+            }
+        }
+
+        private static float patchDoorForApproachOnBothSides(HeartGemDoor self, float orig) {
+            if (self is MiniHeartDoor door) {
+                // actually check the Y position of the player instead.
+                Player player = self.Scene.Tracker.GetEntity<Player>();
+                if (door.ForceTrigger || (player != null && player.Center.Y > door.Y - door.height && player.Center.Y < door.Y + door.height)) {
+                    // player has same height as door => ok (return MaxValue so that the door is further right than the player)
+                    return float.MaxValue;
+                } else {
+                    // player has not same height as door => ko (return MinValue so that the door is further left than the player)
+                    return float.MinValue;
+                }
+            }
+            return orig;
+        }
+
+        private static float makeDoorOpenOnCommand(float orig, HeartGemDoor self) {
+            if (self is MiniHeartDoor door && door.ForceTrigger) {
+                // force trigger the door by replacing the approach distance by... basically positive infinity.
+                return float.MaxValue;
+            }
+            return orig;
         }
 
         private static void modDoorColor(ILContext il) {
@@ -139,17 +146,16 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("18668f"))) {
                 Logger.Log("CollabUtils2/MiniHeartDoor", $"Modding door at {cursor.Index} in IL for HeartGemDoor.DrawInterior");
                 cursor.Emit(OpCodes.Ldarg_0);
-                cursor.EmitDelegate<Func<string, HeartGemDoor, string>>((orig, self) => {
-                    if (self is MiniHeartDoor miniHeartDoor) {
-                        return miniHeartDoor.color;
-                    }
-                    return orig;
-                });
+                cursor.EmitDelegate<Func<string, HeartGemDoor, string>>(modHeartDoorColor);
             }
         }
 
-        public Solid TopSolid;
-        public Solid BottomSolid;
+        private static string modHeartDoorColor(string orig, HeartGemDoor self) {
+            if (self is MiniHeartDoor miniHeartDoor) {
+                return miniHeartDoor.color;
+            }
+            return orig;
+        }
 
         private string levelSet;
         private string color;
@@ -184,22 +190,17 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
             base.Added(scene);
 
-            DynData<HeartGemDoor> self = new DynData<HeartGemDoor>(this);
-            TopSolid = self.Get<Solid>("TopSolid");
-            BottomSolid = self.Get<Solid>("BotSolid");
-
             // resize the gate: it shouldn't take the whole screen height.
             TopSolid.Collider.Height = height;
-            BottomSolid.Collider.Height = height;
+            BotSolid.Collider.Height = height;
             TopSolid.Top = Y - height;
-            BottomSolid.Bottom = Y + height;
+            BotSolid.Bottom = Y + height;
 
             if (Opened) {
                 // place the blocks correctly in an open position.
-                float openDistance = self.Get<float>("openDistance");
                 TopSolid.Collider.Height -= openDistance;
-                BottomSolid.Collider.Height -= openDistance;
-                BottomSolid.Top += openDistance;
+                BotSolid.Collider.Height -= openDistance;
+                BotSolid.Top += openDistance;
             }
         }
 
@@ -213,9 +214,9 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 TopSolid.Collider.Height = height - displacement; // 30 - 4 = 26
                 TopSolid.Top = Y - height; // replace the block at 16
             }
-            if (BottomSolid.Bottom != Y + height && Opened) {
-                float displacement = BottomSolid.Top - Y;
-                BottomSolid.Collider.Height = height - displacement;
+            if (BotSolid.Bottom != Y + height && Opened) {
+                float displacement = BotSolid.Top - Y;
+                BotSolid.Collider.Height = height - displacement;
             }
         }
     }

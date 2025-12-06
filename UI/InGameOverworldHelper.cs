@@ -1,5 +1,6 @@
 using Celeste.Mod.CollabUtils2.Triggers;
 using Celeste.Mod.Entities;
+using Celeste.Mod.Helpers;
 using Microsoft.Xna.Framework;
 using Mono.Cecil.Cil;
 using Monocle;
@@ -875,13 +876,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             // 1. Swap the "chapter xx" and the map name positions.
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(-2f) || instr.MatchLdcR4(-18f))) {
                 Logger.Log("CollabUtils2/InGameOverworldHelper", $"Modding chapter panel title position at {cursor.Index} in IL for OuiChapterPanel.Render");
-                cursor.EmitDelegate<Func<float, float>>(orig => {
-                    if (Engine.Scene == overworldWrapper?.Scene && !isPanelShowingLobby()) {
-                        return orig == -18f ? -49f : 43f;
-                    } else {
-                        return orig;
-                    }
-                });
+                cursor.EmitDelegate<Func<float, float>>(swapChapterNumberAndName);
             }
 
             cursor.Index = 0;
@@ -894,22 +889,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
                 Logger.Log("CollabUtils2/InGameOverworldHelper", $"Modding chapter panel card at {cursor.Index} in IL for OuiChapterPanel.Render");
 
-                cursor.EmitDelegate<Func<string, string>>(orig => {
-                    if (orig != "areaselect/cardtop_golden" && orig != "areaselect/card_golden") {
-                        // chapter card was reskinned through Everest, so don't change it.
-                        return orig;
-                    }
-
-                    string sid = getCurrentPanelMapSID();
-
-                    if (CollabMapDataProcessor.MapsWithRainbowBerries.Contains(sid)) {
-                        return orig == "areaselect/cardtop_golden" ? "CollabUtils2/chapterCard/cardtop_rainbow" : "CollabUtils2/chapterCard/card_rainbow";
-                    }
-                    if (CollabMapDataProcessor.MapsWithSilverBerries.Contains(sid)) {
-                        return orig == "areaselect/cardtop_golden" ? "CollabUtils2/chapterCard/cardtop_silver" : "CollabUtils2/chapterCard/card_silver";
-                    }
-                    return orig;
-                });
+                cursor.EmitDelegate<Func<string, string>>(reskinGoldenChapterCard);
             }
 
             cursor.Index = 0;
@@ -918,13 +898,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCallvirt<AreaData>("get_Interlude_Safe"))) {
                 Logger.Log("CollabUtils2/InGameOverworldHelper", $"Modding chapter panel title position at {cursor.Index} in IL for OuiChapterPanel.Render");
                 cursor.Emit(OpCodes.Ldarg_0);
-                cursor.EmitDelegate<Func<bool, OuiChapterPanel, bool>>((orig, self) => {
-                    if (Engine.Scene == overworldWrapper?.Scene && new DynData<OuiChapterPanel>(self).Get<string>("chapter").Length == 0) {
-                        return true; // interlude!
-                    } else {
-                        return orig;
-                    }
-                });
+                cursor.EmitDelegate<Func<bool, OuiChapterPanel, bool>>(hideChapterNumberIfNecessary);
             }
 
             cursor.Index = 0;
@@ -934,15 +908,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdfld<AreaData>("Name"))) {
                 Logger.Log("FlushelineCollab/InGameOverworldHelper", $"Modding chapter panel title name at {cursor.Index} in IL for OuiChapterPanel.Render");
                 cursor.Emit(OpCodes.Ldarg_0);
-                cursor.EmitDelegate<Func<string, OuiChapterPanel, string>>((name, self) => {
-                    if (overworldWrapper != null) {
-                        AreaData forcedArea = new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea");
-                        if (forcedArea != null) {
-                            return forcedArea.Name;
-                        }
-                    }
-                    return name;
-                });
+                cursor.EmitDelegate<Func<string, OuiChapterPanel, string>>(modChapterPanelName);
             }
 
             cursor.Index = 0;
@@ -959,7 +925,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             cursor.Index = 0;
 
             // 5-2. Draw the difficulty underneath the checkpoint label in gyms.
-            while (cursor.TryGotoNext(MoveType.Before,
+            while (cursor.TryGotoNextBestFit(MoveType.Before,
                 instr => instr.MatchLdarg(0),
                 instr => instr.MatchCallvirt<OuiChapterPanel>("get_options"),
                 instr => instr.MatchLdarg(0),
@@ -969,27 +935,72 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 Logger.Log("CollabUtils2/InGameOverworldHelper", $"Modding chapter option label position at {cursor.Index} in IL for OuiChapterPanel.Render");
 
                 cursor.Emit(OpCodes.Ldarg_0);
-                cursor.EmitDelegate<Func<OuiChapterPanel, bool>>(self => {
-                    if (overworldWrapper != null) {
-                        var selfData = new DynData<OuiChapterPanel>(self);
-                        if (gymSubmenuSelected(self) && !selfData.Get<bool>("selectingMode")) {
-                            var option = new DynamicData(selfData.Get<IList>("options")[selfData.Get<int>("option")]);
-                            string difficulty = option.Get<string>("gymTechDifficulty");
-                            if (difficulty != null) {
-                                string difficultyLabel = Dialog.Clean($"collabutils2_difficulty_{difficulty}");
-                                Vector2 renderPos = selfData.Get<Vector2>("OptionsRenderPosition");
-                                ActiveFont.Draw(option.Get<string>("Label"), renderPos + new Vector2(0f, -140f), new Vector2(0.5f, 1f), Vector2.One * (1f + selfData.Get<Wiggler>("wiggler").Value * 0.1f), Color.Black * 0.8f);
-                                ActiveFont.Draw(difficultyLabel, renderPos + new Vector2(0f, -140f), new Vector2(0.5f, 0f), Vector2.One * 0.6f * (1f + selfData.Get<Wiggler>("wiggler").Value * 0.1f), Color.Black * 0.8f);
-                                return true;
-                            }
-                        }
-                    }
-                    return false;
-                });
+                cursor.EmitDelegate<Func<OuiChapterPanel, bool>>(modChapterOptionLabelPosition);
 
                 cursor.Emit(OpCodes.Brtrue, afterOptionLabel);
                 cursor.Index++;
             }
+        }
+
+        private static string modChapterPanelName(string name, OuiChapterPanel self) {
+            if (overworldWrapper != null) {
+                AreaData forcedArea = new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea");
+                if (forcedArea != null) {
+                    return forcedArea.Name;
+                }
+            }
+            return name;
+        }
+
+        private static float swapChapterNumberAndName(float orig) {
+            if (Engine.Scene == overworldWrapper?.Scene && !isPanelShowingLobby()) {
+                return orig == -18f ? -49f : 43f;
+            } else {
+                return orig;
+            }
+        }
+
+        private static string reskinGoldenChapterCard(string orig) {
+            if (orig != "areaselect/cardtop_golden" && orig != "areaselect/card_golden") {
+                // chapter card was reskinned through Everest, so don't change it.
+                return orig;
+            }
+
+            string sid = getCurrentPanelMapSID();
+
+            if (CollabMapDataProcessor.MapsWithRainbowBerries.Contains(sid)) {
+                return orig == "areaselect/cardtop_golden" ? "CollabUtils2/chapterCard/cardtop_rainbow" : "CollabUtils2/chapterCard/card_rainbow";
+            }
+            if (CollabMapDataProcessor.MapsWithSilverBerries.Contains(sid)) {
+                return orig == "areaselect/cardtop_golden" ? "CollabUtils2/chapterCard/cardtop_silver" : "CollabUtils2/chapterCard/card_silver";
+            }
+            return orig;
+        }
+
+        private static bool hideChapterNumberIfNecessary(bool orig, OuiChapterPanel self) {
+            if (Engine.Scene == overworldWrapper?.Scene && new DynData<OuiChapterPanel>(self).Get<string>("chapter").Length == 0) {
+                return true; // interlude!
+            } else {
+                return orig;
+            }
+        }
+
+        private static bool modChapterOptionLabelPosition(OuiChapterPanel self) {
+            if (overworldWrapper != null) {
+                var selfData = new DynData<OuiChapterPanel>(self);
+                if (gymSubmenuSelected(self) && !selfData.Get<bool>("selectingMode")) {
+                    var option = new DynamicData(selfData.Get<IList>("options")[selfData.Get<int>("option")]);
+                    string difficulty = option.Get<string>("gymTechDifficulty");
+                    if (difficulty != null) {
+                        string difficultyLabel = Dialog.Clean($"collabutils2_difficulty_{difficulty}");
+                        Vector2 renderPos = selfData.Get<Vector2>("OptionsRenderPosition");
+                        ActiveFont.Draw(option.Get<string>("Label"), renderPos + new Vector2(0f, -140f), new Vector2(0.5f, 1f), Vector2.One * (1f + selfData.Get<Wiggler>("wiggler").Value * 0.1f), Color.Black * 0.8f);
+                        ActiveFont.Draw(difficultyLabel, renderPos + new Vector2(0f, -140f), new Vector2(0.5f, 0f), Vector2.One * 0.6f * (1f + selfData.Get<Wiggler>("wiggler").Value * 0.1f), Color.Black * 0.8f);
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         private static IEnumerator OnJournalEnter(On.Celeste.OuiJournal.orig_Enter orig, OuiJournal self, Oui from) {
@@ -1056,14 +1067,16 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 cursor.Emit(OpCodes.Ldarg_0);
                 cursor.Emit(OpCodes.Ldarg_0);
                 cursor.Emit(OpCodes.Ldfld, typeof(DeathsCounter).GetField("icon", BindingFlags.NonPublic | BindingFlags.Instance));
-                cursor.EmitDelegate<Func<float, DeathsCounter, MTexture, float>>((orig, self, icon) => {
-                    DynData<DeathsCounter> data = new DynData<DeathsCounter>(self);
-                    if (data.Data.ContainsKey("modifiedByCollabUtils") && data.Get<bool>("modifiedByCollabUtils")) {
-                        return icon.Width - 4; // vanilla icons are 66px wide.
-                    }
-                    return orig;
-                });
+                cursor.EmitDelegate<Func<float, DeathsCounter, MTexture, float>>(unhardcodeDeathsCounterWidth);
             }
+        }
+
+        private static float unhardcodeDeathsCounterWidth(float orig, DeathsCounter self, MTexture icon) {
+            DynData<DeathsCounter> data = new DynData<DeathsCounter>(self);
+            if (data.Data.ContainsKey("modifiedByCollabUtils") && data.Get<bool>("modifiedByCollabUtils")) {
+                return icon.Width - 4; // vanilla icons are 66px wide.
+            }
+            return orig;
         }
 
         private static void ModStrawberriesCounterRender(ILContext il) {
@@ -1071,17 +1084,19 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("collectables/goldberry"))) {
                 Logger.Log("CollabUtils2/InGameOverworldHelper", $"Changing strawberry icon w/ silver one at {cursor.Index} in IL for StrawberriesCounter.Render");
-                cursor.EmitDelegate<Func<string, string>>(orig => {
-                    string sid = getCurrentPanelMapSID();
-                    if (CollabMapDataProcessor.MapsWithRainbowBerries.Contains(sid)) {
-                        return "CollabUtils2/rainbowberry";
-                    }
-                    if (CollabMapDataProcessor.MapsWithSilverBerries.Contains(sid)) {
-                        return "CollabUtils2/silverberry";
-                    }
-                    return orig;
-                });
+                cursor.EmitDelegate<Func<string, string>>(modStrawberryIconInChapterPanel);
             }
+        }
+
+        private static string modStrawberryIconInChapterPanel(string orig) {
+            string sid = getCurrentPanelMapSID();
+            if (CollabMapDataProcessor.MapsWithRainbowBerries.Contains(sid)) {
+                return "CollabUtils2/rainbowberry";
+            }
+            if (CollabMapDataProcessor.MapsWithSilverBerries.Contains(sid)) {
+                return "CollabUtils2/silverberry";
+            }
+            return orig;
         }
 
         private static void ModMapDataLoad(Action<MapData> orig, MapData self) {
@@ -1283,19 +1298,21 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 Logger.Log("CollabUtils2/InGameOverworldHelper", $"Modding chapter panel title bookmark position at {cursor.Index} in IL for OuiChapterPanel._FixTitleLength");
                 cursor.Index--;
                 cursor.Emit(OpCodes.Ldarg_0);
-                cursor.EmitDelegate<Func<float, OuiChapterPanel, float>>((orig, self) => {
-                    if (Engine.Scene == overworldWrapper?.Scene) {
-                        string mapAuthor = DynamicData.For(self).Get<string>("chapter");
-                        if (mapAuthor?.Length != 0) {
-                            // if the map has author, use the wider one between it and the map title
-                            float width = ActiveFont.Measure(mapAuthor).X * 0.6f;
-                            return Math.Max(orig, width);
-                        }
-                    }
-
-                    return orig;
-                });
+                cursor.EmitDelegate<Func<float, OuiChapterPanel, float>>(resizeChapterPanelTitleTag);
             }
+        }
+
+        private static float resizeChapterPanelTitleTag(float orig, OuiChapterPanel self) {
+            if (Engine.Scene == overworldWrapper?.Scene) {
+                string mapAuthor = DynamicData.For(self).Get<string>("chapter");
+                if (mapAuthor?.Length != 0) {
+                    // if the map has author, use the wider one between it and the map title
+                    float width = ActiveFont.Measure(mapAuthor).X * 0.6f;
+                    return Math.Max(orig, width);
+                }
+            }
+
+            return orig;
         }
 
         // ModInterop exports

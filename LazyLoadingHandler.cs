@@ -281,16 +281,18 @@ namespace Celeste.Mod.CollabUtils2 {
             cursor.GotoNext(MoveType.After, instr => instr.MatchCallvirt<CoreModuleSettings>("get_LazyLoading"));
 
             cursor.Emit(OpCodes.Ldarg_0);
-            cursor.EmitDelegate<Func<bool, VirtualTexture, bool>>((orig, self) => {
-                // don't do anything if lazy loading is actually turned on or for textures with (somehow) no name.
-                if (orig || self.Name == null)
-                    return orig;
+            cursor.EmitDelegate<Func<bool, VirtualTexture, bool>>(checkTextureIsLazyLoaded);
+        }
 
-                // texture is lazily loaded if it is in our list.
-                // this will make Everest actually check if the texture is loaded, and call Reload() if it is not.
-                string name = self.Name;
-                return lazilyLoadedTextures.Contains(name);
-            });
+        private static bool checkTextureIsLazyLoaded(bool orig, VirtualTexture self) {
+            // don't do anything if lazy loading is actually turned on or for textures with (somehow) no name.
+            if (orig || self.Name == null)
+                return orig;
+
+            // texture is lazily loaded if it is in our list.
+            // this will make Everest actually check if the texture is loaded, and call Reload() if it is not.
+            string name = self.Name;
+            return lazilyLoadedTextures.Contains(name);
         }
 
         private static void onTextureLazyLoadHook(On.Monocle.VirtualTexture.orig_Reload orig, VirtualTexture self) {

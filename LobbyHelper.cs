@@ -1,6 +1,7 @@
 using Celeste.Mod.CelesteNet.Client.Components;
 using Celeste.Mod.CelesteNet.DataTypes;
 using Celeste.Mod.CollabUtils2.UI;
+using Celeste.Mod.Helpers;
 using Celeste.Mod.UI;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -286,14 +287,16 @@ namespace Celeste.Mod.CollabUtils2 {
                 Logger.Log("CollabUtils2/InGameOverworldHelper", $"Hiding chapter number from collab maps at {cursor.Index} in IL for DiscordSDK.UpdatePresence");
 
                 cursor.Emit(OpCodes.Ldarg_1);
-                cursor.EmitDelegate<Func<int, Session, int>>((orig, session) => {
-                    if (IsCollabMap(session.Area.SID)) {
-                        // prevent Everest from displaying the chapter number
-                        return -1;
-                    }
-                    return orig;
-                });
+                cursor.EmitDelegate<Func<int, Session, int>>(hideChapterNumber);
             }
+        }
+
+        private static int hideChapterNumber(int orig, Session session) {
+            if (IsCollabMap(session.Area.SID)) {
+                // prevent Everest from displaying the chapter number
+                return -1;
+            }
+            return orig;
         }
 
         public static void OnSessionCreated() {
@@ -337,9 +340,9 @@ namespace Celeste.Mod.CollabUtils2 {
             ILCursor cursor = new ILCursor(il);
 
             // target check: areaData.LevelSet != levelSet
-            if (cursor.TryGotoNext(MoveType.After,
+            if (cursor.TryGotoNextBestFit(MoveType.After,
                 instr => instr.MatchLdloc(6), // AreaData getting considered
-                instr => instr.MatchCall(typeof(AreaDataExt), "GetLevelSet") || instr.MatchCallvirt<AreaData>("get_LevelSet"),
+                instr => instr.MatchCall(typeof(AreaData).Assembly.GetType("Celeste.AreaDataExt"), "GetLevelSet") || instr.MatchCallvirt<AreaData>("get_LevelSet"),
                 instr => instr.MatchLdloc(3), // current level set
                 instr => instr.MatchCall<string>("op_Inequality"))) {
 
@@ -347,9 +350,12 @@ namespace Celeste.Mod.CollabUtils2 {
 
                 // becomes: areaData.LevelSet != levelSet && !IsCollabLevelSet(areaData.LevelSet)
                 cursor.Emit(OpCodes.Ldloc_S, (byte) 6);
-                cursor.EmitDelegate<Func<bool, AreaData, bool>>((orig, areaData) =>
-                    orig && !IsCollabLevelSet(areaData.LevelSet));
+                cursor.EmitDelegate<Func<bool, AreaData, bool>>(checkCollabLevelSets);
             }
+        }
+
+        private static bool checkCollabLevelSets(bool orig, AreaData areaData) {
+            return orig && !IsCollabLevelSet(areaData.LevelSet);
         }
 
         private static void modMapSearch(ILContext il) {
@@ -357,7 +363,7 @@ namespace Celeste.Mod.CollabUtils2 {
 
             // target check: area.HasMode(AreaMode.Normal)
             // area is actually stored in a "DisplayClass" nested type, explaining the extra ldfld "area".
-            if (cursor.TryGotoNext(MoveType.After,
+            if (cursor.TryGotoNextBestFit(MoveType.After,
                 instr => instr.MatchLdloc(13),
                 instr => instr.OpCode == OpCodes.Ldfld && (instr.Operand as FieldReference).Name == "area",
                 instr => instr.MatchLdcI4(0),
@@ -368,8 +374,7 @@ namespace Celeste.Mod.CollabUtils2 {
                 // becomes: area.HasMode(AreaMode.Normal) && !IsCollabLevelSet(area.LevelSet)
                 cursor.Emit(OpCodes.Ldloc_S, (byte) 13);
                 cursor.Emit(OpCodes.Ldfld, cursor.Instrs[cursor.Index - 4].Operand as FieldReference);
-                cursor.EmitDelegate<Func<bool, AreaData, bool>>((orig, areaData) =>
-                    orig && !IsCollabLevelSet(areaData.LevelSet));
+                cursor.EmitDelegate<Func<bool, AreaData, bool>>(hideCollabMapsFromSearchAndList);
             }
         }
 
@@ -378,7 +383,7 @@ namespace Celeste.Mod.CollabUtils2 {
 
             // target check: area.HasMode((AreaMode)side)
             // area is actually stored in a "DisplayClass" nested type, explaining the extra ldfld "area".
-            if (cursor.TryGotoNext(MoveType.After,
+            if (cursor.TryGotoNextBestFit(MoveType.After,
                 instr => instr.MatchLdloc(12),
                 instr => instr.OpCode == OpCodes.Ldfld && (instr.Operand as FieldReference).Name == "area",
                 instr => instr.MatchLdarg(0),
@@ -390,16 +395,19 @@ namespace Celeste.Mod.CollabUtils2 {
                 // becomes: area.HasMode((AreaMode)side) && !IsCollabLevelSet(area.LevelSet)
                 cursor.Emit(OpCodes.Ldloc_S, (byte) 12);
                 cursor.Emit(OpCodes.Ldfld, cursor.Instrs[cursor.Index - 5].Operand as FieldReference);
-                cursor.EmitDelegate<Func<bool, AreaData, bool>>((orig, areaData) =>
-                    orig && !IsCollabLevelSet(areaData.LevelSet));
+                cursor.EmitDelegate<Func<bool, AreaData, bool>>(hideCollabMapsFromSearchAndList);
             }
+        }
+
+        private static bool hideCollabMapsFromSearchAndList(bool orig, AreaData areaData) {
+            return orig && !IsCollabLevelSet(areaData.LevelSet);
         }
 
         private static void modFileSelectChangeStartingLevelSet(ILContext il) {
             ILCursor cursor = new ILCursor(il);
 
             // set ourselves just after the moving operation in changeStartingLevelSet.
-            if (cursor.TryGotoNext(MoveType.AfterLabel,
+            if (cursor.TryGotoNextBestFit(MoveType.AfterLabel,
                 instr => instr.MatchLdarg(0),
                 instr => instr.MatchLdsfld<AreaData>("Areas"),
                 instr => instr.MatchLdloc(0),
@@ -409,29 +417,31 @@ namespace Celeste.Mod.CollabUtils2 {
 
                 cursor.Emit(OpCodes.Ldloc_0);
                 cursor.Emit(OpCodes.Ldarg_1);
-                cursor.EmitDelegate<Func<int, int, int>>((id, direction) => {
-                    string currentLevelSet = AreaData.Areas[id].LevelSet;
-
-                    // repeat the move until the current level set isn't a collab level set anymore.
-                    while (IsCollabLevelSet(currentLevelSet)) {
-                        if (direction > 0) {
-                            id = AreaData.Areas.FindLastIndex(area => area.LevelSet == currentLevelSet) + direction;
-                        } else {
-                            id = AreaData.Areas.FindIndex(area => area.LevelSet == currentLevelSet) + direction;
-                        }
-
-                        if (id >= AreaData.Areas.Count)
-                            id = 0;
-                        if (id < 0)
-                            id = AreaData.Areas.Count - 1;
-
-                        currentLevelSet = AreaData.Areas[id].LevelSet;
-                    }
-
-                    return id;
-                });
+                cursor.EmitDelegate<Func<int, int, int>>(skipCollabLevelSetsInPicker);
                 cursor.Emit(OpCodes.Stloc_0);
             }
+        }
+
+        private static int skipCollabLevelSetsInPicker(int id, int direction) {
+            string currentLevelSet = AreaData.Areas[id].LevelSet;
+
+            // repeat the move until the current level set isn't a collab level set anymore.
+            while (IsCollabLevelSet(currentLevelSet)) {
+                if (direction > 0) {
+                    id = AreaData.Areas.FindLastIndex(area => area.LevelSet == currentLevelSet) + direction;
+                } else {
+                    id = AreaData.Areas.FindIndex(area => area.LevelSet == currentLevelSet) + direction;
+                }
+
+                if (id >= AreaData.Areas.Count)
+                    id = 0;
+                if (id < 0)
+                    id = AreaData.Areas.Count - 1;
+
+                currentLevelSet = AreaData.Areas[id].LevelSet;
+            }
+
+            return id;
         }
 
         private static void modMapListCreateMenu(ILContext il) {
@@ -447,9 +457,12 @@ namespace Celeste.Mod.CollabUtils2 {
 
                 // becomes: levelSet == "Celeste" || IsCollabLevelSet(levelSet)
                 cursor.Emit(OpCodes.Ldloc_1);
-                cursor.EmitDelegate<Func<bool, string, bool>>((orig, levelSet) =>
-                    orig || IsCollabLevelSet(levelSet));
+                cursor.EmitDelegate<Func<bool, string, bool>>(hideCollabMapFromList);
             }
+        }
+
+        private static bool hideCollabMapFromList(bool orig, string levelSet) {
+            return orig || IsCollabLevelSet(levelSet);
         }
 
         private static void onRegisterHeartGem(On.Celeste.SaveData.orig_RegisterHeartGem orig, SaveData self, AreaKey area) {
@@ -687,14 +700,16 @@ namespace Celeste.Mod.CollabUtils2 {
 
                 cursor.Index--;
                 cursor.Emit(OpCodes.Ldarg_0);
-                cursor.EmitDelegate<Func<string, OuiFileSelectSlot, string>>((orig, self) => {
-                    string collab = collabNames.FirstOrDefault(collabName => self.SaveData?.LevelSet.StartsWith($"{collabName}/") ?? false);
-                    if (collab != null) {
-                        return $"{collab.DialogKeyify()}_0_Lobbies";
-                    }
-                    return orig;
-                });
+                cursor.EmitDelegate<Func<string, OuiFileSelectSlot, string>>(modMapNameShownOnSaveFile);
             }
+        }
+
+        private static string modMapNameShownOnSaveFile(string orig, OuiFileSelectSlot self) {
+            string collab = collabNames.FirstOrDefault(collabName => self.SaveData?.LevelSet.StartsWith($"{collabName}/") ?? false);
+            if (collab != null) {
+                return $"{collab.DialogKeyify()}_0_Lobbies";
+            }
+            return orig;
         }
 
         private static void modSelectSlotCollectedStrawberries(ILContext il) {
@@ -704,16 +719,18 @@ namespace Celeste.Mod.CollabUtils2 {
                 Logger.Log("CollabUtils2/LobbyHelper", $"Replacing total strawberry count for stamps at {cursor.Index} in IL for {il.Method.Name}");
 
                 cursor.Emit(OpCodes.Ldarg_0);
-                cursor.EmitDelegate<Func<int, OuiFileSelectSlot, int>>((orig, self) => {
-                    // if we are in a collab, we want to get the strawberries total over the collab (with all associated level sets), not just the level set total.
-                    // luckily, we stored it in self.Strawberries.Amount earlier.
-                    string collab = collabNames.FirstOrDefault(collabName => self.SaveData?.LevelSet.StartsWith($"{collabName}/") ?? false);
-                    if (collab != null) {
-                        return self.Strawberries.Amount;
-                    }
-                    return orig;
-                });
+                cursor.EmitDelegate<Func<int, OuiFileSelectSlot, int>>(sumBerryCountAcrossCollab);
             }
+        }
+
+        private static int sumBerryCountAcrossCollab(int orig, OuiFileSelectSlot self) {
+            // if we are in a collab, we want to get the strawberries total over the collab (with all associated level sets), not just the level set total.
+            // luckily, we stored it in self.Strawberries.Amount earlier.
+            string collab = collabNames.FirstOrDefault(collabName => self.SaveData?.LevelSet.StartsWith($"{collabName}/") ?? false);
+            if (collab != null) {
+                return self.Strawberries.Amount;
+            }
+            return orig;
         }
 
         private static void modOuiFileSelectSlotRender(ILContext il) {
@@ -740,15 +757,17 @@ namespace Celeste.Mod.CollabUtils2 {
                     cursor.Emit(OpCodes.Ldarg_0);
                     cursor.Emit(loopIndex.OpCode, loopIndex.Operand);
 
-                    cursor.EmitDelegate<Func<MTexture, OuiFileSelectSlot, int, MTexture>>((orig, self, index) => {
-                        List<string> customJournalHearts = new DynData<OuiFileSelectSlot>(self).Get<List<string>>("collabutils2_customhearts");
-                        if (customJournalHearts != null && customJournalHearts[index] != null) {
-                            return MTN.Journal[customJournalHearts[index]]; // "Journal" and not "FileSelect" because it re-uses the setup people made for their custom journals.
-                        }
-                        return orig;
-                    });
+                    cursor.EmitDelegate<Func<MTexture, OuiFileSelectSlot, int, MTexture>>(reskinJournalHearts);
                 }
             }
+        }
+
+        private static MTexture reskinJournalHearts(MTexture orig, OuiFileSelectSlot self, int index) {
+            List<string> customJournalHearts = new DynData<OuiFileSelectSlot>(self).Get<List<string>>("collabutils2_customhearts");
+            if (customJournalHearts != null && customJournalHearts[index] != null) {
+                return MTN.Journal[customJournalHearts[index]]; // "Journal" and not "FileSelect" because it re-uses the setup people made for their custom journals.
+            }
+            return orig;
         }
 
         private static void modJournalPoemHeartColors(ILContext il) {
@@ -761,21 +780,23 @@ namespace Celeste.Mod.CollabUtils2 {
                 cursor.Emit(OpCodes.Ldarg_0);
                 cursor.Emit(OpCodes.Ldfld, typeof(OuiJournalPoem).GetNestedType("PoemLine", BindingFlags.NonPublic).GetField("Text"));
 
-                cursor.EmitDelegate<Func<string, string, string>>((orig, poem) => {
-                    if (collabNames.Any(collabName => SaveData.Instance?.LevelSet == $"{collabName}/0-Lobbies")) {
-                        foreach (AreaData area in AreaData.Areas) {
-                            string levelSetName = GetLobbyLevelSet(area.SID);
-                            if (levelSetName != null
-                                && Dialog.Clean("poem_" + levelSetName + "_ZZ_HeartSide_A") == poem
-                                && MTN.Journal.Has("CollabUtils2Hearts/" + levelSetName)) {
-
-                                return "CollabUtils2Hearts/" + levelSetName;
-                            }
-                        }
-                    }
-                    return orig;
-                });
+                cursor.EmitDelegate<Func<string, string, string>>(reskinJournalPoemHearts);
             }
+        }
+
+        private static string reskinJournalPoemHearts(string orig, string poem) {
+            if (collabNames.Any(collabName => SaveData.Instance?.LevelSet == $"{collabName}/0-Lobbies")) {
+                foreach (AreaData area in AreaData.Areas) {
+                    string levelSetName = GetLobbyLevelSet(area.SID);
+                    if (levelSetName != null
+                        && Dialog.Clean("poem_" + levelSetName + "_ZZ_HeartSide_A") == poem
+                        && MTN.Journal.Has("CollabUtils2Hearts/" + levelSetName)) {
+
+                        return "CollabUtils2Hearts/" + levelSetName;
+                    }
+                }
+            }
+            return orig;
         }
 
         // ModInterop exports

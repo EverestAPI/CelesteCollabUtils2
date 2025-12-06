@@ -59,14 +59,16 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(1020f))) {
                 Logger.Log("CollabUtils2/AreaCompleteInfoInLevel", $"Shifting version number and variants up at {cursor.Index} in IL for AreaComplete.orig_VersionNumberAndVariants");
-                cursor.EmitDelegate<Func<float, float>>(orig => {
-                    if (isCollabEndscreen) {
-                        // shift the text up to leave more space for the collab version.
-                        orig -= 32f;
-                    }
-                    return orig;
-                });
+                cursor.EmitDelegate<Func<float, float>>(moveTextUp);
             }
+        }
+
+        private static float moveTextUp(float orig) {
+            if (isCollabEndscreen) {
+                // shift the text up to leave more space for the collab version.
+                orig -= 32f;
+            }
+            return orig;
         }
 
         public AreaCompleteInfoInLevel() : base() {

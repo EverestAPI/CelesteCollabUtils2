@@ -26,9 +26,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         public SpeedBerryTimerDisplay TimerDisplay;
 
-        private Sprite sprite;
-
-        private bool collected = false;
         public bool restored = false;
 
         private Vector2 transitionStart;
@@ -125,7 +122,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             }
             base.Awake(scene);
 
-            sprite = new DynData<Strawberry>(this).Get<Sprite>("sprite");
             if (TimerDisplay != null) {
                 string nextRank = TimerDisplay.GetNextRank(out _).ToLowerInvariant();
                 if (nextRank != "none") {
@@ -135,8 +131,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         }
 
         public override void Update() {
-            Sprite sprite = Get<Sprite>();
-
             if (Follower.HasLeader) {
                 if (TimerDisplay == null) {
                     TimerDisplay = new SpeedBerryTimerDisplay(this);

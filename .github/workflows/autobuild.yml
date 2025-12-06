@@ -51,7 +51,7 @@ jobs:
         cat DOCUMENTATION.md >> documentation.txt
         rm Ahorn/triggers/mapSwapTrigger.jl
         ZIPNAME=$ZIPNAME-${GITHUB_SHA:0:8}.zip
-        zip -qq -r $ZIPNAME everest.yaml bin/Release/net452 Ahorn Graphics Audio Dialog Loenn documentation.txt
+        zip -qq -r $ZIPNAME everest.yaml bin/CollabUtils2.* Ahorn Graphics Audio Dialog Loenn documentation.txt
         url=$(curl -H 'Content-Type: multipart/form-data' -X POST -F "file=@$ZIPNAME" "$DISCORD_WEBHOOK"| jq -r '.attachments[0].url')
         msg=$(git log -n 1 "--format=%B" | head -n 1 | tr -d '\n')
         curl -H 'Content-Type: application/json' -X POST -d "$(jq -n \

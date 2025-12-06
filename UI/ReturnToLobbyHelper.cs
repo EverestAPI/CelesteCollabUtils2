@@ -29,7 +29,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.SaveData.StartSession += onSaveDataStartSession;
             On.Celeste.LevelLoader.StartLevel += onLevelLoaderStartLevel;
 
-            using (new DetourContext { Before = { "*" } }) {
+            using (new DetourConfigContext(new DetourConfig("CollabUtils2_BeforeAll").WithPriority(int.MinValue)).Use()) {
                 On.Celeste.LevelEnter.Go += onLevelEnterGo;
             }
 
@@ -272,7 +272,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 menu.Add(new TextMenu.SubHeader(""));
 
                 menu.Add(new TextMenu.Button(Dialog.Clean("collabutils2_returntolobby_confirm_save")).Pressed(() => {
+#pragma warning disable CS0618 // setting TimeRate back to 1 is relevant in this context, since we're exiting the level
                     Engine.TimeRate = 1f;
+#pragma warning restore CS0618
                     menu.Focused = false;
                     Audio.SetMusic(null);
                     Audio.BusStopAll(Buses.GAMEPLAY, immediate: true);
@@ -326,7 +328,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             // Do Not Save
             menu.Add(new TextMenu.Button(Dialog.Clean(CollabModule.Instance.Session.SaveAndReturnToLobbyAllowed ? "collabutils2_returntolobby_confirm_donotsave" : "menu_return_continue")).Pressed(() => {
+#pragma warning disable CS0618 // setting TimeRate back to 1 is relevant in this context, since we're exiting the level
                 Engine.TimeRate = 1f;
+#pragma warning restore CS0618
                 menu.Focused = false;
                 Audio.SetMusic(null);
                 Audio.BusStopAll(Buses.GAMEPLAY, immediate: true);

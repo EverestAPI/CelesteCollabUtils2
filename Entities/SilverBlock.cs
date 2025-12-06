@@ -20,12 +20,20 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             ILCursor cursor = new ILCursor(il);
             if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("collectables/goldberry/idle00"))) {
                 cursor.Emit(OpCodes.Ldarg_0);
-                cursor.EmitDelegate<Func<string, GoldenBlock, string>>((orig, self) => self is SilverBlock ? "CollabUtils2/silverBerry/idle00" : orig);
+                cursor.EmitDelegate<Func<string, GoldenBlock, string>>(reskinGoldenBlockBerry);
             }
             if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("objects/goldblock"))) {
                 cursor.Emit(OpCodes.Ldarg_0);
-                cursor.EmitDelegate<Func<string, GoldenBlock, string>>((orig, self) => self is SilverBlock ? "CollabUtils2/silverblock" : orig);
+                cursor.EmitDelegate<Func<string, GoldenBlock, string>>(reskinGoldenBlock);
             }
+        }
+
+        private static string reskinGoldenBlockBerry( string orig, GoldenBlock self) {
+            return self is SilverBlock ? "CollabUtils2/silverBerry/idle00" : orig;
+        }
+
+        private static string reskinGoldenBlock(string orig, GoldenBlock self) {
+            return self is SilverBlock ? "CollabUtils2/silverblock" : orig;
         }
 
         public SilverBlock(EntityData data, Vector2 offset) : base(data, offset) { }

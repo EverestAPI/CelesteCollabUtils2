@@ -42,11 +42,13 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
                 // argument 3 (self) is the strawberry that is being checked: the method we are hooking is part of it
                 cursor.Emit(OpCodes.Ldarg_0);
 
-                cursor.EmitDelegate<Func<Player, bool, Strawberry, bool>>((player, orig, self) => {
-                    // collect golden berry and derivatives if the player is in a golden berry trigger, OR if it is a silver berry and the player is in a silver berry collect trigger.
-                    return orig || ((self is SilverBerry) && player.CollideCheck<SilverBerryCollectTrigger>());
-                });
+                cursor.EmitDelegate<Func<Player, bool, Strawberry, bool>>(modCollectGoldenBerry);
             }
+        }
+
+        private static bool modCollectGoldenBerry(Player player, bool orig, Strawberry self) {
+            // collect golden berry and derivatives if the player is in a golden berry trigger, OR if it is a silver berry and the player is in a silver berry collect trigger.
+            return orig || ((self is SilverBerry) && player.CollideCheck<SilverBerryCollectTrigger>());
         }
     }
 }

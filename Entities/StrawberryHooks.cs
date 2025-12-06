@@ -38,7 +38,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
             // Any other mod blocking calls to Die to make Madeline invincible (like shadow dashes) should be able to also block the call to that hook on Die.
             // Otherwise, speed berries turn not golden and collect when Madeline is on the ground. This is bad.
-            using (new DetourContext { Before = { "*" } }) {
+            using (new DetourConfigContext(new DetourConfig("CollabUtils2_BeforeAll").WithPriority(int.MinValue)).Use()) {
                 On.Celeste.Player.Die += onPlayerDie;
             }
         }
@@ -113,32 +113,34 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 cursor.Emit(OpCodes.Ldarg_0); // for stfld
                 cursor.Index++;
                 cursor.Emit(OpCodes.Ldarg_0); // for the delegate call
-                cursor.EmitDelegate<Func<Sprite, Strawberry, Sprite>>((orig, self) => {
-                    // this method determines the strawberry sprite. "orig" is the original sprite, "self" is the strawberry.
-                    if (self is SilverBerry) {
-                        if (SaveData.Instance.CheckStrawberry(self.ID)) {
-                            return GFX.SpriteBank.Create("CollabUtils2_ghostSilverBerry");
-                        }
-                        return GFX.SpriteBank.Create("CollabUtils2_silverBerry");
-                    }
-                    if (self is RainbowBerry) {
-                        if (SaveData.Instance.CheckStrawberry(self.ID)) {
-                            return GFX.SpriteBank.Create("CollabUtils2_ghostRainbowBerry");
-                        }
-                        return GFX.SpriteBank.Create("CollabUtils2_rainbowBerry");
-                    }
-                    if (self is SpeedBerry) {
-                        if (SaveData.Instance.CheckStrawberry(self.ID)) {
-                            return GFX.SpriteBank.Create("CollabUtils2_ghostSpeedBerry");
-                        }
-                        return GFX.SpriteBank.Create("CollabUtils2_speedBerry");
-                    }
-                    return orig;
-                });
+                cursor.EmitDelegate<Func<Sprite, Strawberry, Sprite>>(replaceStrawberrySprite);
                 cursor.Emit(OpCodes.Stfld, strawberrySprite);
                 cursor.Emit(OpCodes.Ldarg_0);
                 cursor.Emit(OpCodes.Ldfld, strawberrySprite);
             }
+        }
+
+        private static Sprite replaceStrawberrySprite(Sprite orig, Strawberry self) {
+            // this method determines the strawberry sprite. "orig" is the original sprite, "self" is the strawberry.
+            if (self is SilverBerry) {
+                if (SaveData.Instance.CheckStrawberry(self.ID)) {
+                    return GFX.SpriteBank.Create("CollabUtils2_ghostSilverBerry");
+                }
+                return GFX.SpriteBank.Create("CollabUtils2_silverBerry");
+            }
+            if (self is RainbowBerry) {
+                if (SaveData.Instance.CheckStrawberry(self.ID)) {
+                    return GFX.SpriteBank.Create("CollabUtils2_ghostRainbowBerry");
+                }
+                return GFX.SpriteBank.Create("CollabUtils2_rainbowBerry");
+            }
+            if (self is SpeedBerry) {
+                if (SaveData.Instance.CheckStrawberry(self.ID)) {
+                    return GFX.SpriteBank.Create("CollabUtils2_ghostSpeedBerry");
+                }
+                return GFX.SpriteBank.Create("CollabUtils2_speedBerry");
+            }
+            return orig;
         }
 
         private static void modStrawberrySound(ILContext il) {
@@ -151,19 +153,21 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 // we want to replace the vanilla collect sound with the silver berry one if the current berry is a silver one.
                 cursor.Emit(OpCodes.Ldarg_0);
                 cursor.Emit(OpCodes.Ldfld, refToThis);
-                cursor.EmitDelegate<Func<string, Strawberry, string>>((orig, self) => {
-                    if (self is SilverBerry) {
-                        return "event:/SC2020_silverBerry_get";
-                    }
-                    if (self is RainbowBerry) {
-                        return "event:/SC2020_rainbowBerry_get";
-                    }
-                    if (self is SpeedBerry) {
-                        return "event:/SC2020_timedBerry_get";
-                    }
-                    return orig;
-                });
+                cursor.EmitDelegate<Func<string, Strawberry, string>>(replaceStrawberryGetSound);
             }
+        }
+
+        private static string replaceStrawberryGetSound(string orig, Strawberry self) {
+            if (self is SilverBerry) {
+                return "event:/SC2020_silverBerry_get";
+            }
+            if (self is RainbowBerry) {
+                return "event:/SC2020_rainbowBerry_get";
+            }
+            if (self is SpeedBerry) {
+                return "event:/SC2020_timedBerry_get";
+            }
+            return orig;
         }
 
         /// <summary>
@@ -213,22 +217,24 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 // we want to replace the vanilla death sound with the silver berry one if carrying a silver berry.
                 cursor.Emit(OpCodes.Ldarg_0);
                 cursor.Emit(OpCodes.Ldfld, refToThis);
-                cursor.EmitDelegate<Func<string, PlayerDeadBody, string>>((orig, self) => {
-                    DynData<PlayerDeadBody> data = new DynData<PlayerDeadBody>(self);
-                    bool hasSilver = data.Get<bool>("hasSilver");
-                    bool hasSpeedBerry = data.Get<bool>("hasSpeedBerry");
-                    if (hasSilver && hasSpeedBerry) {
-                        return "event:/SC2020_silverTimedBerry_death";
-                    }
-                    if (hasSilver) {
-                        return "event:/SC2020_silverBerry_death";
-                    }
-                    if (hasSpeedBerry) {
-                        return "event:/SC2020_timedBerry_death";
-                    }
-                    return orig;
-                });
+                cursor.EmitDelegate<Func<string, PlayerDeadBody, string>>(modGoldenDeathSound);
             }
+        }
+
+        private static string modGoldenDeathSound(string orig, PlayerDeadBody self) {
+            DynData<PlayerDeadBody> data = new DynData<PlayerDeadBody>(self);
+            bool hasSilver = data.Get<bool>("hasSilver");
+            bool hasSpeedBerry = data.Get<bool>("hasSpeedBerry");
+            if (hasSilver && hasSpeedBerry) {
+                return "event:/SC2020_silverTimedBerry_death";
+            }
+            if (hasSilver) {
+                return "event:/SC2020_silverBerry_death";
+            }
+            if (hasSpeedBerry) {
+                return "event:/SC2020_timedBerry_death";
+            }
+            return orig;
         }
 
         private static void onSaveDataAddStrawberry(On.Celeste.SaveData.orig_AddStrawberry_AreaKey_EntityID_bool orig,

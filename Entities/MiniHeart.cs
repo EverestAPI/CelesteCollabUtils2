@@ -19,6 +19,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         private EventInstance pauseMusicSnapshot;
         private SoundEmitter collectSound;
 
+        private TimeRateModifier timeRateModifier;
+
         public MiniHeart(EntityData data, Vector2 position, EntityID gid)
             : base(data, position, gid) {
 
@@ -49,6 +51,9 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 item.OnCollect();
             }
 
+            timeRateModifier = new TimeRateModifier(1);
+            Add(timeRateModifier);
+
             // play the collect jingle
             collectSound = SoundEmitter.Play("event:/SC2020_heartShard_get", this);
 
@@ -63,7 +68,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             yield return null;
             Celeste.Freeze(0.2f);
             yield return null;
-            Engine.TimeRate = 0.5f;
+            timeRateModifier.Multiplier = 0.5f;
             player.Depth = Depths.FormationSequences;
             for (int i = 0; i < 10; i++) {
                 Scene.Add(new AbsorbOrb(Position));
@@ -78,7 +83,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             // slow down time further, to a freeze
             Visible = false;
             for (float time = 0f; time < 2f; time += Engine.RawDeltaTime) {
-                Engine.TimeRate = Calc.Approach(Engine.TimeRate, 0f, Engine.RawDeltaTime * 0.25f);
+                timeRateModifier.Multiplier = Calc.Approach(timeRateModifier.Multiplier, 0f, Engine.RawDeltaTime * 0.25f);
                 yield return null;
             }
 
@@ -91,7 +96,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 yield return 100f;
             }
 
-            Engine.TimeRate = 1f;
+            Remove(timeRateModifier);
             Tag = Tags.FrozenUpdate;
             level.Frozen = true;
 
@@ -129,7 +134,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
             level.Frozen = false;
             level.CanRetry = true;
             level.FormationBackdrop.Display = false;
-            Engine.TimeRate = 1f;
+            if (timeRateModifier != null) Remove(timeRateModifier);
 
             if (collectSound != null) {
                 collectSound.RemoveSelf();

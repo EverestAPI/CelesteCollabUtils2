@@ -75,12 +75,14 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
                 // this is a bit confusing, but this function is returning a function that the vanilla code will run
                 // (instead of the vanilla function that goes Engine.Scene = new LevelExit(...))
-                cursor.EmitDelegate<Func<Action, Level, Action>>((orig, self) => () => {
-                    Engine.Scene = new LevelExitToLobby(LevelExit.Mode.Completed, self.Session);
-                });
+                cursor.EmitDelegate<Func<Action, Level, Action>>(exitToLobby);
 
                 cursor.Index++;
             }
+        }
+
+        private static Action exitToLobby(Action orig, Level self) {
+            return () => Engine.Scene = new LevelExitToLobby(LevelExit.Mode.Completed, self.Session);
         }
     }
 }
