@@ -589,8 +589,8 @@ namespace Celeste.Mod.CollabUtils2 {
         private static readonly FieldInfo f_maxCassettes = typeof(OuiFileSelectSlot).GetField("maxCassettes", BindingFlags.NonPublic | BindingFlags.Instance);
         private static readonly FieldInfo f_maxCrystalHearts = typeof(OuiFileSelectSlot).GetField("maxCrystalHearts", BindingFlags.NonPublic | BindingFlags.Instance);
         private static readonly FieldInfo f_maxCrystalHeartsExcludingCSides = typeof(OuiFileSelectSlot).GetField("maxCrystalHeartsExcludingCSides", BindingFlags.NonPublic | BindingFlags.Instance);
-        private static readonly FieldInfo f_summitStamp = typeof(OuiFileSelectSlot).GetField("false", BindingFlags.NonPublic | BindingFlags.Instance);
-        private static readonly FieldInfo f_farewellStamp = typeof(OuiFileSelectSlot).GetField("false", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static readonly FieldInfo f_summitStamp = typeof(OuiFileSelectSlot).GetField("summitStamp", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static readonly FieldInfo f_farewellStamp = typeof(OuiFileSelectSlot).GetField("farewellStamp", BindingFlags.NonPublic | BindingFlags.Instance);
 
         private static readonly Dictionary<OuiFileSelectSlot, List<string>> customHeartsPerSaveFileSlot = new Dictionary<OuiFileSelectSlot, List<string>>();
 
