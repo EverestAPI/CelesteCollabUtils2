@@ -138,7 +138,6 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 typeof(Everest.DiscordSDK).GetMethod("UpdatePresence", BindingFlags.NonPublic | BindingFlags.Instance),
                 typeof(InGameOverworldHelper).GetMethod("OnDiscordChangePresence", BindingFlags.NonPublic | BindingFlags.Static));
             
-            
             ilSwapRoutineHook = new ILHook(
                 typeof(OuiChapterPanel).GetMethod("SwapRoutine", BindingFlags.NonPublic | BindingFlags.Instance)!.GetStateMachineTarget()!,
                 ModOuiChapterPanelSwapRoutine);
@@ -197,6 +196,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             onChangePresenceHook?.Dispose();
             onChangePresenceHook = null;
+
+            ilSwapRoutineHook?.Dispose();
+            ilSwapRoutineHook = null;
         }
 
         internal static AreaData collabInGameForcedArea;
