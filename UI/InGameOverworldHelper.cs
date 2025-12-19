@@ -631,7 +631,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 cursor.EmitDelegate(ModToHeight);
             }
             
-            // replace the chapter panel's checkpoints with a single dummy checkpoint
+            // replace the chapter panel's checkpoints with a single null checkpoint
             if (cursor.TryGotoNextBestFit(MoveType.After,
                 instr => instr.MatchCall<OuiChapterPanel>("_GetCheckpoints"))) {
                 cursor.EmitLdloc1();
@@ -660,7 +660,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             static HashSet<string> ModCheckpoints(HashSet<string> orig, OuiChapterPanel panel) {
                 return ShouldModChapterPanelSwap(panel) && !panel.selectingMode
-                    ? ["CollabUtils2_dummyCheckpoint"]
+                    ? [null]
                     : orig;
             }
 
@@ -927,31 +927,27 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
             cursor.Index = 0;
 
-            // 5-1. Get line to jump to after the next injection.
-            ILLabel afterOptionLabel = cursor.DefineLabel();
-
-            if (cursor.TryGotoNext(MoveType.Before,
-                instr => instr.MatchLdarg(0),
-                instr => instr.MatchLdfld<OuiChapterPanel>("selectingMode"))) {
-                cursor.MarkLabel(afterOptionLabel);
-            }
-
-            cursor.Index = 0;
-
-            // 5-2. Draw the difficulty underneath the checkpoint label in gyms.
+            // 5. Draw the difficulty underneath the checkpoint label in gyms.
             while (cursor.TryGotoNextBestFit(MoveType.Before,
-                instr => instr.MatchLdarg(0),
-                instr => instr.MatchCallvirt<OuiChapterPanel>("get_options"),
-                instr => instr.MatchLdarg(0),
-                instr => instr.MatchCallvirt<OuiChapterPanel>("get_option"),
-                instr => true,
-                instr => instr.MatchLdfld(typeof(OuiChapterPanel.Option), "Label"))) {
+                instr => instr.MatchCall(typeof(ActiveFont), "Draw"),
+                instr => instr.MatchLdarg0(),
+                instr => instr.MatchLdfld<OuiChapterPanel>("selectingMode"),
+                instr => instr.MatchBrfalse(out _))) {
                 Logger.Log("CollabUtils2/InGameOverworldHelper", $"Modding chapter option label position at {cursor.Index} in IL for OuiChapterPanel.Render");
 
+                ILLabel normalDraw = cursor.DefineLabel(), afterNormalDraw = cursor.DefineLabel();
+                
+                // `if (shouldModChapterOptionLabelPosition(this)) { modChapterOptionLabelPosition(..., this); } else { ActiveFont.Draw(...); }`
                 cursor.Emit(OpCodes.Ldarg_0);
-                cursor.EmitDelegate<Func<OuiChapterPanel, bool>>(modChapterOptionLabelPosition);
+                cursor.EmitDelegate(shouldModChapterOptionLabelPosition);
+                cursor.Emit(OpCodes.Brfalse, normalDraw);
+                cursor.EmitLdarg0();
+                cursor.EmitDelegate(modChapterOptionLabelPosition);
+                cursor.Emit(OpCodes.Br, afterNormalDraw);
+                cursor.MarkLabel(normalDraw);
+                cursor.Index++; // original call to `ActiveFont.Draw` is here
+                cursor.MarkLabel(afterNormalDraw);
 
-                cursor.Emit(OpCodes.Brtrue, afterOptionLabel);
                 cursor.Index++;
             }
         }
@@ -999,21 +995,27 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
         }
 
-        private static bool modChapterOptionLabelPosition(OuiChapterPanel self) {
-            if (overworldWrapper != null) {
-                if (gymSubmenuSelected(self) && !self.selectingMode) {
-                    var option = self.options[self.option];
-                    string difficulty = option is OuiChapterPanelGymOption o ? o.GymTechDifficuty : null;
-                    if (difficulty != null) {
-                        string difficultyLabel = Dialog.Clean($"collabutils2_difficulty_{difficulty}");
-                        Vector2 renderPos = self.OptionsRenderPosition;
-                        ActiveFont.Draw(option.Label, renderPos + new Vector2(0f, -140f), new Vector2(0.5f, 1f), Vector2.One * (1f + self.wiggler.Value * 0.1f), Color.Black * 0.8f);
-                        ActiveFont.Draw(difficultyLabel, renderPos + new Vector2(0f, -140f), new Vector2(0.5f, 0f), Vector2.One * 0.6f * (1f + self.wiggler.Value * 0.1f), Color.Black * 0.8f);
-                        return true;
-                    }
-                }
-            }
-            return false;
+        private static bool shouldModChapterOptionLabelPosition(OuiChapterPanel self) {
+            if (overworldWrapper == null)
+                return false;
+            
+            if (!gymSubmenuSelected(self) || self.selectingMode)
+                return false;
+            
+            if (self.options[self.option] is not OuiChapterPanelGymOption)
+                return false;
+            
+            return true;
+        }
+
+        private static void modChapterOptionLabelPosition(string text, Vector2 position, Vector2 justify, Vector2 scale, Color color, OuiChapterPanel self) {
+            OuiChapterPanel.Option option = self.options[self.option];
+            string difficulty = option is OuiChapterPanelGymOption o ? o.GymTechDifficuty : null;
+            string difficultyLabel = Dialog.Clean($"collabutils2_difficulty_{difficulty}");
+            Vector2 renderPos = self.OptionsRenderPosition;
+            
+            ActiveFont.Draw(option.Label, renderPos + new Vector2(0f, -140f), new Vector2(0.5f, 1f), Vector2.One * (1f + self.wiggler.Value * 0.1f), color);
+            ActiveFont.Draw(difficultyLabel, renderPos + new Vector2(0f, -140f), new Vector2(0.5f, 0f), Vector2.One * 0.6f * (1f + self.wiggler.Value * 0.1f), color);
         }
 
         private static IEnumerator OnJournalEnter(On.Celeste.OuiJournal.orig_Enter orig, OuiJournal self, Oui from) {
