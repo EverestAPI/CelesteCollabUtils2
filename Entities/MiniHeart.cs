@@ -27,7 +27,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         protected override void heartBroken(Player player, Holdable holdable, Level level) {
             if (hasBeenBroken) return;
-            
+
             hasBeenBroken = true;
             Add(smashRoutine = new Coroutine(SmashRoutine(player, level)));
         }
