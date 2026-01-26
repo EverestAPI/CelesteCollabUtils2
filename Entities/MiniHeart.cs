@@ -12,7 +12,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
     [CustomEntity("CollabUtils2/MiniHeart")]
     public class MiniHeart : AbstractMiniHeart {
         private Sprite white;
-        private bool inCollectAnimation = false;
+        private bool hasBeenBroken = false;
         private readonly bool flash;
 
         private Coroutine smashRoutine;
@@ -26,12 +26,14 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         }
 
         protected override void heartBroken(Player player, Holdable holdable, Level level) {
+            if (hasBeenBroken) return;
+
+            hasBeenBroken = true;
             Add(smashRoutine = new Coroutine(SmashRoutine(player, level)));
         }
 
         private IEnumerator SmashRoutine(Player player, Level level) {
             level.CanRetry = false;
-            inCollectAnimation = true;
 
             Collidable = false;
 
@@ -124,7 +126,7 @@ namespace Celeste.Mod.CollabUtils2.Entities {
                 white.SetAnimationFrame(sprite.CurrentAnimationFrame);
             }
 
-            if (inCollectAnimation && (Scene.Tracker.GetEntity<Player>()?.Dead ?? true)) {
+            if (hasBeenBroken && (Scene.Tracker.GetEntity<Player>()?.Dead ?? true)) {
                 interruptCollection();
             }
         }
@@ -162,7 +164,9 @@ namespace Celeste.Mod.CollabUtils2.Entities {
         }
 
         private void stopMusic() {
-            pauseMusicSnapshot = Audio.CreateSnapshot("snapshot:/music_mains_mute");
+            if (pauseMusicSnapshot == null) {
+                pauseMusicSnapshot = Audio.CreateSnapshot("snapshot:/music_mains_mute");
+            }
             Audio.BusStopAll("bus:/gameplay_sfx", immediate: true);
         }
 
