@@ -137,7 +137,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             onChangePresenceHook = new Hook(
                 typeof(Everest.DiscordSDK).GetMethod("UpdatePresence", BindingFlags.NonPublic | BindingFlags.Instance),
                 typeof(InGameOverworldHelper).GetMethod("OnDiscordChangePresence", BindingFlags.NonPublic | BindingFlags.Static));
-            
+
             ilSwapRoutineHook = new ILHook(
                 typeof(OuiChapterPanel).GetMethod("SwapRoutine", BindingFlags.NonPublic | BindingFlags.Instance)!.GetStateMachineTarget()!,
                 ModOuiChapterPanelSwapRoutine);
@@ -387,7 +387,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private class OuiChapterPanelGymOption : OuiChapterPanel.Option {
             public string GymTechDifficuty;
         }
-        
+
         private static MethodInfo m_OuiChapterPanel__ModAreaselectTexture = typeof(OuiChapterPanel).GetMethod("_ModAreaselectTexture", BindingFlags.NonPublic | BindingFlags.Instance)!;
         private static string GetModdedPath(OuiChapterPanel panel, string path)
             => (string) m_OuiChapterPanel__ModAreaselectTexture.Invoke(panel, [path]);
@@ -630,7 +630,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 cursor.EmitLdloc1();
                 cursor.EmitDelegate(ModToHeight);
             }
-            
+
             // replace the chapter panel's checkpoints with a single null checkpoint
             if (cursor.TryGotoNextBestFit(MoveType.After,
                 instr => instr.MatchCall<OuiChapterPanel>("_GetCheckpoints"))) {
@@ -647,9 +647,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 cursor.EmitLdloc1();
                 cursor.EmitDelegate(ModOptions);
             }
-            
+
             return;
-            
+
             static int ModToHeight(int orig, OuiChapterPanel panel) {
                 return ShouldModChapterPanelSwap(panel) && panel.selectingMode
                     ? gymSubmenuSelected(panel)
@@ -667,7 +667,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             static void ModOptions(OuiChapterPanel panel) {
                 if (!ShouldModChapterPanelSwap(panel) || panel.selectingMode)
                     return;
-                
+
                 if (gymSubmenuSelected(panel)) {
                     SetupChapterPanelGymOptions(panel);
                 } else {
@@ -936,7 +936,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 Logger.Log("CollabUtils2/InGameOverworldHelper", $"Modding chapter option label position at {cursor.Index} in IL for OuiChapterPanel.Render");
 
                 ILLabel normalDraw = cursor.DefineLabel(), afterNormalDraw = cursor.DefineLabel();
-                
+
                 // `if (shouldModChapterOptionLabelPosition(this)) { modChapterOptionLabelPosition(..., this); } else { ActiveFont.Draw(...); }`
                 cursor.Emit(OpCodes.Ldarg_0);
                 cursor.EmitDelegate(shouldModChapterOptionLabelPosition);
@@ -998,13 +998,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private static bool shouldModChapterOptionLabelPosition(OuiChapterPanel self) {
             if (overworldWrapper == null)
                 return false;
-            
+
             if (!gymSubmenuSelected(self) || self.selectingMode)
                 return false;
-            
+
             if (self.options[self.option] is not OuiChapterPanelGymOption)
                 return false;
-            
+
             return true;
         }
 
@@ -1013,7 +1013,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             string difficulty = option is OuiChapterPanelGymOption o ? o.GymTechDifficuty : null;
             string difficultyLabel = Dialog.Clean($"collabutils2_difficulty_{difficulty}");
             Vector2 renderPos = self.OptionsRenderPosition;
-            
+
             ActiveFont.Draw(option.Label, renderPos + new Vector2(0f, -140f), new Vector2(0.5f, 1f), Vector2.One * (1f + self.wiggler.Value * 0.1f), color);
             ActiveFont.Draw(difficultyLabel, renderPos + new Vector2(0f, -140f), new Vector2(0.5f, 0f), Vector2.One * 0.6f * (1f + self.wiggler.Value * 0.1f), color);
         }
