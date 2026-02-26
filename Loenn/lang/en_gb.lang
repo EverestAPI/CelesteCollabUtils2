@@ -86,6 +86,7 @@ triggers.CollabUtils2/SpeedBerryCollectTrigger.placements.name.default=Speed Ber
 entities.CollabUtils2/GymMarker.placements.name.controller=Gym Marker
 entities.CollabUtils2/GymMarker.attributes.description.name=The tech name of the current room.
 entities.CollabUtils2/GymMarker.attributes.description.difficulty=The difficulty of the tech.
+entities.CollabUtils2/GymMarker.attributes.description.difficultyColor=The color of the tech's tab on the chapter panel. If left empty, the color corresponding to the difficulty set will be used, or white if the set difficulty is custom.
 
 # Collab Crystal Heart
 entities.CollabUtils2/CollabCrystalHeart.placements.name.crystal_heart=Crystal Heart (Return to Lobby)

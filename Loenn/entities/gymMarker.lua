@@ -8,17 +8,20 @@ gymMarker.placements = {
     data = {
         name = "",
         difficulty = "beginner",
-        difficultyColor = "56B3FF"
+        difficultyColor = ""
     }
 }
 
 gymMarker.fieldInformation = {
     difficulty = {
-        options = { "beginner", "intermediate", "advanced", "expert", "grandmaster" }
+        options = { "beginner", "intermediate", "advanced", "expert", "grandmaster" },
+        editable = true
     },
     difficultyColor = {
         fieldType = "color",
-        options = { "56B3FF", "FF6D81", "FFFF89", "FF9E66", "DD87FF" }
+        allowEmpty = true,
+        options = { "56B3FF", "FF6D81", "FFFF89", "FF9E66", "DD87FF" },
+        editable = true
     }
 }
 
