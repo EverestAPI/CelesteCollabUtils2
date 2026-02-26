@@ -95,13 +95,14 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private static List<Hook> altSidesHelperHooks = new List<Hook>();
         private static Hook hookOnMapDataOrigLoad;
 
-        private static Dictionary<string, Color> difficultyColors = new Dictionary<string, Color>() {
+        private static readonly Dictionary<string, Color> defaultDifficultyColors = new() {
             { "beginner", Calc.HexToColor("56B3FF") },
             { "intermediate", Calc.HexToColor("FF6D81") },
             { "advanced", Calc.HexToColor("FFFF89") },
             { "expert", Calc.HexToColor("FF9E66") },
             { "grandmaster", Calc.HexToColor("DD87FF") }
         };
+        private static readonly Color fallbackDifficultyColor = Calc.HexToColor("ffffff"); // todo: find something that looks nice
 
         private static bool presenceLock = false;
 
@@ -122,6 +123,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.OuiJournal.Enter += OnJournalEnter;
             On.Celeste.OuiChapterPanel.UpdateStats += OnChapterPanelUpdateStats;
             IL.Celeste.OuiChapterPanel.Render += ModOuiChapterPanelRender;
+            IL.Celeste.OuiChapterPanel.Option.Render += ModOuiChapterPanelOptionRender;
             IL.Celeste.DeathsCounter.Render += ModDeathsCounterRender;
             IL.Celeste.StrawberriesCounter.Render += ModStrawberriesCounterRender;
             On.Celeste.OuiChapterPanel.Start += OnOuiChapterPanelStart;
@@ -175,6 +177,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.OuiJournal.Enter -= OnJournalEnter;
             On.Celeste.OuiChapterPanel.UpdateStats -= OnChapterPanelUpdateStats;
             IL.Celeste.OuiChapterPanel.Render -= ModOuiChapterPanelRender;
+            IL.Celeste.OuiChapterPanel.Option.Render -= ModOuiChapterPanelOptionRender;
             IL.Celeste.DeathsCounter.Render -= ModDeathsCounterRender;
             IL.Celeste.StrawberriesCounter.Render -= ModStrawberriesCounterRender;
             On.Celeste.OuiChapterPanel.Start -= OnOuiChapterPanelStart;
@@ -376,7 +379,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     Label = Dialog.Clean("collabutils2_overworld_exit"),
                     BgColor = Calc.HexToColor("FA5139"),
                     Bg = GFX.Gui[GetModdedPath(self, "areaselect/tab")],
-                    Icon = GFX.Gui["menu/exit"],
+                    Icon = GFX.Gui["CollabUtils2/menu/exit"],
                 });
 
                 // directly select the current gym.
@@ -385,7 +388,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private class OuiChapterPanelGymOption : OuiChapterPanel.Option {
-            public string GymTechDifficuty;
+            public string GymTechDifficulty;
         }
 
         private static MethodInfo m_OuiChapterPanel__ModAreaselectTexture = typeof(OuiChapterPanel).GetMethod("_ModAreaselectTexture", BindingFlags.NonPublic | BindingFlags.Instance)!;
@@ -414,14 +417,14 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
                 CollabMapDataProcessor.GymTechInfo techInfo = CollabMapDataProcessor.GymTech[techName];
                 var checkpoint = new OuiChapterPanelGymOption {
-                    Label = Dialog.Clean($"{LobbyHelper.GetCollabNameForSID(techInfo.AreaSID)}_gym_{techName}_name", null),
-                    BgColor = difficultyColors[techInfo.Difficulty],
+                    Label = Dialog.Clean($"{LobbyHelper.GetCollabNameForSID(techInfo.AreaSID)}_gym_{techName}_name"),
+                    BgColor = techInfo.DifficultyColor ?? defaultDifficultyColors.GetValueOrDefault(techInfo.Difficulty, fallbackDifficultyColor),
                     Bg = GFX.Gui[GetModdedPath(self, "areaselect/tab")],
-                    Icon = GFX.Gui[$"CollabUtils2/areaselect/startpoint_{techInfo.Difficulty}"],
+                    Icon = GFX.Gui["CollabUtils2/areaselect/gym_startpoint"],
                     CheckpointLevelName = $"{techInfo.AreaSID}|{techInfo.Level}",
                     Large = false,
                     Siblings = tech.Length,
-                    GymTechDifficuty = techInfo.Difficulty
+                    GymTechDifficulty = techInfo.Difficulty
                 };
                 checkpoints.Add(checkpoint);
 
@@ -729,14 +732,14 @@ namespace Celeste.Mod.CollabUtils2.UI {
             foreach (string techName in tech) {
                 CollabMapDataProcessor.GymTechInfo techInfo = CollabMapDataProcessor.GymTech[techName];
                 var checkpoint = new OuiChapterPanelGymOption {
-                    Label = Dialog.Clean($"{LobbyHelper.GetCollabNameForSID(techInfo.AreaSID)}_gym_{techName}_name", null),
-                    BgColor = difficultyColors[techInfo.Difficulty],
+                    Label = Dialog.Clean($"{LobbyHelper.GetCollabNameForSID(techInfo.AreaSID)}_gym_{techName}_name"),
+                    BgColor = techInfo.DifficultyColor ?? defaultDifficultyColors.GetValueOrDefault(techInfo.Difficulty, fallbackDifficultyColor),
                     Bg = GFX.Gui[GetModdedPath(self, "areaselect/tab")],
-                    Icon = GFX.Gui[$"CollabUtils2/areaselect/startpoint_{techInfo.Difficulty}"],
+                    Icon = GFX.Gui["CollabUtils2/areaselect/gym_startpoint"],
                     CheckpointLevelName = $"{techInfo.AreaSID}|{techInfo.Level}",
                     Large = false,
                     Siblings = tech.Count(),
-                    GymTechDifficuty = techInfo.Difficulty
+                    GymTechDifficulty = techInfo.Difficulty
                 };
                 checkpoints.Add(checkpoint);
             }
@@ -1002,7 +1005,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (!gymSubmenuSelected(self) || self.selectingMode)
                 return false;
 
-            if (self.options[self.option] is not OuiChapterPanelGymOption)
+            if (self.options[self.option] is not OuiChapterPanelGymOption { GymTechDifficulty: not null })
                 return false;
 
             return true;
@@ -1010,12 +1013,27 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private static void modChapterOptionLabelPosition(string text, Vector2 position, Vector2 justify, Vector2 scale, Color color, OuiChapterPanel self) {
             OuiChapterPanel.Option option = self.options[self.option];
-            string difficulty = option is OuiChapterPanelGymOption o ? o.GymTechDifficuty : null;
+            string difficulty = option is OuiChapterPanelGymOption o ? o.GymTechDifficulty : null;
             string difficultyLabel = Dialog.Clean($"collabutils2_difficulty_{difficulty}");
             Vector2 renderPos = self.OptionsRenderPosition;
 
             ActiveFont.Draw(option.Label, renderPos + new Vector2(0f, -140f), new Vector2(0.5f, 1f), Vector2.One * (1f + self.wiggler.Value * 0.1f), color);
             ActiveFont.Draw(difficultyLabel, renderPos + new Vector2(0f, -140f), new Vector2(0.5f, 0f), Vector2.One * 0.6f * (1f + self.wiggler.Value * 0.1f), color);
+        }
+        
+        private static void ModOuiChapterPanelOptionRender(ILContext il) {
+            ILCursor cursor = new(il);
+            
+            // IL_00d9: call valuetype [FNA]Microsoft.Xna.Framework.Color [FNA]Microsoft.Xna.Framework.Color::get_White()
+            if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCall<Color>("get_White"))) {
+                cursor.EmitLdarg0();
+                cursor.EmitDelegate(ModIconColor);
+            }
+            
+            return;
+
+            static Color ModIconColor(Color orig, OuiChapterPanel.Option self)
+                => self is OuiChapterPanelGymOption gymOption ? gymOption.BgColor : orig;
         }
 
         private static IEnumerator OnJournalEnter(On.Celeste.OuiJournal.orig_Enter orig, OuiJournal self, Oui from) {

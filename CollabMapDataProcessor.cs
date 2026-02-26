@@ -1,3 +1,5 @@
+using Microsoft.Xna.Framework;
+using Monocle;
 using System;
 using System.Collections.Generic;
 
@@ -17,6 +19,7 @@ namespace Celeste.Mod.CollabUtils2 {
 
         public struct GymTechInfo {
             public string Difficulty;
+            public Color? DifficultyColor;
             public string AreaSID;
             public string Level;
         }
@@ -86,9 +89,12 @@ namespace Celeste.Mod.CollabUtils2 {
                 {
                     "entity:CollabUtils2/GymMarker", gymMarker => {
                         string techName = gymMarker.Attr("name");
+                        string difficulty = gymMarker.Attr("difficulty", "beginner");
+                        string difficultyColor = gymMarker.Attr("difficultyColor");
                         if (!string.IsNullOrEmpty(techName)) {
                             GymTech[techName] = new GymTechInfo {
-                                Difficulty = gymMarker.Attr("difficulty", "beginner"),
+                                Difficulty = !string.IsNullOrEmpty(difficulty) ? difficulty : null,
+                                DifficultyColor = !string.IsNullOrEmpty(difficultyColor) ? Calc.HexToColor(difficultyColor) : null,
                                 AreaSID = AreaKey.GetSID(),
                                 Level = levelName
                             };
