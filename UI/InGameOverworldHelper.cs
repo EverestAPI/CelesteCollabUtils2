@@ -416,9 +416,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 string techName = tech[i];
 
                 CollabMapDataProcessor.GymTechInfo techInfo = CollabMapDataProcessor.GymTech[techName];
+                Color difficultyColor = techInfo.DifficultyColor
+                    ?? (techInfo.Difficulty is not null
+                        ? defaultDifficultyColors.GetValueOrDefault(techInfo.Difficulty, fallbackDifficultyColor)
+                        : fallbackDifficultyColor);
                 var checkpoint = new OuiChapterPanelGymOption {
                     Label = Dialog.Clean($"{LobbyHelper.GetCollabNameForSID(techInfo.AreaSID)}_gym_{techName}_name"),
-                    BgColor = techInfo.DifficultyColor ?? defaultDifficultyColors.GetValueOrDefault(techInfo.Difficulty, fallbackDifficultyColor),
+                    BgColor = difficultyColor,
                     Bg = GFX.Gui[GetModdedPath(self, "areaselect/tab")],
                     Icon = GFX.Gui["CollabUtils2/areaselect/gym_startpoint"],
                     CheckpointLevelName = $"{techInfo.AreaSID}|{techInfo.Level}",
@@ -731,9 +735,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
             string[] tech = activeGymTech.Where(name => CollabMapDataProcessor.GymTech.ContainsKey(name)).ToArray();
             foreach (string techName in tech) {
                 CollabMapDataProcessor.GymTechInfo techInfo = CollabMapDataProcessor.GymTech[techName];
+                Color difficultyColor = techInfo.DifficultyColor
+                    ?? (techInfo.Difficulty is not null
+                        ? defaultDifficultyColors.GetValueOrDefault(techInfo.Difficulty, fallbackDifficultyColor)
+                        : fallbackDifficultyColor);
                 var checkpoint = new OuiChapterPanelGymOption {
                     Label = Dialog.Clean($"{LobbyHelper.GetCollabNameForSID(techInfo.AreaSID)}_gym_{techName}_name"),
-                    BgColor = techInfo.DifficultyColor ?? defaultDifficultyColors.GetValueOrDefault(techInfo.Difficulty, fallbackDifficultyColor),
+                    BgColor = difficultyColor,
                     Bg = GFX.Gui[GetModdedPath(self, "areaselect/tab")],
                     Icon = GFX.Gui["CollabUtils2/areaselect/gym_startpoint"],
                     CheckpointLevelName = $"{techInfo.AreaSID}|{techInfo.Level}",
