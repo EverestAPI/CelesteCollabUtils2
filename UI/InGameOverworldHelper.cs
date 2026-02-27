@@ -102,7 +102,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             { "expert", Calc.HexToColor("FF9E66") },
             { "grandmaster", Calc.HexToColor("DD87FF") }
         };
-        private static readonly Color fallbackDifficultyColor = Calc.HexToColor("ffebb6");
+        private static readonly Color fallbackDifficultyColor = Calc.HexToColor("ffd6ae");
 
         private static bool presenceLock = false;
 
