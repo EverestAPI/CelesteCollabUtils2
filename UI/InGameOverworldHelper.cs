@@ -719,7 +719,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         ? defaultDifficultyColors.GetValueOrDefault(techInfo.Difficulty, fallbackDifficultyColor)
                         : fallbackDifficultyColor);
                 Color learntColor = techInfo.LearntColor ?? fallbackLearntColor;
-                bool learnt = CollabModule.Instance.SaveData.LearntTech.TryGetValue(self.Area.SID, out var learntTech)
+                bool learnt = CollabModule.Instance.SaveData.LearntTech.TryGetValue(collabID, out var learntTech)
                     && learntTech.Contains(techName);
                 var checkpoint = new OuiChapterPanelGymOption {
                     Label = Dialog.Clean($"{LobbyHelper.GetCollabNameForSID(techInfo.AreaSID)}_gym_{techName}_name"),

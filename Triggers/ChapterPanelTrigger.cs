@@ -36,7 +36,7 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
                             if (CollabModule.Instance.SaveData.LearntTech.TryGetValue(collabID, out HashSet<string> learntTech))
                                 learntTech.Add(currentGymTech);
                             else
-                                CollabModule.Instance.SaveData.LearntTech.Add(sid, [currentGymTech]);
+                                CollabModule.Instance.SaveData.LearntTech.Add(collabID, [currentGymTech]);
                         }
                     }
                     

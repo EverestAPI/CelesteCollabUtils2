@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using Monocle;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Celeste.Mod.CollabUtils2 {
     public class CollabMapDataProcessor : EverestMapDataProcessor {
@@ -128,12 +129,19 @@ namespace Celeste.Mod.CollabUtils2 {
         }
 
         public override void Reset() {
-            if (SilverBerries.ContainsKey(AreaKey.GetLevelSet())) {
-                SilverBerries[AreaKey.GetLevelSet()].Remove(AreaKey.GetSID());
-            }
+            if (SilverBerries.TryGetValue(AreaKey.GetLevelSet(), out Dictionary<string, EntityID> silverBerries))
+                silverBerries.Remove(AreaKey.GetSID());
             SpeedBerries.Remove(AreaKey.GetSID());
+            
             MapsWithSilverBerries.Remove(AreaKey.GetSID());
             MapsWithRainbowBerries.Remove(AreaKey.GetSID());
+            
+            GymLevels.Remove(AreaKey.GetSID());
+            foreach ((string _, Dictionary<string, GymTechInfo> techForCollab) in GymTech) {
+                string[] affectedTech = techForCollab.Where(kvp => kvp.Value.AreaSID == AreaKey.GetSID()).Select(kvp => kvp.Key).ToArray();
+                foreach (string tech in affectedTech)
+                    techForCollab.Remove(tech);
+            }
         }
 
         public override void End() {
