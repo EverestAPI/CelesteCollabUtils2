@@ -21,7 +21,7 @@ gymMarker.fieldInformation = {
     difficultyColor = {
         fieldType = "color",
         allowEmpty = true,
-        options = { "56B3FF", "FF6D81", "FFFF89", "FF9E66", "DD87FF" },
+        options = { "", "56B3FF", "FF6D81", "FFFF89", "FF9E66", "DD87FF" },
         editable = true
     },
     learntColor = {

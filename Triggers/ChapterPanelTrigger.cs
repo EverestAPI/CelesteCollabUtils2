@@ -19,7 +19,7 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
             string map = data.Attr("map");
             ReturnToLobbyMode returnToLobbyMode = data.Enum("returnToLobbyMode", ReturnToLobbyMode.SetReturnToHere);
             bool savingAllowed = data.Bool("allowSaving", defaultValue: true);
-            bool exitFromGym = (data.Name == "CollabUtils2/ExitFromGymTrigger");
+            bool exitFromGym = data.Name == "CollabUtils2/ExitFromGymTrigger";
 
             Add(talkComponent = new TalkComponent(
                 new Rectangle(0, 0, data.Width, data.Height),
