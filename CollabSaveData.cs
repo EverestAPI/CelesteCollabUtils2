@@ -35,5 +35,8 @@ namespace Celeste.Mod.CollabUtils2 {
         public bool PauseVisitingPoints { get; set; }
         // whether the lobby map controller should show visited points, useful for TAS routing
         public bool ShowVisitedPoints { get; set; }
+        
+        // maps gym sids to a list of all tech learnt in that gym
+        public Dictionary<string, HashSet<string>> LearntTech = new Dictionary<string, HashSet<string>>();
     }
 }

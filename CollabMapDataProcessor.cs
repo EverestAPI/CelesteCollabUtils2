@@ -20,6 +20,7 @@ namespace Celeste.Mod.CollabUtils2 {
         public struct GymTechInfo {
             public string Difficulty;
             public Color? DifficultyColor;
+            public Color? LearntColor;
             public string AreaSID;
             public string Level;
         }

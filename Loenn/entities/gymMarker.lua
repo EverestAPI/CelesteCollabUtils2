@@ -8,7 +8,8 @@ gymMarker.placements = {
     data = {
         name = "",
         difficulty = "beginner",
-        difficultyColor = ""
+        difficultyColor = "",
+        learntColor = ""
     }
 }
 
@@ -22,6 +23,10 @@ gymMarker.fieldInformation = {
         allowEmpty = true,
         options = { "56B3FF", "FF6D81", "FFFF89", "FF9E66", "DD87FF" },
         editable = true
+    },
+    learntColor = {
+        fieldType = "color",
+        allowEmpty = true
     }
 }
 
