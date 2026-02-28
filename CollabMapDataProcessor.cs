@@ -25,8 +25,10 @@ namespace Celeste.Mod.CollabUtils2 {
             public string Level;
         }
 
+        // GymLevels: maps map SIDs to their gym level info
+        // GymTech: maps collab IDs and tech names to gym tech info
         public static Dictionary<string, GymLevelInfo> GymLevels = new Dictionary<string, GymLevelInfo>();
-        public static Dictionary<string, GymTechInfo> GymTech = new Dictionary<string, GymTechInfo>();
+        public static Dictionary<string, Dictionary<string, GymTechInfo>> GymTech = new Dictionary<string, Dictionary<string, GymTechInfo>>();
 
         // the structure here is: SilverBerries[LevelSet][SID] = ID of the silver berry in that map.
         // so, to check if all silvers in a levelset have been unlocked, go through all entries in SilverBerries[levelset].
@@ -90,16 +92,25 @@ namespace Celeste.Mod.CollabUtils2 {
                 {
                     "entity:CollabUtils2/GymMarker", gymMarker => {
                         string techName = gymMarker.Attr("name");
+                        if (string.IsNullOrEmpty(techName))
+                            return;
+                        
                         string difficulty = gymMarker.Attr("difficulty", "beginner");
                         string difficultyColor = gymMarker.Attr("difficultyColor");
-                        if (!string.IsNullOrEmpty(techName)) {
-                            GymTech[techName] = new GymTechInfo {
-                                Difficulty = !string.IsNullOrEmpty(difficulty) ? difficulty : null,
-                                DifficultyColor = !string.IsNullOrEmpty(difficultyColor) ? Calc.HexToColor(difficultyColor) : null,
-                                AreaSID = AreaKey.GetSID(),
-                                Level = levelName
-                            };
-                        }
+                        string learntColor = gymMarker.Attr("learntColor");
+                        GymTechInfo techInfo = new GymTechInfo {
+                            Difficulty = !string.IsNullOrEmpty(difficulty) ? difficulty : null,
+                            DifficultyColor = !string.IsNullOrEmpty(difficultyColor) ? Calc.HexToColor(difficultyColor) : null,
+                            LearntColor = !string.IsNullOrEmpty(learntColor) ? Calc.HexToColor(learntColor) : null,
+                            AreaSID = AreaKey.GetSID(),
+                            Level = levelName
+                        };
+
+                        string collabID = LobbyHelper.GetCollabNameForSID(AreaKey.GetSID());
+                        if (GymTech.TryGetValue(collabID, out Dictionary<string, GymTechInfo> tech))
+                            tech[techName] = techInfo;
+                        else
+                            GymTech.Add(collabID, new Dictionary<string, GymTechInfo> { { techName, techInfo } });
                     }
                 }
             };

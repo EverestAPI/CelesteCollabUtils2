@@ -215,29 +215,18 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private static bool exitFromGym;
         private static bool heartDirty;
         private static string[] activeGymTech;
-        private static string currentGymTech;
         private static readonly HashSet<DeathsCounter> deathsCountersAddedByCollabUtils = new HashSet<DeathsCounter>();
 
         private static void OnOuiChapterPanelStart(On.Celeste.OuiChapterPanel.orig_Start orig, OuiChapterPanel self, string checkpoint) {
             if (overworldWrapper != null) {
                 (overworldWrapper.Scene as Level).PauseLock = true;
 
-                if (exitFromGym && currentGymTech is not null) {
-                    // we exited from a gym, so mark the current tech as learnt.
-                    if (CollabModule.Instance.SaveData.LearntTech.TryGetValue(self.Area.SID, out HashSet<string> learntTech))
-                        learntTech.Add(currentGymTech);
-                    else
-                        CollabModule.Instance.SaveData.LearntTech.Add(self.Area.SID, new HashSet<string>() { currentGymTech });
-                }
-                currentGymTech = null;
-
-                if (gymSubmenuSelected(self) && self.options[self.option] is OuiChapterPanelGymOption { GymTechName: { } techName }) {
+                if (gymSubmenuSelected(self)) {
                     // We picked a map in the second menu: this is a gym.
                     self.Area.Mode = AreaMode.Normal;
                     gymExitMapSID = collabInGameForcedArea.SID;
                     gymExitSaveAllowed = saveAndReturnToLobbyAllowed;
                     saveAndReturnToLobbyAllowed = false;
-                    currentGymTech = techName;
                 } else if (returnToLobbySelected(self)) {
                     // The third option is "return to lobby".
                     self.Focused = false;
@@ -371,7 +360,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 if (CollabMapDataProcessor.GymLevels.ContainsKey(forceArea.SID)) {
                     CollabMapDataProcessor.GymLevelInfo info = CollabMapDataProcessor.GymLevels[forceArea.SID];
 
-                    if (info.Tech.Any(name => CollabMapDataProcessor.GymTech.ContainsKey(name))) {
+                    string collabID = LobbyHelper.GetCollabNameForSID(collabInGameForcedArea.SID);
+                    if (CollabMapDataProcessor.GymTech.TryGetValue(collabID, out Dictionary<string, CollabMapDataProcessor.GymTechInfo> techForCollab)
+                        && info.Tech.Any(name => techForCollab.ContainsKey(name))) {
                         // some of the tech used here exists in gyms! be sure to display the "tech" tab.
                         self.modes.Add(new OuiChapterPanel.Option {
                             Label = Dialog.Clean("collabutils2_overworld_gym"),
@@ -387,6 +378,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             save.CurrentSession = session;
 
             if (exitFromGym) {
+                // add the return to lobby option.
                 self.modes.Add(new OuiChapterPanel.Option {
                     Label = Dialog.Clean("collabutils2_overworld_exit"),
                     BgColor = Calc.HexToColor("FA5139"),
@@ -711,13 +703,17 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private static void SetupChapterPanelGymOptions(OuiChapterPanel self, bool setOption) {
+            string collabID = LobbyHelper.GetCollabNameForSID(collabInGameForcedArea.SID);
+            if (!CollabMapDataProcessor.GymTech.TryGetValue(collabID, out Dictionary<string, CollabMapDataProcessor.GymTechInfo> techForCollab))
+                return;
+            
             self.checkpoints.Clear();
-
-            string[] tech = activeGymTech.Where(name => CollabMapDataProcessor.GymTech.ContainsKey(name)).ToArray();
+            
+            string[] tech = activeGymTech.Where(name => techForCollab.ContainsKey(name)).ToArray();
             for (int i = 0; i < tech.Length; i++) {
                 string techName = tech[i];
                 
-                CollabMapDataProcessor.GymTechInfo techInfo = CollabMapDataProcessor.GymTech[techName];
+                CollabMapDataProcessor.GymTechInfo techInfo = techForCollab[techName];
                 Color difficultyColor = techInfo.DifficultyColor
                     ?? (techInfo.Difficulty is not null
                         ? defaultDifficultyColors.GetValueOrDefault(techInfo.Difficulty, fallbackDifficultyColor)
@@ -729,7 +725,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     Label = Dialog.Clean($"{LobbyHelper.GetCollabNameForSID(techInfo.AreaSID)}_gym_{techName}_name"),
                     BgColor = learnt ? learntColor : difficultyColor,
                     Bg = GFX.Gui[GetModdedPath(self, "areaselect/tab")],
-                    Icon = GFX.Gui[learnt ? "CollabUtils2/areaselect/gym_startpoint" : "CollabUtils2/areaselect/gym_checkmark"],
+                    Icon = GFX.Gui[learnt ? "CollabUtils2/areaselect/gym_checkmark" : "CollabUtils2/areaselect/gym_startpoint"],
                     CheckpointLevelName = $"{techInfo.AreaSID}|{techInfo.Level}",
                     Large = false,
                     Siblings = tech.Length,
@@ -878,10 +874,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private static void OnChapterPanelDrawGymCheckpoint(OuiChapterPanel self, Vector2 center, OuiChapterPanel.Option option, int checkpointIndex, string[] collabTech) {
             AreaData forcedArea = collabInGameForcedArea;
+            string currentCollabID = LobbyHelper.GetCollabNameForSID(forcedArea.SID);
 
-            if (CollabMapDataProcessor.GymTech.ContainsKey(collabTech[checkpointIndex])) {
-                CollabMapDataProcessor.GymTechInfo techInfo = CollabMapDataProcessor.GymTech[collabTech[checkpointIndex]];
-
+            if (CollabMapDataProcessor.GymTech.TryGetValue(currentCollabID, out Dictionary<string, CollabMapDataProcessor.GymTechInfo> techForCollab)
+                && techForCollab.ContainsKey(collabTech[checkpointIndex])) {
                 string imageName = $"{LobbyHelper.GetCollabNameForSID(forcedArea.SID)}/Gyms/{collabTech[checkpointIndex]}";
                 MTexture imagePreview = MTN.Checkpoints.Has(imageName) ? MTN.Checkpoints[imageName] : null;
                 if (imagePreview != null) {
