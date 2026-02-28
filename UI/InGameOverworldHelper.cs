@@ -613,10 +613,22 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
 
             // replace the chapter panel's checkpoints with a single null checkpoint
-            if (cursor.TryGotoNextBestFit(MoveType.After,
+            if (cursor.TryGotoNextBestFit(MoveType.Before,
+                instr => instr.MatchLdsfld<SaveData>("Instance"),
+                instr => instr.MatchLdloc1(),
+                instr => instr.MatchLdfld<OuiChapterPanel>("Area"),
                 instr => instr.MatchCall<OuiChapterPanel>("_GetCheckpoints"))) {
+                ILLabel getCheckpoints = cursor.DefineLabel(), afterGetCheckpoints = cursor.DefineLabel();
+                
                 cursor.EmitLdloc1();
+                cursor.EmitDelegate(ShouldModChapterPanelSwap);
+                cursor.EmitBrfalse(getCheckpoints);
                 cursor.EmitDelegate(ModCheckpoints);
+                cursor.EmitBr(afterGetCheckpoints);
+                cursor.MarkLabel(getCheckpoints);
+
+                cursor.GotoNext(MoveType.After, instr => instr.MatchCall<OuiChapterPanel>("_GetCheckpoints"));
+                cursor.MarkLabel(afterGetCheckpoints);
             }
 
             // mod the chapter panel's options
@@ -639,11 +651,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     : orig;
             }
 
-            static HashSet<string> ModCheckpoints(HashSet<string> orig, OuiChapterPanel panel) {
-                return ShouldModChapterPanelSwap(panel) && !panel.selectingMode
-                    ? [null]
-                    : orig;
-            }
+            static HashSet<string> ModCheckpoints()
+                => [null];
 
             static void ModOptions(OuiChapterPanel panel) {
                 if (!ShouldModChapterPanelSwap(panel) || panel.selectingMode)
