@@ -99,7 +99,7 @@ namespace Celeste.Mod.CollabUtils2 {
                         string difficulty = gymMarker.Attr("difficulty", "beginner");
                         string difficultyColor = gymMarker.Attr("difficultyColor");
                         string learntColor = gymMarker.Attr("learntColor");
-                        GymTechInfo techInfo = new GymTechInfo {
+                        GymTechInfo techInfo = new() {
                             Difficulty = !string.IsNullOrEmpty(difficulty) ? difficulty : null,
                             DifficultyColor = !string.IsNullOrEmpty(difficultyColor) ? Calc.HexToColor(difficultyColor) : null,
                             LearntColor = !string.IsNullOrEmpty(learntColor) ? Calc.HexToColor(learntColor) : null,

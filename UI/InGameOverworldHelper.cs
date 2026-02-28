@@ -708,43 +708,49 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 return;
             
             self.checkpoints.Clear();
+            int nextSelectedOption = -1;
             
             string[] tech = activeGymTech.Where(name => techForCollab.ContainsKey(name)).ToArray();
+            string[] learntTech = tech.Where(name =>
+                CollabModule.Instance.SaveData.LearntTech.TryGetValue(collabID, out var learntTechForCollab)
+                && learntTechForCollab.Contains(name)).ToArray();
+            string[] unlearntTech = tech.Except(learntTech).ToArray();
+            AddGymOptions(self, unlearntTech, techForCollab, tech.Length, false, setOption, 0, ref nextSelectedOption);
+            AddGymOptions(self, learntTech, techForCollab, tech.Length, true, setOption, unlearntTech.Length, ref nextSelectedOption);
+            
+            self.option = nextSelectedOption == -1 ? 0 : nextSelectedOption;
+        }
+
+        private static void AddGymOptions(OuiChapterPanel self, string[] tech, Dictionary<string, CollabMapDataProcessor.GymTechInfo> techForCollab, int totalTech, bool learnt, bool setOption, int optionOffset, ref int option) {
             for (int i = 0; i < tech.Length; i++) {
                 string techName = tech[i];
-                
                 CollabMapDataProcessor.GymTechInfo techInfo = techForCollab[techName];
+                
                 Color difficultyColor = techInfo.DifficultyColor
                     ?? (techInfo.Difficulty is not null
                         ? defaultDifficultyColors.GetValueOrDefault(techInfo.Difficulty, fallbackDifficultyColor)
                         : fallbackDifficultyColor);
                 Color learntColor = techInfo.LearntColor ?? fallbackLearntColor;
-                bool learnt = CollabModule.Instance.SaveData.LearntTech.TryGetValue(collabID, out var learntTech)
-                    && learntTech.Contains(techName);
-                var checkpoint = new OuiChapterPanelGymOption {
+            
+                self.checkpoints.Add(new OuiChapterPanelGymOption {
                     Label = Dialog.Clean($"{LobbyHelper.GetCollabNameForSID(techInfo.AreaSID)}_gym_{techName}_name"),
                     BgColor = learnt ? learntColor : difficultyColor,
                     Bg = GFX.Gui[GetModdedPath(self, "areaselect/tab")],
                     Icon = GFX.Gui[learnt ? "CollabUtils2/areaselect/gym_checkmark" : "CollabUtils2/areaselect/gym_startpoint"],
                     CheckpointLevelName = $"{techInfo.AreaSID}|{techInfo.Level}",
                     Large = false,
-                    Siblings = tech.Length,
+                    Siblings = totalTech,
                     GymTechName = techName,
                     GymTechDifficulty = techInfo.Difficulty
-                };
-                self.checkpoints.Add(checkpoint);
+                });
                 
                 string currentSid = SaveData.Instance.CurrentSession_Safe.Area.SID;
                 string currentRoom = SaveData.Instance.CurrentSession_Safe.Level;
-
                 if (setOption && techInfo.AreaSID == currentSid && techInfo.Level == currentRoom) {
                     // this is the one we're currently in! select it
-                    self.option = i;
+                    option = optionOffset + i;
                 }
             }
-
-            if (!setOption)
-                self.option = 0;
         }
 
         private static void OnChapterPanelDrawCheckpoint(On.Celeste.OuiChapterPanel.orig_DrawCheckpoint orig, OuiChapterPanel self, Vector2 center, object option, int checkpointIndex) {
