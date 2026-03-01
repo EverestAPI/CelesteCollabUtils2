@@ -3,7 +3,10 @@ trigger.name = "CollabUtils2/ExitFromGymTrigger"
 trigger.nodeLimits = {0, 1}
 trigger.placements = {
     {
-        name = "default"
+        name = "default",
+        data = {
+            markTechAsLearned = false
+        }
     }
 }
 

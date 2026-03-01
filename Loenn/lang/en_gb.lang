@@ -60,6 +60,7 @@ triggers.CollabUtils2/ChapterPanelTrigger.attributes.description.tech=Comma-sepa
 
 # Exit From Gym Trigger
 triggers.CollabUtils2/ExitFromGymTrigger.placements.name.default=Exit From Gym
+triggers.CollabUtils2/ExitFromGymTrigger.attributes.description.markTechAsLearned=Whether to mark this room's tech as learned upon interaction.
 
 # Journal Trigger
 triggers.CollabUtils2/JournalTrigger.placements.name.default=Journal

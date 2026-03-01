@@ -20,6 +20,7 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
             ReturnToLobbyMode returnToLobbyMode = data.Enum("returnToLobbyMode", ReturnToLobbyMode.SetReturnToHere);
             bool savingAllowed = data.Bool("allowSaving", defaultValue: true);
             bool exitFromGym = data.Name == "CollabUtils2/ExitFromGymTrigger";
+            bool markTechAsLearned = exitFromGym && data.Bool("markTechAsLearned");
 
             Add(talkComponent = new TalkComponent(
                 new Rectangle(0, 0, data.Width, data.Height),
@@ -32,7 +33,7 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
                     string collabID = LobbyHelper.GetCollabNameForSID(sid);
                     if (exitFromGym && CollabMapDataProcessor.GymTech.TryGetValue(collabID, out Dictionary<string, CollabMapDataProcessor.GymTechInfo> techForCollab)) {
                         string currentGymTech = techForCollab.FirstOrDefault(kvp => kvp.Value.AreaSID == sid && kvp.Value.Level == level).Key;
-                        if (currentGymTech is not null) {
+                        if (currentGymTech is not null && markTechAsLearned) {
                             if (CollabModule.Instance.SaveData.LearnedTech.TryGetValue(collabID, out HashSet<string> learnedTech))
                                 learnedTech.Add(currentGymTech);
                             else
