@@ -103,7 +103,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             { "grandmaster", Calc.HexToColor("DD87FF") }
         };
         private static readonly Color fallbackDifficultyColor = Calc.HexToColor("ffd6ae");
-        private static readonly Color fallbackLearntColor = Calc.HexToColor("a1ff83");
+        private static readonly Color fallbackLearnedColor = Calc.HexToColor("a1ff83");
 
         private static bool presenceLock = false;
 
@@ -720,17 +720,17 @@ namespace Celeste.Mod.CollabUtils2.UI {
             int nextSelectedOption = -1;
             
             string[] tech = activeGymTech.Where(name => techForCollab.ContainsKey(name)).ToArray();
-            string[] learntTech = tech.Where(name =>
-                CollabModule.Instance.SaveData.LearntTech.TryGetValue(collabID, out var learntTechForCollab)
-                && learntTechForCollab.Contains(name)).ToArray();
-            string[] unlearntTech = tech.Except(learntTech).ToArray();
-            AddGymOptions(self, unlearntTech, techForCollab, tech.Length, false, setOption, 0, ref nextSelectedOption);
-            AddGymOptions(self, learntTech, techForCollab, tech.Length, true, setOption, unlearntTech.Length, ref nextSelectedOption);
+            string[] learnedTech = tech.Where(name =>
+                CollabModule.Instance.SaveData.LearnedTech.TryGetValue(collabID, out var learnedTechForCollab)
+                && learnedTechForCollab.Contains(name)).ToArray();
+            string[] unlearnedTech = tech.Except(learnedTech).ToArray();
+            AddGymOptions(self, unlearnedTech, techForCollab, tech.Length, false, setOption, 0, ref nextSelectedOption);
+            AddGymOptions(self, learnedTech, techForCollab, tech.Length, true, setOption, unlearnedTech.Length, ref nextSelectedOption);
             
             self.option = nextSelectedOption == -1 ? 0 : nextSelectedOption;
         }
 
-        private static void AddGymOptions(OuiChapterPanel self, string[] tech, Dictionary<string, CollabMapDataProcessor.GymTechInfo> techForCollab, int totalTech, bool learnt, bool setOption, int optionOffset, ref int option) {
+        private static void AddGymOptions(OuiChapterPanel self, string[] tech, Dictionary<string, CollabMapDataProcessor.GymTechInfo> techForCollab, int totalTech, bool learned, bool setOption, int optionOffset, ref int option) {
             for (int i = 0; i < tech.Length; i++) {
                 string techName = tech[i];
                 CollabMapDataProcessor.GymTechInfo techInfo = techForCollab[techName];
@@ -739,13 +739,13 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     ?? (techInfo.Difficulty is not null
                         ? defaultDifficultyColors.GetValueOrDefault(techInfo.Difficulty, fallbackDifficultyColor)
                         : fallbackDifficultyColor);
-                Color learntColor = techInfo.LearntColor ?? fallbackLearntColor;
+                Color learnedColor = techInfo.LearnedColor ?? fallbackLearnedColor;
             
                 self.checkpoints.Add(new OuiChapterPanelGymOption {
                     Label = Dialog.Clean($"{LobbyHelper.GetCollabNameForSID(techInfo.AreaSID)}_gym_{techName}_name"),
-                    BgColor = learnt ? learntColor : difficultyColor,
+                    BgColor = learned ? learnedColor : difficultyColor,
                     Bg = GFX.Gui[GetModdedPath(self, "areaselect/tab")],
-                    Icon = GFX.Gui[learnt ? "CollabUtils2/areaselect/gym_checkmark" : "CollabUtils2/areaselect/gym_startpoint"],
+                    Icon = GFX.Gui[learned ? "CollabUtils2/areaselect/gym_checkmark" : "CollabUtils2/areaselect/gym_startpoint"],
                     CheckpointLevelName = $"{techInfo.AreaSID}|{techInfo.Level}",
                     Large = false,
                     Siblings = totalTech,

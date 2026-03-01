@@ -33,10 +33,10 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
                     if (exitFromGym && CollabMapDataProcessor.GymTech.TryGetValue(collabID, out Dictionary<string, CollabMapDataProcessor.GymTechInfo> techForCollab)) {
                         string currentGymTech = techForCollab.FirstOrDefault(kvp => kvp.Value.AreaSID == sid && kvp.Value.Level == level).Key;
                         if (currentGymTech is not null) {
-                            if (CollabModule.Instance.SaveData.LearntTech.TryGetValue(collabID, out HashSet<string> learntTech))
-                                learntTech.Add(currentGymTech);
+                            if (CollabModule.Instance.SaveData.LearnedTech.TryGetValue(collabID, out HashSet<string> learnedTech))
+                                learnedTech.Add(currentGymTech);
                             else
-                                CollabModule.Instance.SaveData.LearntTech.Add(collabID, [currentGymTech]);
+                                CollabModule.Instance.SaveData.LearnedTech.Add(collabID, [currentGymTech]);
                         }
                     }
                     

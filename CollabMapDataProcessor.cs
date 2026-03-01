@@ -21,7 +21,7 @@ namespace Celeste.Mod.CollabUtils2 {
         public struct GymTechInfo {
             public string Difficulty;
             public Color? DifficultyColor;
-            public Color? LearntColor;
+            public Color? LearnedColor;
             public string AreaSID;
             public string Level;
         }
@@ -98,11 +98,11 @@ namespace Celeste.Mod.CollabUtils2 {
                         
                         string difficulty = gymMarker.Attr("difficulty", "beginner");
                         string difficultyColor = gymMarker.Attr("difficultyColor");
-                        string learntColor = gymMarker.Attr("learntColor");
+                        string learnedColor = gymMarker.Attr("learnedColor");
                         GymTechInfo techInfo = new() {
                             Difficulty = !string.IsNullOrEmpty(difficulty) ? difficulty : null,
                             DifficultyColor = !string.IsNullOrEmpty(difficultyColor) ? Calc.HexToColor(difficultyColor) : null,
-                            LearntColor = !string.IsNullOrEmpty(learntColor) ? Calc.HexToColor(learntColor) : null,
+                            LearnedColor = !string.IsNullOrEmpty(learnedColor) ? Calc.HexToColor(learnedColor) : null,
                             AreaSID = AreaKey.GetSID(),
                             Level = levelName
                         };
