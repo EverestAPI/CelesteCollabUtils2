@@ -96,14 +96,21 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private static Hook hookOnMapDataOrigLoad;
 
         private static readonly Dictionary<string, Color> defaultDifficultyColors = new() {
-            { "beginner", Calc.HexToColor("56B3FF") },
-            { "intermediate", Calc.HexToColor("FF6D81") },
-            { "advanced", Calc.HexToColor("FFFF89") },
-            { "expert", Calc.HexToColor("FF9E66") },
-            { "grandmaster", Calc.HexToColor("DD87FF") }
+            { "beginner", Calc.HexToColor("56b3ff") },
+            { "intermediate", Calc.HexToColor("ff6d81") },
+            { "advanced", Calc.HexToColor("ffff89") },
+            { "expert", Calc.HexToColor("ff9e66") },
+            { "grandmaster", Calc.HexToColor("dd87ff") }
         };
-        private static readonly Color fallbackDifficultyColor = Calc.HexToColor("ffd6ae");
-        private static readonly Color fallbackLearnedColor = Calc.HexToColor("a1ff83");
+        private static readonly Color fallbackDifficultyColor = Calc.HexToColor("f2e0cb");
+        private static readonly Dictionary<string, Color> defaultLearnedColors = new() {
+            { "beginner", Calc.HexToColor("a7e2f9") },
+            { "intermediate", Calc.HexToColor("faa7bc") },
+            { "advanced", Calc.HexToColor("fbf8b8") },
+            { "expert", Calc.HexToColor("fbd0a6") },
+            { "grandmaster", Calc.HexToColor("f3bafa") }
+        };
+        private static readonly Color fallbackLearnedColor = Calc.HexToColor("abf797");
 
         private static bool presenceLock = false;
 
@@ -724,40 +731,43 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 CollabModule.Instance.SaveData.LearnedTech.TryGetValue(collabID, out var learnedTechForCollab)
                 && learnedTechForCollab.Contains(name)).ToArray();
             string[] unlearnedTech = tech.Except(learnedTech).ToArray();
-            AddGymOptions(self, unlearnedTech, techForCollab, tech.Length, false, setOption, 0, ref nextSelectedOption);
-            AddGymOptions(self, learnedTech, techForCollab, tech.Length, true, setOption, unlearnedTech.Length, ref nextSelectedOption);
+            AddGymOptions(unlearnedTech, false, 0);
+            AddGymOptions(learnedTech, true, unlearnedTech.Length);
             
-            self.option = nextSelectedOption == -1 ? 0 : nextSelectedOption;
-        }
+            self.option = setOption && nextSelectedOption != -1 ? nextSelectedOption : 0;
+            return;
 
-        private static void AddGymOptions(OuiChapterPanel self, string[] tech, Dictionary<string, CollabMapDataProcessor.GymTechInfo> techForCollab, int totalTech, bool learned, bool setOption, int optionOffset, ref int option) {
-            for (int i = 0; i < tech.Length; i++) {
-                string techName = tech[i];
-                CollabMapDataProcessor.GymTechInfo techInfo = techForCollab[techName];
-                
-                Color difficultyColor = techInfo.DifficultyColor
-                    ?? (techInfo.Difficulty is not null
-                        ? defaultDifficultyColors.GetValueOrDefault(techInfo.Difficulty, fallbackDifficultyColor)
-                        : fallbackDifficultyColor);
-                Color learnedColor = techInfo.LearnedColor ?? fallbackLearnedColor;
-            
-                self.checkpoints.Add(new OuiChapterPanelGymOption {
-                    Label = Dialog.Clean($"{LobbyHelper.GetCollabNameForSID(techInfo.AreaSID)}_gym_{techName}_name"),
-                    BgColor = learned ? learnedColor : difficultyColor,
-                    Bg = GFX.Gui[GetModdedPath(self, "areaselect/tab")],
-                    Icon = GFX.Gui[learned ? "CollabUtils2/areaselect/gym_checkmark" : "CollabUtils2/areaselect/gym_startpoint"],
-                    CheckpointLevelName = $"{techInfo.AreaSID}|{techInfo.Level}",
-                    Large = false,
-                    Siblings = totalTech,
-                    GymTechName = techName,
-                    GymTechDifficulty = techInfo.Difficulty
-                });
-                
-                string currentSid = SaveData.Instance.CurrentSession_Safe.Area.SID;
-                string currentRoom = SaveData.Instance.CurrentSession_Safe.Level;
-                if (setOption && techInfo.AreaSID == currentSid && techInfo.Level == currentRoom) {
-                    // this is the one we're currently in! select it
-                    option = optionOffset + i;
+            void AddGymOptions(string[] techToAdd, bool learned, int optionOffset) {
+                for (int i = 0; i < techToAdd.Length; i++) {
+                    string techName = techToAdd[i];
+                    CollabMapDataProcessor.GymTechInfo techInfo = techForCollab[techName];
+
+                    Color difficultyColor = techInfo.DifficultyColor
+                        ?? (techInfo.Difficulty is not null
+                            ? defaultDifficultyColors.GetValueOrDefault(techInfo.Difficulty, fallbackDifficultyColor)
+                            : fallbackDifficultyColor);
+                    Color learnedColor = techInfo.LearnedColor
+                        ?? (techInfo.Difficulty is not null
+                            ? defaultLearnedColors.GetValueOrDefault(techInfo.Difficulty, fallbackLearnedColor)
+                            : fallbackLearnedColor);
+
+                    self.checkpoints.Add(new OuiChapterPanelGymOption {
+                        Label = Dialog.Clean($"{LobbyHelper.GetCollabNameForSID(techInfo.AreaSID)}_gym_{techName}_name"),
+                        BgColor = learned ? learnedColor : difficultyColor,
+                        Bg = GFX.Gui[GetModdedPath(self, "areaselect/tab")],
+                        Icon = GFX.Gui[learned ? "CollabUtils2/areaselect/gym_checkmark" : "CollabUtils2/areaselect/gym_startpoint"],
+                        CheckpointLevelName = $"{techInfo.AreaSID}|{techInfo.Level}",
+                        Large = false,
+                        Siblings = tech.Length,
+                        GymTechName = techName,
+                        GymTechDifficulty = techInfo.Difficulty
+                    });
+
+                    // select the tech we're currently in
+                    string currentSid = SaveData.Instance.CurrentSession_Safe.Area.SID;
+                    string currentRoom = SaveData.Instance.CurrentSession_Safe.Level;
+                    if (techInfo.AreaSID == currentSid && techInfo.Level == currentRoom)
+                        nextSelectedOption = optionOffset + i;
                 }
             }
         }
