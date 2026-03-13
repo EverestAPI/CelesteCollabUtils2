@@ -7,18 +7,18 @@ gymMarker.placements = {
     name = "controller",
     data = {
         name = "",
-        difficulty = "beginner",
-        difficultyColor = "",
+        order = 0,
+        color = "",
         learnedColor = ""
     }
 }
 
 gymMarker.fieldInformation = {
-    difficulty = {
-        options = { "beginner", "intermediate", "advanced", "expert", "grandmaster" },
-        editable = true
+    order = {
+        fieldType = "integer",
+        minimumValue = 0
     },
-    difficultyColor = {
+    color = {
         fieldType = "color",
         allowEmpty = true,
         options = { "", "56b3ff", "ff6d81", "ffff89", "ff9e66", "dd87ff" },

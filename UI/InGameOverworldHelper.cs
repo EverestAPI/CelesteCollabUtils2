@@ -95,14 +95,14 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private static List<Hook> altSidesHelperHooks = new List<Hook>();
         private static Hook hookOnMapDataOrigLoad;
 
-        private static readonly Dictionary<string, Color> defaultDifficultyColors = new() {
+        private static readonly Dictionary<string, Color> defaultTechColors = new() {
             { "beginner", Calc.HexToColor("56b3ff") },
             { "intermediate", Calc.HexToColor("ff6d81") },
             { "advanced", Calc.HexToColor("ffff89") },
             { "expert", Calc.HexToColor("ff9e66") },
             { "grandmaster", Calc.HexToColor("dd87ff") }
         };
-        private static readonly Color fallbackDifficultyColor = Calc.HexToColor("f2e0cb");
+        private static readonly Color fallbackTechColor = Calc.HexToColor("f2e0cb");
         private static readonly Dictionary<string, Color> defaultLearnedColors = new() {
             { "beginner", Calc.HexToColor("a7e2f9") },
             { "intermediate", Calc.HexToColor("faa7bc") },
@@ -110,7 +110,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             { "expert", Calc.HexToColor("fbd0a6") },
             { "grandmaster", Calc.HexToColor("f3bafa") }
         };
-        private static readonly Color fallbackLearnedColor = Calc.HexToColor("abf797");
+        private static readonly Color fallbackTechLearnedColor = Calc.HexToColor("abf797");
 
         private static bool presenceLock = false;
 
@@ -399,8 +399,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private class OuiChapterPanelGymOption : OuiChapterPanel.Option {
-            public string GymTechName;
-            public string GymTechDifficulty;
+            public string DifficultyLabel;
         }
 
         private static MethodInfo m_OuiChapterPanel__ModAreaselectTexture = typeof(OuiChapterPanel).GetMethod("_ModAreaselectTexture", BindingFlags.NonPublic | BindingFlags.Instance)!;
@@ -726,10 +725,11 @@ namespace Celeste.Mod.CollabUtils2.UI {
             self.checkpoints.Clear();
             int nextSelectedOption = -1;
             
-            string[] tech = activeGymTech.Where(name => techForCollab.ContainsKey(name)).ToArray();
-            string[] learnedTech = tech.Where(name =>
+            string[] tech = activeGymTech.Where(techName => techForCollab.ContainsKey(techName))
+                                         .OrderBy(techName => techForCollab[techName].Order).ToArray();
+            string[] learnedTech = tech.Where(techName =>
                 CollabModule.Instance.SaveData.LearnedTech.TryGetValue(collabID, out var learnedTechForCollab)
-                && learnedTechForCollab.Contains(name)).ToArray();
+                && learnedTechForCollab.Contains(techName)).ToArray();
             string[] unlearnedTech = tech.Except(learnedTech).ToArray();
             AddGymOptions(unlearnedTech, false, 0);
             AddGymOptions(learnedTech, true, unlearnedTech.Length);
@@ -742,25 +742,31 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     string techName = techToAdd[i];
                     CollabMapDataProcessor.GymTechInfo techInfo = techForCollab[techName];
 
-                    Color difficultyColor = techInfo.DifficultyColor
+                    Color color = techInfo.Color
                         ?? (techInfo.Difficulty is not null
-                            ? defaultDifficultyColors.GetValueOrDefault(techInfo.Difficulty, fallbackDifficultyColor)
-                            : fallbackDifficultyColor);
+                            ? defaultTechColors.GetValueOrDefault(techInfo.Difficulty, fallbackTechColor)
+                            : fallbackTechColor);
                     Color learnedColor = techInfo.LearnedColor
                         ?? (techInfo.Difficulty is not null
-                            ? defaultLearnedColors.GetValueOrDefault(techInfo.Difficulty, fallbackLearnedColor)
-                            : fallbackLearnedColor);
+                            ? defaultLearnedColors.GetValueOrDefault(techInfo.Difficulty, fallbackTechLearnedColor)
+                            : fallbackTechLearnedColor);
 
+                    string difficultyLabelID = $"{LobbyHelper.GetCollabNameForSID(techInfo.AreaSID)}_gym_{techName}_name";
+                    string difficultyLabel = Dialog.Has(difficultyLabelID)
+                        ? Dialog.Clean(difficultyLabelID)
+                        : techInfo.Difficulty is { } difficulty
+                            ? Dialog.Clean($"collabutils2_difficulty_{difficulty}")
+                            : null;
+                    
                     self.checkpoints.Add(new OuiChapterPanelGymOption {
                         Label = Dialog.Clean($"{LobbyHelper.GetCollabNameForSID(techInfo.AreaSID)}_gym_{techName}_name"),
-                        BgColor = learned ? learnedColor : difficultyColor,
+                        BgColor = learned ? learnedColor : color,
                         Bg = GFX.Gui[GetModdedPath(self, "areaselect/tab")],
                         Icon = GFX.Gui[learned ? "CollabUtils2/areaselect/gym_checkmark" : "CollabUtils2/areaselect/gym_startpoint"],
                         CheckpointLevelName = $"{techInfo.AreaSID}|{techInfo.Level}",
                         Large = false,
                         Siblings = tech.Length,
-                        GymTechName = techName,
-                        GymTechDifficulty = techInfo.Difficulty
+                        DifficultyLabel = difficultyLabel
                     });
 
                     // select the tech we're currently in
@@ -1030,20 +1036,18 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (!gymSubmenuSelected(self) || self.selectingMode)
                 return false;
 
-            if (self.options[self.option] is not OuiChapterPanelGymOption { GymTechDifficulty: not null })
+            if (self.options[self.option] is not OuiChapterPanelGymOption { DifficultyLabel: not null })
                 return false;
 
             return true;
         }
 
         private static void modChapterOptionLabelPosition(string text, Vector2 position, Vector2 justify, Vector2 scale, Color color, OuiChapterPanel self) {
-            OuiChapterPanel.Option option = self.options[self.option];
-            string difficulty = option is OuiChapterPanelGymOption o ? o.GymTechDifficulty : null;
-            string difficultyLabel = Dialog.Clean($"collabutils2_difficulty_{difficulty}");
-            Vector2 renderPos = self.OptionsRenderPosition;
+            if (self.options[self.option] is not OuiChapterPanelGymOption gymOption)
+                return;
 
-            ActiveFont.Draw(option.Label, renderPos + new Vector2(0f, -140f), new Vector2(0.5f, 1f), Vector2.One * (1f + self.wiggler.Value * 0.1f), color);
-            ActiveFont.Draw(difficultyLabel, renderPos + new Vector2(0f, -140f), new Vector2(0.5f, 0f), Vector2.One * 0.6f * (1f + self.wiggler.Value * 0.1f), color);
+            ActiveFont.Draw(gymOption.Label, self.OptionsRenderPosition + new Vector2(0f, -140f), new Vector2(0.5f, 1f), Vector2.One * (1f + self.wiggler.Value * 0.1f), color);
+            ActiveFont.Draw(gymOption.DifficultyLabel, self.OptionsRenderPosition + new Vector2(0f, -140f), new Vector2(0.5f, 0f), Vector2.One * 0.6f * (1f + self.wiggler.Value * 0.1f), color);
         }
         
         private static void ModOuiChapterPanelOptionRender(ILContext il) {

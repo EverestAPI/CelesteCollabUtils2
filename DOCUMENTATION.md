@@ -396,13 +396,14 @@ Here is how you can do this:
 - Make a separate bin for the gyms, putting it in the `0-Gyms` folder: refer to [above](#some-extra-features-depending-on-folder-structure) for more details.
 - Make one room per tech you want to teach, and put an **Exit From Gym Trigger** at the end of them. This brings up the chapter panel of the map the player was originally entering, similar to the Chapter Panel Trigger, and this allows them to either pick another tech, enter the map, or return to the lobby.
 - The Exit From Gym Trigger also has an option to mark the current room's tech as learned when interacted with, which will change the tech's icon and color in the chapter panel, alongside moving it to the end of the list.
-- Put a **Gym Marker** in the room (this is an invisible entity), and change its settings to designate a name (only using letters, numbers and _) and optionally a difficulty, difficulty color, and learned color.
+- Put a **Gym Marker** in the room (this is an invisible entity), and change its settings to designate a name (only using letters, numbers and _) and optionally an order, color, and learned color.
 
 ### Setting up the chapter panel visuals
 
 - Put the **image to display for the tech in the chapter panel** in `Graphics/Atlases/Checkpoints/{CollabName}/Gyms/{TechName}.png`.
 - Add the **name of the tech** in your `English.txt`: `{CollabName}_gym_{TechName}_name= The Tech Name`
+- Add the **difficulty of the tech** in your `English.txt`: `{CollabName}_gym_{TechName}_difficulty= The Difficulty Name`. If the dialog key is not present, no difficulty will be displayed.
 
 ### Listing tech used in each map
 
-In order to make the "Learn" tab with the tech list show up in the chapter panel, just fill out the "Tech" option of the Chapter Panel Trigger. Separate the tech names with commas, and don't put spaces: `wavedash,wallbounce`.
+In order to make the "Learn" tab with the tech list show up in the chapter panel, just fill out the "Tech" option of the Chapter Panel Trigger. Separate the tech names with commas, and don't put spaces: e.g. `wavedash,wallbounce`. The tech will be sorted by their assigned order.
