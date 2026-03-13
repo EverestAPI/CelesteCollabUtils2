@@ -751,7 +751,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                             ? defaultLearnedColors.GetValueOrDefault(techInfo.Difficulty, fallbackTechLearnedColor)
                             : fallbackTechLearnedColor);
 
-                    string difficultyLabelID = $"{LobbyHelper.GetCollabNameForSID(techInfo.AreaSID)}_gym_{techName}_name";
+                    string label = Dialog.Clean($"{LobbyHelper.GetCollabNameForSID(techInfo.AreaSID)}_gym_{techName}_name");
+                    string difficultyLabelID = $"{LobbyHelper.GetCollabNameForSID(techInfo.AreaSID)}_gym_{techName}_difficulty";
                     string difficultyLabel = Dialog.Has(difficultyLabelID)
                         ? Dialog.Clean(difficultyLabelID)
                         : techInfo.Difficulty is { } difficulty
@@ -759,7 +760,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                             : null;
                     
                     self.checkpoints.Add(new OuiChapterPanelGymOption {
-                        Label = Dialog.Clean($"{LobbyHelper.GetCollabNameForSID(techInfo.AreaSID)}_gym_{techName}_name"),
+                        Label = label,
                         BgColor = learned ? learnedColor : color,
                         Bg = GFX.Gui[GetModdedPath(self, "areaselect/tab")],
                         Icon = GFX.Gui[learned ? "CollabUtils2/areaselect/gym_checkmark" : "CollabUtils2/areaselect/gym_startpoint"],
