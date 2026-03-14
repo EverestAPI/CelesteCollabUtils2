@@ -14,11 +14,6 @@ gymMarker.placements = {
     }
 }
 
-gymMarker.ignoredFields = {
-    "_name", "_id", "originX", "originY",
-    "legacyRenderMode"
-}
-
 gymMarker.fieldInformation = {
     order = {
         fieldType = "integer",
