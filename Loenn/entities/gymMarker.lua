@@ -8,8 +8,8 @@ gymMarker.placements = {
     data = {
         name = "",
         order = 0,
-        color = "",
-        learnedColor = "",
+        color = "f2e0cb",
+        learnedColor = "abf797",
         legacyRenderMode = false
     }
 }
@@ -21,14 +21,12 @@ gymMarker.fieldInformation = {
     },
     color = {
         fieldType = "color",
-        allowEmpty = true,
-        options = { "", "56b3ff", "ff6d81", "ffff89", "ff9e66", "dd87ff" },
+        options = { "f2e0cb", "56b3ff", "ff6d81", "ffff89", "ff9e66", "dd87ff" },
         editable = true
     },
     learnedColor = {
         fieldType = "color",
-        allowEmpty = true,
-        options = { "", "a7e2f9", "faa7bc", "fbf8b8", "fbd0a6", "f3bafa" },
+        options = { "abf797", "a7e2f9", "faa7bc", "fbf8b8", "fbd0a6", "f3bafa" },
         editable = true
     }
 }
