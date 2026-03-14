@@ -25,6 +25,7 @@ namespace Celeste.Mod.CollabUtils2 {
             public Color? LearnedColor;
             public string AreaSID;
             public string Level;
+            public bool LegacyRenderMode; // for legacy placements, should no longer be used
         }
 
         // GymLevels: maps map SIDs to their gym level info
@@ -101,13 +102,15 @@ namespace Celeste.Mod.CollabUtils2 {
                         int order = gymMarker.AttrInt("order", -1);
                         string color = gymMarker.Attr("color");
                         string learnedColor = gymMarker.Attr("learnedColor");
+                        bool legacyRenderMode = gymMarker.AttrBool("legacyRenderMode", true); // for legacy placements, should no longer be used
                         GymTechInfo techInfo = new() {
                             Difficulty = !string.IsNullOrEmpty(difficulty) ? difficulty : null,
                             Order = order,
                             Color = !string.IsNullOrEmpty(color) ? Calc.HexToColor(color) : null,
                             LearnedColor = !string.IsNullOrEmpty(learnedColor) ? Calc.HexToColor(learnedColor) : null,
                             AreaSID = AreaKey.GetSID(),
-                            Level = levelName
+                            Level = levelName,
+                            LegacyRenderMode = legacyRenderMode
                         };
 
                         string collabID = LobbyHelper.GetCollabNameForSID(AreaKey.GetSID());

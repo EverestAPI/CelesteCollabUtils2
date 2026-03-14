@@ -2,6 +2,7 @@ using Celeste.Mod.CollabUtils2.Triggers;
 using Celeste.Mod.Entities;
 using Celeste.Mod.Helpers;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Monocle;
@@ -368,7 +369,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     CollabMapDataProcessor.GymLevelInfo info = CollabMapDataProcessor.GymLevels[forceArea.SID];
 
                     string collabID = LobbyHelper.GetCollabNameForSID(collabInGameForcedArea.SID);
-                    if (CollabMapDataProcessor.GymTech.TryGetValue(collabID, out Dictionary<string, CollabMapDataProcessor.GymTechInfo> techForCollab)
+                    if (collabID is not null
+                        && CollabMapDataProcessor.GymTech.TryGetValue(collabID, out Dictionary<string, CollabMapDataProcessor.GymTechInfo> techForCollab)
                         && info.Tech.Any(name => techForCollab.ContainsKey(name))) {
                         // some of the tech used here exists in gyms! be sure to display the "tech" tab.
                         self.modes.Add(new OuiChapterPanel.Option {
@@ -399,6 +401,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private class OuiChapterPanelGymOption : OuiChapterPanel.Option {
+            public bool LegacyRenderMode;
             public string DifficultyLabel;
         }
 
@@ -719,7 +722,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private static void SetupChapterPanelGymOptions(OuiChapterPanel self, bool setOption) {
             string collabID = LobbyHelper.GetCollabNameForSID(collabInGameForcedArea.SID);
-            if (!CollabMapDataProcessor.GymTech.TryGetValue(collabID, out Dictionary<string, CollabMapDataProcessor.GymTechInfo> techForCollab))
+            if (collabID is null
+                || !CollabMapDataProcessor.GymTech.TryGetValue(collabID, out Dictionary<string, CollabMapDataProcessor.GymTechInfo> techForCollab))
                 return;
             
             self.checkpoints.Clear();
@@ -765,9 +769,12 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         Bg = GFX.Gui[GetModdedPath(self, "areaselect/tab")],
                         Icon = GFX.Gui[learned ? "CollabUtils2/areaselect/gym_checkmark" : "CollabUtils2/areaselect/gym_startpoint"],
                         CheckpointLevelName = $"{techInfo.AreaSID}|{techInfo.Level}",
+                        CheckpointRotation = Calc.Random.Choose(-1f, 1f) * Calc.Random.Range(0.05f, 0.1f),
+                        CheckpointOffset = Calc.Random.Range(Vector2.One * -16f, Vector2.One * 16f),
                         Large = false,
                         Siblings = tech.Length,
-                        DifficultyLabel = difficultyLabel
+                        DifficultyLabel = difficultyLabel,
+                        LegacyRenderMode = techInfo.LegacyRenderMode
                     });
 
                     // select the tech we're currently in
@@ -905,17 +912,37 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private static void OnChapterPanelDrawGymCheckpoint(OuiChapterPanel self, Vector2 center, OuiChapterPanel.Option option, int checkpointIndex, string[] collabTech) {
-            AreaData forcedArea = collabInGameForcedArea;
-            string currentCollabID = LobbyHelper.GetCollabNameForSID(forcedArea.SID);
+            if (option is not OuiChapterPanelGymOption gymOption)
+                return;
+            
+            string collabID = LobbyHelper.GetCollabNameForSID(collabInGameForcedArea.SID);
+            if (collabID is null
+                || !CollabMapDataProcessor.GymTech.TryGetValue(collabID, out Dictionary<string, CollabMapDataProcessor.GymTechInfo> techForCollab)
+                || !techForCollab.ContainsKey(collabTech[checkpointIndex]))
+                return;
+            
+            string imageName = $"{collabID}/Gyms/{collabTech[checkpointIndex]}";
+            if (!MTN.Checkpoints.Has(imageName))
+                return;
+                
+            MTexture polaroid = MTN.Checkpoints["CollabUtils2/polaroid"];
+            MTexture techPreview = MTN.Checkpoints[imageName];
+            if (gymOption.LegacyRenderMode) {
+                Vector2 vector = center + Vector2.UnitX * 800f * Ease.CubeIn(gymOption.CheckpointSlideOut);
+                techPreview.DrawCentered(vector, Color.White, Vector2.One * 0.5f);
+            } else {
+                float checkpointRotation = gymOption.CheckpointRotation;
+                Vector2 position = center + gymOption.CheckpointOffset + new Vector2(800f * Ease.CubeIn(gymOption.CheckpointSlideOut), 20f);
+                Vector2 scale = Vector2.One * 0.85f * 720f / techPreview.Width;
 
-            if (CollabMapDataProcessor.GymTech.TryGetValue(currentCollabID, out Dictionary<string, CollabMapDataProcessor.GymTechInfo> techForCollab)
-                && techForCollab.ContainsKey(collabTech[checkpointIndex])) {
-                string imageName = $"{LobbyHelper.GetCollabNameForSID(forcedArea.SID)}/Gyms/{collabTech[checkpointIndex]}";
-                MTexture imagePreview = MTN.Checkpoints.Has(imageName) ? MTN.Checkpoints[imageName] : null;
-                if (imagePreview != null) {
-                    Vector2 vector = center + (Vector2.UnitX * 800f * Ease.CubeIn(option.CheckpointSlideOut));
-                    imagePreview.DrawCentered(vector, Color.White, Vector2.One * 0.5f);
-                }
+                polaroid.DrawCentered(position, Color.White, 0.85f, checkpointRotation);
+
+                // restart the renderer with `SamplerState.PointClamp` so the preview isn't blurry
+                HiresRenderer.EndRender();
+                HiresRenderer.BeginRender(BlendState.AlphaBlend, SamplerState.PointClamp);
+                techPreview.DrawCentered(position, Color.White, scale, checkpointRotation);
+                HiresRenderer.EndRender();
+                HiresRenderer.BeginRender();
             }
         }
 

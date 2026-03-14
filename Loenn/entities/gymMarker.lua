@@ -9,8 +9,14 @@ gymMarker.placements = {
         name = "",
         order = 0,
         color = "",
-        learnedColor = ""
+        learnedColor = "",
+        legacyRenderMode = false
     }
+}
+
+gymMarker.ignoredFields = {
+    "_name", "_id", "originX", "originY",
+    "legacyRenderMode"
 }
 
 gymMarker.fieldInformation = {
