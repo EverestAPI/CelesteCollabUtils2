@@ -29,7 +29,7 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
                     Session session = SceneAs<Level>().Session;
                     string sid = session.Area.SID;
                     string level = session.Level;
-                    
+
                     string collabID = LobbyHelper.GetCollabNameForSID(sid);
                     if (exitFromGym && CollabMapDataProcessor.GymTech.TryGetValue(collabID, out Dictionary<string, CollabMapDataProcessor.GymTechInfo> techForCollab)) {
                         string currentGymTech = techForCollab.FirstOrDefault(kvp => kvp.Value.AreaSID == sid && kvp.Value.Level == level).Key;
@@ -40,7 +40,7 @@ namespace Celeste.Mod.CollabUtils2.Triggers {
                                 CollabModule.Instance.SaveData.LearnedTech.Add(collabID, [currentGymTech]);
                         }
                     }
-                    
+
                     InGameOverworldHelper.OpenChapterPanel(player,
                         exitFromGym ? CollabModule.Instance.Session.GymExitMapSID : map,
                         exitFromGym ? ReturnToLobbyMode.DoNotChangeReturn : returnToLobbyMode,

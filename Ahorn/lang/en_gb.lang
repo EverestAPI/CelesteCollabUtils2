@@ -4,6 +4,9 @@ placements.triggers.CollabUtils2/ChapterPanelTrigger.tooltips.returnToLobbyMode=
 placements.triggers.CollabUtils2/ChapterPanelTrigger.tooltips.allowSaving=If selected, the player will be allowed to save and return to the lobby in the map this trigger teleports to, by selecting "Save" when returning to lobby. Not compatible with maps that have checkpoints.
 placements.triggers.CollabUtils2/ChapterPanelTrigger.tooltips.tech=Comma-separated list of tech used in the level, corresponding to gym names (e.g. hyper,wallbounce,cornerboost).\nFilling this out will make a second tab appear in the chapter panel,\nthat allows the player to a room teaching a tech (be sure to put a Gym Marker inside it).
 
+# Exit From Gym Trigger
+placements.triggers.CollabUtils2/ExitFromGymTrigger.tooltips.markTechAsLearned=Whether to mark this room's tech as learned upon interaction.
+
 # Journal Trigger
 placements.triggers.CollabUtils2/JournalTrigger.tooltips.levelset=The levelset for which the journal will be opened with the trigger.
 placements.triggers.CollabUtils2/JournalTrigger.tooltips.showOnlyDiscovered=If checked, the journal will hide maps with a play time of 0, to only show those the player has found in the lobby.
@@ -62,7 +65,11 @@ placements.triggers.CollabUtils2/RainbowBerryUnlockCutsceneTrigger.tooltips.maps
 
 # Gym Marker
 placements.entities.CollabUtils2/GymMarker.tooltips.name=The tech name of the current room.
-placements.entities.CollabUtils2/GymMarker.tooltips.difficulty=The difficulty of the tech.
+placements.entities.CollabUtils2/GymMarker.tooltips.difficulty=The difficulty of the tech. Can be left empty to not show a difficulty for this tech on the chapter panel.
+placements.entities.CollabUtils2/GymMarker.tooltips.order=Specifies the order of the tech's tabs on the chapter panel. Lower values will come first.
+placements.entities.CollabUtils2/GymMarker.tooltips.color=The color of the tech's tab on the chapter panel.
+placements.entities.CollabUtils2/GymMarker.tooltips.learnedColor=The color of the tech's tab on the chapter panel once it has been learned.
+placements.entities.CollabUtils2/GymMarker.tooltips.legacyRenderMode=Whether to render this tech's preview image as a plain image (legacy) or similar to how vanilla checkpoint previews are rendered.
 
 # Collab Crystal Heart
 placements.entities.CollabUtils2/CollabCrystalHeart.tooltips.removeCameraTriggers=Whether the heart should remove camera triggers once it's collected.

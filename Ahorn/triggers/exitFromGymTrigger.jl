@@ -2,7 +2,8 @@ module CollabUtils2ExitFromGymTrigger
 
 using ..Ahorn, Maple
 
-@mapdef Trigger "CollabUtils2/ExitFromGymTrigger" ExitFromGymTrigger(x::Integer, y::Integer, width::Integer=Maple.defaultTriggerWidth, height::Integer=Maple.defaultTriggerHeight)
+@mapdef Trigger "CollabUtils2/ExitFromGymTrigger" ExitFromGymTrigger(x::Integer, y::Integer,
+    width::Integer=Maple.defaultTriggerWidth, height::Integer=Maple.defaultTriggerHeight, markTechAsLearned::Bool=false)
 
 const placements = Ahorn.PlacementDict(
     "Exit From Gym Trigger (Collab Utils 2 / READ DOCS)" => Ahorn.EntityPlacement(

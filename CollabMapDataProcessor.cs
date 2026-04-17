@@ -81,7 +81,7 @@ namespace Celeste.Mod.CollabUtils2 {
                 {
                     "triggers", triggerList => {
                         foreach (BinaryPacker.Element trigger in triggerList.Children) {
-                            if(trigger.Name == "CollabUtils2/ChapterPanelTrigger") {
+                            if (trigger.Name == "CollabUtils2/ChapterPanelTrigger") {
                                 addGymInfoFromChapterPanelTrigger(trigger);
                             }
                         }
@@ -97,7 +97,7 @@ namespace Celeste.Mod.CollabUtils2 {
                         string techName = gymMarker.Attr("name");
                         if (string.IsNullOrEmpty(techName))
                             return;
-                        
+
                         string difficulty = gymMarker.Attr("difficulty"); // for legacy placements, should no longer be used
                         int order = gymMarker.AttrInt("order", -1);
                         string color = gymMarker.Attr("color");
@@ -138,10 +138,10 @@ namespace Celeste.Mod.CollabUtils2 {
             if (SilverBerries.TryGetValue(AreaKey.GetLevelSet(), out Dictionary<string, EntityID> silverBerries))
                 silverBerries.Remove(AreaKey.GetSID());
             SpeedBerries.Remove(AreaKey.GetSID());
-            
+
             MapsWithSilverBerries.Remove(AreaKey.GetSID());
             MapsWithRainbowBerries.Remove(AreaKey.GetSID());
-            
+
             GymLevels.Remove(AreaKey.GetSID());
             foreach ((string _, Dictionary<string, GymTechInfo> techForCollab) in GymTech) {
                 string[] affectedTech = techForCollab.Where(kvp => kvp.Value.AreaSID == AreaKey.GetSID()).Select(kvp => kvp.Key).ToArray();

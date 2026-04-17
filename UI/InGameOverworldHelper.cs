@@ -628,7 +628,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 instr => instr.MatchLdfld<OuiChapterPanel>("Area"),
                 instr => instr.MatchCall<OuiChapterPanel>("_GetCheckpoints"))) {
                 ILLabel getCheckpoints = cursor.DefineLabel(), afterGetCheckpoints = cursor.DefineLabel();
-                
+
                 cursor.EmitLdloc1();
                 cursor.EmitDelegate(ShouldModChapterPanelSwap);
                 cursor.EmitBrfalse(getCheckpoints);
@@ -725,19 +725,19 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (collabID is null
                 || !CollabMapDataProcessor.GymTech.TryGetValue(collabID, out Dictionary<string, CollabMapDataProcessor.GymTechInfo> techForCollab))
                 return;
-            
+
             self.checkpoints.Clear();
             int nextSelectedOption = -1;
-            
+
             string[] tech = activeGymTech.Where(techName => techForCollab.ContainsKey(techName))
-                                         .OrderBy(techName => techForCollab[techName].Order).ToArray();
+                .OrderBy(techName => techForCollab[techName].Order).ToArray();
             string[] learnedTech = tech.Where(techName =>
                 CollabModule.Instance.SaveData.LearnedTech.TryGetValue(collabID, out var learnedTechForCollab)
                 && learnedTechForCollab.Contains(techName)).ToArray();
             string[] unlearnedTech = tech.Except(learnedTech).ToArray();
             AddGymOptions(unlearnedTech, false, 0);
             AddGymOptions(learnedTech, true, unlearnedTech.Length);
-            
+
             self.option = setOption && nextSelectedOption != -1 ? nextSelectedOption : 0;
             return;
 
@@ -762,7 +762,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                         : techInfo.Difficulty is { } difficulty
                             ? Dialog.Clean($"collabutils2_difficulty_{difficulty}")
                             : null;
-                    
+
                     self.checkpoints.Add(new OuiChapterPanelGymOption {
                         Label = label,
                         BgColor = learned ? learnedColor : color,
@@ -914,17 +914,17 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private static void OnChapterPanelDrawGymCheckpoint(OuiChapterPanel self, Vector2 center, OuiChapterPanel.Option option, int checkpointIndex, string[] collabTech) {
             if (option is not OuiChapterPanelGymOption gymOption)
                 return;
-            
+
             string collabID = LobbyHelper.GetCollabNameForSID(collabInGameForcedArea.SID);
             if (collabID is null
                 || !CollabMapDataProcessor.GymTech.TryGetValue(collabID, out Dictionary<string, CollabMapDataProcessor.GymTechInfo> techForCollab)
                 || !techForCollab.ContainsKey(collabTech[checkpointIndex]))
                 return;
-            
+
             string imageName = $"{collabID}/Gyms/{collabTech[checkpointIndex]}";
             if (!MTN.Checkpoints.Has(imageName))
                 return;
-                
+
             MTexture polaroid = MTN.Checkpoints["CollabUtils2/polaroid"];
             MTexture techPreview = MTN.Checkpoints[imageName];
             if (gymOption.LegacyRenderMode) {
@@ -1077,16 +1077,16 @@ namespace Celeste.Mod.CollabUtils2.UI {
             ActiveFont.Draw(gymOption.Label, self.OptionsRenderPosition + new Vector2(0f, -140f), new Vector2(0.5f, 1f), Vector2.One * (1f + self.wiggler.Value * 0.1f), color);
             ActiveFont.Draw(gymOption.DifficultyLabel, self.OptionsRenderPosition + new Vector2(0f, -140f), new Vector2(0.5f, 0f), Vector2.One * 0.6f * (1f + self.wiggler.Value * 0.1f), color);
         }
-        
+
         private static void ModOuiChapterPanelOptionRender(ILContext il) {
             ILCursor cursor = new(il);
-            
+
             // IL_00d9: call valuetype [FNA]Microsoft.Xna.Framework.Color [FNA]Microsoft.Xna.Framework.Color::get_White()
             if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCall<Color>("get_White"))) {
                 cursor.EmitLdarg0();
                 cursor.EmitDelegate(ModIconColor);
             }
-            
+
             return;
 
             static Color ModIconColor(Color orig, OuiChapterPanel.Option self)
