@@ -172,8 +172,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     row.Add(null).Add(new IconCellFromGui(GFX.Gui.Has(areaData.Icon) ? areaData.Icon : "areas/null", 60f, 50f));
                 }
 
+                string levelHeartTexture = MTN.Journal.Has("CollabUtils2Hearts/" + item.SID) ? "CollabUtils2Hearts/" + item.SID : heartTexture;
+
                 row.Add(null)
-                    .Add(new IconCell(item.Modes[0].HeartGem ? heartTexture : "dot"))
+                    .Add(new IconCell(item.Modes[0].HeartGem ? levelHeartTexture : "dot"))
                     .Add(new TextCell(strawberryText, currentPage.TextJustify, 0.5f, currentPage.TextColor));
 
                 if (item.TotalTimePlayed > 0) {
