@@ -2,6 +2,7 @@ using Celeste.Mod.CollabUtils2.Triggers;
 using Celeste.Mod.Entities;
 using Celeste.Mod.Helpers;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Monocle;
@@ -95,13 +96,22 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private static List<Hook> altSidesHelperHooks = new List<Hook>();
         private static Hook hookOnMapDataOrigLoad;
 
-        private static Dictionary<string, Color> difficultyColors = new Dictionary<string, Color>() {
-            { "beginner", Calc.HexToColor("56B3FF") },
-            { "intermediate", Calc.HexToColor("FF6D81") },
-            { "advanced", Calc.HexToColor("FFFF89") },
-            { "expert", Calc.HexToColor("FF9E66") },
-            { "grandmaster", Calc.HexToColor("DD87FF") }
+        private static readonly Dictionary<string, Color> defaultTechColors = new() {
+            { "beginner", Calc.HexToColor("56b3ff") },
+            { "intermediate", Calc.HexToColor("ff6d81") },
+            { "advanced", Calc.HexToColor("ffff89") },
+            { "expert", Calc.HexToColor("ff9e66") },
+            { "grandmaster", Calc.HexToColor("dd87ff") }
         };
+        private static readonly Color fallbackTechColor = Calc.HexToColor("f2e0cb");
+        private static readonly Dictionary<string, Color> defaultLearnedColors = new() {
+            { "beginner", Calc.HexToColor("a7e2f9") },
+            { "intermediate", Calc.HexToColor("faa7bc") },
+            { "advanced", Calc.HexToColor("fbf8b8") },
+            { "expert", Calc.HexToColor("fbd0a6") },
+            { "grandmaster", Calc.HexToColor("f3bafa") }
+        };
+        private static readonly Color fallbackTechLearnedColor = Calc.HexToColor("abf797");
 
         private static bool presenceLock = false;
 
@@ -122,6 +132,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.OuiJournal.Enter += OnJournalEnter;
             On.Celeste.OuiChapterPanel.UpdateStats += OnChapterPanelUpdateStats;
             IL.Celeste.OuiChapterPanel.Render += ModOuiChapterPanelRender;
+            IL.Celeste.OuiChapterPanel.Option.Render += ModOuiChapterPanelOptionRender;
             IL.Celeste.DeathsCounter.Render += ModDeathsCounterRender;
             IL.Celeste.StrawberriesCounter.Render += ModStrawberriesCounterRender;
             On.Celeste.OuiChapterPanel.Start += OnOuiChapterPanelStart;
@@ -175,6 +186,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             On.Celeste.OuiJournal.Enter -= OnJournalEnter;
             On.Celeste.OuiChapterPanel.UpdateStats -= OnChapterPanelUpdateStats;
             IL.Celeste.OuiChapterPanel.Render -= ModOuiChapterPanelRender;
+            IL.Celeste.OuiChapterPanel.Option.Render -= ModOuiChapterPanelOptionRender;
             IL.Celeste.DeathsCounter.Render -= ModDeathsCounterRender;
             IL.Celeste.StrawberriesCounter.Render -= ModStrawberriesCounterRender;
             On.Celeste.OuiChapterPanel.Start -= OnOuiChapterPanelStart;
@@ -356,7 +368,10 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 if (CollabMapDataProcessor.GymLevels.ContainsKey(forceArea.SID)) {
                     CollabMapDataProcessor.GymLevelInfo info = CollabMapDataProcessor.GymLevels[forceArea.SID];
 
-                    if (info.Tech.Any(name => CollabMapDataProcessor.GymTech.ContainsKey(name))) {
+                    string collabID = LobbyHelper.GetCollabNameForSID(collabInGameForcedArea.SID);
+                    if (collabID is not null
+                        && CollabMapDataProcessor.GymTech.TryGetValue(collabID, out Dictionary<string, CollabMapDataProcessor.GymTechInfo> techForCollab)
+                        && info.Tech.Any(name => techForCollab.ContainsKey(name))) {
                         // some of the tech used here exists in gyms! be sure to display the "tech" tab.
                         self.modes.Add(new OuiChapterPanel.Option {
                             Label = Dialog.Clean("collabutils2_overworld_gym"),
@@ -372,11 +387,12 @@ namespace Celeste.Mod.CollabUtils2.UI {
             save.CurrentSession = session;
 
             if (exitFromGym) {
+                // add the return to lobby option.
                 self.modes.Add(new OuiChapterPanel.Option {
                     Label = Dialog.Clean("collabutils2_overworld_exit"),
                     BgColor = Calc.HexToColor("FA5139"),
                     Bg = GFX.Gui[GetModdedPath(self, "areaselect/tab")],
-                    Icon = GFX.Gui["menu/exit"],
+                    Icon = GFX.Gui["CollabUtils2/menu/exit"],
                 });
 
                 // directly select the current gym.
@@ -385,7 +401,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private class OuiChapterPanelGymOption : OuiChapterPanel.Option {
-            public string GymTechDifficuty;
+            public bool LegacyRenderMode;
+            public string DifficultyLabel;
         }
 
         private static MethodInfo m_OuiChapterPanel__ModAreaselectTexture = typeof(OuiChapterPanel).GetMethod("_ModAreaselectTexture", BindingFlags.NonPublic | BindingFlags.Instance)!;
@@ -405,42 +422,15 @@ namespace Celeste.Mod.CollabUtils2.UI {
             self.option = 0;
             activeGymTech = CollabMapDataProcessor.GymLevels[collabInGameForcedArea.SID].Tech;
 
-            List<OuiChapterPanel.Option> checkpoints = self.checkpoints;
-            checkpoints.Clear();
-            string[] tech = activeGymTech.Where(name => CollabMapDataProcessor.GymTech.ContainsKey(name)).ToArray();
+            SetupChapterPanelGymOptions(self, true);
 
-            for (int i = 0; i < tech.Length; i++) {
-                string techName = tech[i];
-
-                CollabMapDataProcessor.GymTechInfo techInfo = CollabMapDataProcessor.GymTech[techName];
-                var checkpoint = new OuiChapterPanelGymOption {
-                    Label = Dialog.Clean($"{LobbyHelper.GetCollabNameForSID(techInfo.AreaSID)}_gym_{techName}_name", null),
-                    BgColor = difficultyColors[techInfo.Difficulty],
-                    Bg = GFX.Gui[GetModdedPath(self, "areaselect/tab")],
-                    Icon = GFX.Gui[$"CollabUtils2/areaselect/startpoint_{techInfo.Difficulty}"],
-                    CheckpointLevelName = $"{techInfo.AreaSID}|{techInfo.Level}",
-                    Large = false,
-                    Siblings = tech.Length,
-                    GymTechDifficuty = techInfo.Difficulty
-                };
-                checkpoints.Add(checkpoint);
-
-                string currentSid = SaveData.Instance.CurrentSession_Safe.Area.SID;
-                string currentRoom = SaveData.Instance.CurrentSession_Safe.Level;
-
-                if (techInfo.AreaSID == currentSid && techInfo.Level == currentRoom) {
-                    // this is the one we're currently in! select it
-                    self.option = i;
-                }
-            }
-
-            for (int i = 0; i < checkpoints.Count; i++) {
-                var option = checkpoints[i];
+            for (int i = 0; i < self.checkpoints.Count; i++) {
+                var option = self.checkpoints[i];
                 option.Pop = self.option == i ? 1f : 0f;
                 option.Appear = 1f;
                 option.CheckpointSlideOut = self.option > i ? 1f : 0f;
                 option.Faded = 0f;
-                option.SlideTowards(i, checkpoints.Count, true);
+                option.SlideTowards(i, self.checkpoints.Count, true);
             }
 
             List<OuiChapterPanel.Option> modes = self.modes;
@@ -632,10 +622,22 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
 
             // replace the chapter panel's checkpoints with a single null checkpoint
-            if (cursor.TryGotoNextBestFit(MoveType.After,
+            if (cursor.TryGotoNextBestFit(MoveType.Before,
+                instr => instr.MatchLdsfld<SaveData>("Instance"),
+                instr => instr.MatchLdloc1(),
+                instr => instr.MatchLdfld<OuiChapterPanel>("Area"),
                 instr => instr.MatchCall<OuiChapterPanel>("_GetCheckpoints"))) {
+                ILLabel getCheckpoints = cursor.DefineLabel(), afterGetCheckpoints = cursor.DefineLabel();
+                
                 cursor.EmitLdloc1();
+                cursor.EmitDelegate(ShouldModChapterPanelSwap);
+                cursor.EmitBrfalse(getCheckpoints);
                 cursor.EmitDelegate(ModCheckpoints);
+                cursor.EmitBr(afterGetCheckpoints);
+                cursor.MarkLabel(getCheckpoints);
+
+                cursor.GotoNext(MoveType.After, instr => instr.MatchCall<OuiChapterPanel>("_GetCheckpoints"));
+                cursor.MarkLabel(afterGetCheckpoints);
             }
 
             // mod the chapter panel's options
@@ -658,18 +660,15 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     : orig;
             }
 
-            static HashSet<string> ModCheckpoints(HashSet<string> orig, OuiChapterPanel panel) {
-                return ShouldModChapterPanelSwap(panel) && !panel.selectingMode
-                    ? [null]
-                    : orig;
-            }
+            static HashSet<string> ModCheckpoints()
+                => [null];
 
             static void ModOptions(OuiChapterPanel panel) {
                 if (!ShouldModChapterPanelSwap(panel) || panel.selectingMode)
                     return;
 
                 if (gymSubmenuSelected(panel)) {
-                    SetupChapterPanelGymOptions(panel);
+                    SetupChapterPanelGymOptions(panel, false);
                 } else {
                     SetupChapterPanelOptions(panel);
                 }
@@ -721,27 +720,70 @@ namespace Celeste.Mod.CollabUtils2.UI {
             return 730;
         }
 
-        private static void SetupChapterPanelGymOptions(OuiChapterPanel self) {
-            List<OuiChapterPanel.Option> checkpoints = self.checkpoints;
-            checkpoints.Clear();
+        private static void SetupChapterPanelGymOptions(OuiChapterPanel self, bool setOption) {
+            string collabID = LobbyHelper.GetCollabNameForSID(collabInGameForcedArea.SID);
+            if (collabID is null
+                || !CollabMapDataProcessor.GymTech.TryGetValue(collabID, out Dictionary<string, CollabMapDataProcessor.GymTechInfo> techForCollab))
+                return;
+            
+            self.checkpoints.Clear();
+            int nextSelectedOption = -1;
+            
+            string[] tech = activeGymTech.Where(techName => techForCollab.ContainsKey(techName))
+                                         .OrderBy(techName => techForCollab[techName].Order).ToArray();
+            string[] learnedTech = tech.Where(techName =>
+                CollabModule.Instance.SaveData.LearnedTech.TryGetValue(collabID, out var learnedTechForCollab)
+                && learnedTechForCollab.Contains(techName)).ToArray();
+            string[] unlearnedTech = tech.Except(learnedTech).ToArray();
+            AddGymOptions(unlearnedTech, false, 0);
+            AddGymOptions(learnedTech, true, unlearnedTech.Length);
+            
+            self.option = setOption && nextSelectedOption != -1 ? nextSelectedOption : 0;
+            return;
 
-            string[] tech = activeGymTech.Where(name => CollabMapDataProcessor.GymTech.ContainsKey(name)).ToArray();
-            foreach (string techName in tech) {
-                CollabMapDataProcessor.GymTechInfo techInfo = CollabMapDataProcessor.GymTech[techName];
-                var checkpoint = new OuiChapterPanelGymOption {
-                    Label = Dialog.Clean($"{LobbyHelper.GetCollabNameForSID(techInfo.AreaSID)}_gym_{techName}_name", null),
-                    BgColor = difficultyColors[techInfo.Difficulty],
-                    Bg = GFX.Gui[GetModdedPath(self, "areaselect/tab")],
-                    Icon = GFX.Gui[$"CollabUtils2/areaselect/startpoint_{techInfo.Difficulty}"],
-                    CheckpointLevelName = $"{techInfo.AreaSID}|{techInfo.Level}",
-                    Large = false,
-                    Siblings = tech.Count(),
-                    GymTechDifficuty = techInfo.Difficulty
-                };
-                checkpoints.Add(checkpoint);
+            void AddGymOptions(string[] techToAdd, bool learned, int optionOffset) {
+                for (int i = 0; i < techToAdd.Length; i++) {
+                    string techName = techToAdd[i];
+                    CollabMapDataProcessor.GymTechInfo techInfo = techForCollab[techName];
+
+                    Color color = techInfo.Color
+                        ?? (techInfo.Difficulty is not null
+                            ? defaultTechColors.GetValueOrDefault(techInfo.Difficulty, fallbackTechColor)
+                            : fallbackTechColor);
+                    Color learnedColor = techInfo.LearnedColor
+                        ?? (techInfo.Difficulty is not null
+                            ? defaultLearnedColors.GetValueOrDefault(techInfo.Difficulty, fallbackTechLearnedColor)
+                            : fallbackTechLearnedColor);
+
+                    string label = Dialog.Clean($"{LobbyHelper.GetCollabNameForSID(techInfo.AreaSID)}_gym_{techName}_name");
+                    string difficultyLabelID = $"{LobbyHelper.GetCollabNameForSID(techInfo.AreaSID)}_gym_{techName}_difficulty";
+                    string difficultyLabel = Dialog.Has(difficultyLabelID)
+                        ? Dialog.Clean(difficultyLabelID)
+                        : techInfo.Difficulty is { } difficulty
+                            ? Dialog.Clean($"collabutils2_difficulty_{difficulty}")
+                            : null;
+                    
+                    self.checkpoints.Add(new OuiChapterPanelGymOption {
+                        Label = label,
+                        BgColor = learned ? learnedColor : color,
+                        Bg = GFX.Gui[GetModdedPath(self, "areaselect/tab")],
+                        Icon = GFX.Gui[learned ? "CollabUtils2/areaselect/gym_checkmark" : "CollabUtils2/areaselect/gym_startpoint"],
+                        CheckpointLevelName = $"{techInfo.AreaSID}|{techInfo.Level}",
+                        CheckpointRotation = Calc.Random.Choose(-1f, 1f) * Calc.Random.Range(0.05f, 0.1f),
+                        CheckpointOffset = Calc.Random.Range(Vector2.One * -16f, Vector2.One * 16f),
+                        Large = false,
+                        Siblings = tech.Length,
+                        DifficultyLabel = difficultyLabel,
+                        LegacyRenderMode = techInfo.LegacyRenderMode
+                    });
+
+                    // select the tech we're currently in
+                    string currentSid = SaveData.Instance.CurrentSession_Safe.Area.SID;
+                    string currentRoom = SaveData.Instance.CurrentSession_Safe.Level;
+                    if (techInfo.AreaSID == currentSid && techInfo.Level == currentRoom)
+                        nextSelectedOption = optionOffset + i;
+                }
             }
-
-            self.option = 0;
         }
 
         private static void OnChapterPanelDrawCheckpoint(On.Celeste.OuiChapterPanel.orig_DrawCheckpoint orig, OuiChapterPanel self, Vector2 center, object option, int checkpointIndex) {
@@ -870,17 +912,37 @@ namespace Celeste.Mod.CollabUtils2.UI {
         }
 
         private static void OnChapterPanelDrawGymCheckpoint(OuiChapterPanel self, Vector2 center, OuiChapterPanel.Option option, int checkpointIndex, string[] collabTech) {
-            AreaData forcedArea = collabInGameForcedArea;
+            if (option is not OuiChapterPanelGymOption gymOption)
+                return;
+            
+            string collabID = LobbyHelper.GetCollabNameForSID(collabInGameForcedArea.SID);
+            if (collabID is null
+                || !CollabMapDataProcessor.GymTech.TryGetValue(collabID, out Dictionary<string, CollabMapDataProcessor.GymTechInfo> techForCollab)
+                || !techForCollab.ContainsKey(collabTech[checkpointIndex]))
+                return;
+            
+            string imageName = $"{collabID}/Gyms/{collabTech[checkpointIndex]}";
+            if (!MTN.Checkpoints.Has(imageName))
+                return;
+                
+            MTexture polaroid = MTN.Checkpoints["CollabUtils2/polaroid"];
+            MTexture techPreview = MTN.Checkpoints[imageName];
+            if (gymOption.LegacyRenderMode) {
+                Vector2 vector = center + Vector2.UnitX * 800f * Ease.CubeIn(gymOption.CheckpointSlideOut);
+                techPreview.DrawCentered(vector, Color.White, Vector2.One * 0.5f);
+            } else {
+                float checkpointRotation = gymOption.CheckpointRotation;
+                Vector2 position = center + gymOption.CheckpointOffset + new Vector2(800f * Ease.CubeIn(gymOption.CheckpointSlideOut), 20f);
+                Vector2 scale = Vector2.One * 0.85f * 720f / techPreview.Width;
 
-            if (CollabMapDataProcessor.GymTech.ContainsKey(collabTech[checkpointIndex])) {
-                CollabMapDataProcessor.GymTechInfo techInfo = CollabMapDataProcessor.GymTech[collabTech[checkpointIndex]];
+                polaroid.DrawCentered(position, Color.White, 0.85f, checkpointRotation);
 
-                string imageName = $"{LobbyHelper.GetCollabNameForSID(forcedArea.SID)}/Gyms/{collabTech[checkpointIndex]}";
-                MTexture imagePreview = MTN.Checkpoints.Has(imageName) ? MTN.Checkpoints[imageName] : null;
-                if (imagePreview != null) {
-                    Vector2 vector = center + (Vector2.UnitX * 800f * Ease.CubeIn(option.CheckpointSlideOut));
-                    imagePreview.DrawCentered(vector, Color.White, Vector2.One * 0.5f);
-                }
+                // restart the renderer with `SamplerState.PointClamp` so the preview isn't blurry
+                HiresRenderer.EndRender();
+                HiresRenderer.BeginRender(BlendState.AlphaBlend, SamplerState.PointClamp);
+                techPreview.DrawCentered(position, Color.White, scale, checkpointRotation);
+                HiresRenderer.EndRender();
+                HiresRenderer.BeginRender();
             }
         }
 
@@ -1002,20 +1064,33 @@ namespace Celeste.Mod.CollabUtils2.UI {
             if (!gymSubmenuSelected(self) || self.selectingMode)
                 return false;
 
-            if (self.options[self.option] is not OuiChapterPanelGymOption)
+            if (self.options[self.option] is not OuiChapterPanelGymOption { DifficultyLabel: not null })
                 return false;
 
             return true;
         }
 
         private static void modChapterOptionLabelPosition(string text, Vector2 position, Vector2 justify, Vector2 scale, Color color, OuiChapterPanel self) {
-            OuiChapterPanel.Option option = self.options[self.option];
-            string difficulty = option is OuiChapterPanelGymOption o ? o.GymTechDifficuty : null;
-            string difficultyLabel = Dialog.Clean($"collabutils2_difficulty_{difficulty}");
-            Vector2 renderPos = self.OptionsRenderPosition;
+            if (self.options[self.option] is not OuiChapterPanelGymOption gymOption)
+                return;
 
-            ActiveFont.Draw(option.Label, renderPos + new Vector2(0f, -140f), new Vector2(0.5f, 1f), Vector2.One * (1f + self.wiggler.Value * 0.1f), color);
-            ActiveFont.Draw(difficultyLabel, renderPos + new Vector2(0f, -140f), new Vector2(0.5f, 0f), Vector2.One * 0.6f * (1f + self.wiggler.Value * 0.1f), color);
+            ActiveFont.Draw(gymOption.Label, self.OptionsRenderPosition + new Vector2(0f, -140f), new Vector2(0.5f, 1f), Vector2.One * (1f + self.wiggler.Value * 0.1f), color);
+            ActiveFont.Draw(gymOption.DifficultyLabel, self.OptionsRenderPosition + new Vector2(0f, -140f), new Vector2(0.5f, 0f), Vector2.One * 0.6f * (1f + self.wiggler.Value * 0.1f), color);
+        }
+        
+        private static void ModOuiChapterPanelOptionRender(ILContext il) {
+            ILCursor cursor = new(il);
+            
+            // IL_00d9: call valuetype [FNA]Microsoft.Xna.Framework.Color [FNA]Microsoft.Xna.Framework.Color::get_White()
+            if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCall<Color>("get_White"))) {
+                cursor.EmitLdarg0();
+                cursor.EmitDelegate(ModIconColor);
+            }
+            
+            return;
+
+            static Color ModIconColor(Color orig, OuiChapterPanel.Option self)
+                => self is OuiChapterPanelGymOption gymOption ? gymOption.BgColor : orig;
         }
 
         private static IEnumerator OnJournalEnter(On.Celeste.OuiJournal.orig_Enter orig, OuiJournal self, Oui from) {

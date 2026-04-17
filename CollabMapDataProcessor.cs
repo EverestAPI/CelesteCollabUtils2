@@ -1,5 +1,8 @@
+using Microsoft.Xna.Framework;
+using Monocle;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Celeste.Mod.CollabUtils2 {
     public class CollabMapDataProcessor : EverestMapDataProcessor {
@@ -16,13 +19,19 @@ namespace Celeste.Mod.CollabUtils2 {
         }
 
         public struct GymTechInfo {
-            public string Difficulty;
+            public string Difficulty; // for legacy placements, should no longer be used
+            public int Order;
+            public Color? Color;
+            public Color? LearnedColor;
             public string AreaSID;
             public string Level;
+            public bool LegacyRenderMode; // for legacy placements, should no longer be used
         }
 
+        // GymLevels: maps map SIDs to their gym level info
+        // GymTech: maps collab IDs and tech names to gym tech info
         public static Dictionary<string, GymLevelInfo> GymLevels = new Dictionary<string, GymLevelInfo>();
-        public static Dictionary<string, GymTechInfo> GymTech = new Dictionary<string, GymTechInfo>();
+        public static Dictionary<string, Dictionary<string, GymTechInfo>> GymTech = new Dictionary<string, Dictionary<string, GymTechInfo>>();
 
         // the structure here is: SilverBerries[LevelSet][SID] = ID of the silver berry in that map.
         // so, to check if all silvers in a levelset have been unlocked, go through all entries in SilverBerries[levelset].
@@ -86,13 +95,29 @@ namespace Celeste.Mod.CollabUtils2 {
                 {
                     "entity:CollabUtils2/GymMarker", gymMarker => {
                         string techName = gymMarker.Attr("name");
-                        if (!string.IsNullOrEmpty(techName)) {
-                            GymTech[techName] = new GymTechInfo {
-                                Difficulty = gymMarker.Attr("difficulty", "beginner"),
-                                AreaSID = AreaKey.GetSID(),
-                                Level = levelName
-                            };
-                        }
+                        if (string.IsNullOrEmpty(techName))
+                            return;
+                        
+                        string difficulty = gymMarker.Attr("difficulty"); // for legacy placements, should no longer be used
+                        int order = gymMarker.AttrInt("order", -1);
+                        string color = gymMarker.Attr("color");
+                        string learnedColor = gymMarker.Attr("learnedColor");
+                        bool legacyRenderMode = gymMarker.AttrBool("legacyRenderMode", true); // for legacy placements, should no longer be used
+                        GymTechInfo techInfo = new() {
+                            Difficulty = !string.IsNullOrEmpty(difficulty) ? difficulty : null,
+                            Order = order,
+                            Color = !string.IsNullOrEmpty(color) ? Calc.HexToColor(color) : null,
+                            LearnedColor = !string.IsNullOrEmpty(learnedColor) ? Calc.HexToColor(learnedColor) : null,
+                            AreaSID = AreaKey.GetSID(),
+                            Level = levelName,
+                            LegacyRenderMode = legacyRenderMode
+                        };
+
+                        string collabID = LobbyHelper.GetCollabNameForSID(AreaKey.GetSID());
+                        if (GymTech.TryGetValue(collabID, out Dictionary<string, GymTechInfo> tech))
+                            tech[techName] = techInfo;
+                        else
+                            GymTech.Add(collabID, new Dictionary<string, GymTechInfo> { { techName, techInfo } });
                     }
                 }
             };
@@ -110,12 +135,19 @@ namespace Celeste.Mod.CollabUtils2 {
         }
 
         public override void Reset() {
-            if (SilverBerries.ContainsKey(AreaKey.GetLevelSet())) {
-                SilverBerries[AreaKey.GetLevelSet()].Remove(AreaKey.GetSID());
-            }
+            if (SilverBerries.TryGetValue(AreaKey.GetLevelSet(), out Dictionary<string, EntityID> silverBerries))
+                silverBerries.Remove(AreaKey.GetSID());
             SpeedBerries.Remove(AreaKey.GetSID());
+            
             MapsWithSilverBerries.Remove(AreaKey.GetSID());
             MapsWithRainbowBerries.Remove(AreaKey.GetSID());
+            
+            GymLevels.Remove(AreaKey.GetSID());
+            foreach ((string _, Dictionary<string, GymTechInfo> techForCollab) in GymTech) {
+                string[] affectedTech = techForCollab.Where(kvp => kvp.Value.AreaSID == AreaKey.GetSID()).Select(kvp => kvp.Key).ToArray();
+                foreach (string tech in affectedTech)
+                    techForCollab.Remove(tech);
+            }
         }
 
         public override void End() {
