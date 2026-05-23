@@ -819,8 +819,10 @@ namespace Celeste.Mod.CollabUtils2 {
                 foreach (AreaData area in AreaData.Areas) {
                     string levelSetName = GetLobbyLevelSet(area.SID);
                     if (levelSetName != null
-                        && Dialog.Clean("poem_" + levelSetName + "_ZZ_HeartSide_A") == poem
-                        && MTN.Journal.Has("CollabUtils2Hearts/" + levelSetName)) {
+                        && (
+                            Dialog.Clean("poem_" + levelSetName + "_ZZ_HeartSide_A") == poem
+                            || Dialog.Clean("poem_" + area.SID + "_A") == poem
+                        ) && MTN.Journal.Has("CollabUtils2Hearts/" + levelSetName)) {
 
                         return "CollabUtils2Hearts/" + levelSetName;
                     }
