@@ -299,6 +299,7 @@ If you don't define those images, they will use A-side skulls instead.
 You can take the skulls that ship with the collab utils as a reference.
 
 You can change the chapter panel skull icon for **any** campaign using this feature: if the maps are in `Maps/foldername`, put the skull icon at `Graphics/Atlases/Gui/CollabUtils2/skulls/foldername`.
+You can also change it for individual maps: if the map is at `Maps/path/to/map.bin`, put the skull icon at `Graphics/Atlases/Gui/CollabUtils2/skulls/path/to/map.png`.
 
 ### Journal Trigger
 
@@ -402,7 +403,7 @@ Here is how you can do this:
 
 - Put the **image to display for the tech in the chapter panel** in `Graphics/Atlases/Checkpoints/{CollabName}/Gyms/{TechName}.png`.
 - Add the **name of the tech** in your `English.txt`: `{CollabName}_gym_{TechName}_name= The Tech Name`
-- Add the **difficulty of the tech** in your `English.txt`: `{CollabName}_gym_{TechName}_difficulty= The Difficulty Name`. If the dialog key is not present, no difficulty will be displayed.
+- Add the **category of the tech** in your `English.txt`: `{CollabName}_gym_{TechName}_category= The Category Name`. If the dialog key is not present, no category will be displayed. This can be used to assign difficulty to tech, for example.
 
 ### Listing tech used in each map
 

@@ -91,7 +91,7 @@ entities.CollabUtils2/GymMarker.attributes.description.difficulty=The difficulty
 entities.CollabUtils2/GymMarker.attributes.description.order=Specifies the order of the tech's tabs on the chapter panel. Lower values will come first.
 entities.CollabUtils2/GymMarker.attributes.description.color=The color of the tech's tab on the chapter panel.
 entities.CollabUtils2/GymMarker.attributes.description.learnedColor=The color of the tech's tab on the chapter panel once it has been learned.
-entities.CollabUtils2/GymMarker.attributes.description.legacyRenderMode=Whether to render this tech's preview image as a plain image (legacy) or similar to how vanilla checkpoint previews are rendered.
+entities.CollabUtils2/GymMarker.attributes.description.legacyRenderMode=Whether to render this tech's preview image as a plain image (if checked) or similar to how vanilla checkpoint previews are rendered (if unchecked).
 
 # Collab Crystal Heart
 entities.CollabUtils2/CollabCrystalHeart.placements.name.crystal_heart=Crystal Heart (Return to Lobby)
