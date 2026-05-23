@@ -70,7 +70,7 @@ placements.entities.CollabUtils2/GymMarker.tooltips.difficulty=The difficulty of
 placements.entities.CollabUtils2/GymMarker.tooltips.order=Specifies the order of the tech's tabs on the chapter panel. Lower values will come first.
 placements.entities.CollabUtils2/GymMarker.tooltips.color=The color of the tech's tab on the chapter panel.
 placements.entities.CollabUtils2/GymMarker.tooltips.learnedColor=The color of the tech's tab on the chapter panel once it has been learned.
-placements.entities.CollabUtils2/GymMarker.tooltips.legacyRenderMode=Whether to render this tech's preview image as a plain image (legacy) or similar to how vanilla checkpoint previews are rendered.
+placements.entities.CollabUtils2/GymMarker.tooltips.legacyRenderMode=Whether to render this tech's preview image as a plain image (if checked) or similar to how vanilla checkpoint previews are rendered (if unchecked).
 
 # Collab Crystal Heart
 placements.entities.CollabUtils2/CollabCrystalHeart.tooltips.removeCameraTriggers=Whether the heart should remove camera triggers once it's collected.
