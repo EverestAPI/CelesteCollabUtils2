@@ -172,7 +172,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
                     row.Add(null).Add(new IconCellFromGui(GFX.Gui.Has(areaData.Icon) ? areaData.Icon : "areas/null", 60f, 50f));
                 }
 
-                string levelHeartTexture = MTN.Journal.Has("CollabUtils2Hearts/" + item.SID) ? "CollabUtils2Hearts/" + item.SID : heartTexture;
+                string levelHeartTexture = MTN.Journal.Has("CollabUtils2LevelHearts/" + item.SID) ? "CollabUtils2LevelHearts/" + item.SID : heartTexture;
 
                 row.Add(null)
                     .Add(new IconCell(item.Modes[0].HeartGem ? levelHeartTexture : "dot"))
