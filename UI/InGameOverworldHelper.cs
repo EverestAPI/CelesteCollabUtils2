@@ -115,7 +115,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
         private static readonly string[] defaultTechOrdering = ["beginner", "intermediate", "advanced", "expert", "grandmaster"];
 
         private static bool presenceLock = false;
-        
+
         private static Dictionary<string, Action<AreaData>> OpenChapterPanelCallbacks = new();
         public static void AddOpenChapterPanelCallback(string collabID, Action<AreaData> callback) {
             if (OpenChapterPanelCallbacks.TryGetValue(collabID, out _))
@@ -1194,7 +1194,7 @@ namespace Celeste.Mod.CollabUtils2.UI {
             deathsIcon = $"CollabUtils2/skulls/{levelSet}";
             if (GFX.Gui.Has(deathsIcon))
                 return deathsIcon;
-            
+
             return null;
         }
 
