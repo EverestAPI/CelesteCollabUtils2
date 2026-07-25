@@ -1103,14 +1103,30 @@ namespace Celeste.Mod.CollabUtils2.UI {
             }
 
             string sid = getCurrentPanelMapSID();
+            string textureName = orig == "areaselect/cardtop_golden" ? "cardtop" : "card";
 
             if (CollabMapDataProcessor.MapsWithRainbowBerries.Contains(sid)) {
-                return orig == "areaselect/cardtop_golden" ? "CollabUtils2/chapterCard/cardtop_rainbow" : "CollabUtils2/chapterCard/card_rainbow";
+                return getChapterCardTexture(sid, textureName, "rainbow");
             }
             if (CollabMapDataProcessor.MapsWithSilverBerries.Contains(sid)) {
-                return orig == "areaselect/cardtop_golden" ? "CollabUtils2/chapterCard/cardtop_silver" : "CollabUtils2/chapterCard/card_silver";
+                return getChapterCardTexture(sid, textureName, "silver");
             }
             return orig;
+        }
+
+        // mirrors the patch_OuiChapterPanel._ModCardTexture method, except with Collab Utils paths
+        private static string getChapterCardTexture(string sid, string textureName, string color) {
+            // First, check for area (chapter) specific card textures.
+            string areaTextureName = $"CollabUtils2/chapterCard/{sid}_{textureName}_{color}";
+            if (GFX.Gui.Has(areaTextureName)) return areaTextureName;
+
+            // If none are found, fall back to levelset card textures.
+            string levelSet = AreaData.Get(sid)?.LevelSet ?? "Celeste";
+            string levelSetTextureName = $"CollabUtils2/chapterCard/{levelSet}/{textureName}_{color}";
+            if (GFX.Gui.Has(levelSetTextureName)) return levelSetTextureName;
+
+            // If that doesn't exist either, use the default one.
+            return $"CollabUtils2/chapterCard/{textureName}_{color}";
         }
 
         private static bool hideChapterNumberIfNecessary(bool orig, OuiChapterPanel self) {
