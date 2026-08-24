@@ -3,4 +3,4 @@
   DLL: bin/CollabUtils2.dll
   Dependencies:
     - Name: Everest
-      Version: 1.6458.0
+      Version: 1.6485.0
