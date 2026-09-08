@@ -26,7 +26,8 @@ heartDoor.placements = {
         startHidden = false,
         levelSet = "SpringCollab2020/1-Beginner",
         color = "beginner",
-        doorID = ""
+        doorID = "",
+        iconTexture = "objects/heartdoor/icon"
     }
 }
 
