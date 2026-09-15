@@ -31,6 +31,7 @@ entities.CollabUtils2/MiniHeartDoor.attributes.description.startHidden=Whether t
 entities.CollabUtils2/MiniHeartDoor.attributes.description.levelSet=The heart door will be unlocked by collecting mini hearts in this level set.
 entities.CollabUtils2/MiniHeartDoor.attributes.description.color=The color of the door. Also supports hex color codes.
 entities.CollabUtils2/MiniHeartDoor.attributes.description.doorID=An identifier for this door (should be unique in the lobby). Only useful if you have multiple heart doors in the same lobby, otherwise you can leave that empty.
+entities.CollabUtils2/MiniHeartDoor.attributes.description.iconTexture=The animation to use for the heart icons on the gate.\nThe first frame shows the icon in its "uncollected" state, the last frame shows it in its "collected" state, and all frames in between are used to animate between both states.
 
 # Rainbow Berry
 entities.CollabUtils2/RainbowBerry.placements.name.default=Rainbow Berry

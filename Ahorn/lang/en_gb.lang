@@ -46,6 +46,7 @@ placements.entities.CollabUtils2/MiniHeartDoor.tooltips.startHidden=Whether the 
 placements.entities.CollabUtils2/MiniHeartDoor.tooltips.levelSet=The heart door will be unlocked by collecting mini hearts in this level set.
 placements.entities.CollabUtils2/MiniHeartDoor.tooltips.color=The color of the door. Also supports hex color codes.
 placements.entities.CollabUtils2/MiniHeartDoor.tooltips.doorID=An identifier for this door (should be unique in the lobby). Only useful if you have multiple heart doors in the same lobby, otherwise you can leave that empty.
+placements.entities.CollabUtils2/MiniHeartDoor.tooltips.iconTexture=The animation to use for the heart icons on the gate.\nThe first frame shows the icon in its "uncollected" state, the last frame shows it in its "collected" state, and all frames in between are used to animate between both states.
 
 # Map Swap Trigger
 placements.triggers.CollabUtils2/MapSwapTrigger.tooltips.map=The SID (string ID) of the map this trigger will teleport to.

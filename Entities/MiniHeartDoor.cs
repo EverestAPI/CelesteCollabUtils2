@@ -166,7 +166,6 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
         private EntityID entityID;
         public string DoorID;
-        private string iconTexture;
         public string GetDoorSaveDataID(Scene scene) {
             return (scene as Level).Session.Area.GetSID() + (string.IsNullOrEmpty(DoorID) ? "" : ":" + DoorID);
         }
@@ -182,8 +181,8 @@ namespace Celeste.Mod.CollabUtils2.Entities {
 
             this.entityID = entityID;
             DoorID = data.Attr("doorID");
-            iconTexture = data.Attr("iconTexture");
-            icon = GFX.Game.GetAtlasSubtextures(iconTexture);
+
+            icon = GFX.Game.GetAtlasSubtextures(data.Attr("iconTexture", defaultValue: "objects/heartdoor/icon"));
         }
 
         public override void Added(Scene scene) {

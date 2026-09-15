@@ -3,7 +3,8 @@ module CollabUtils2MiniHeartDoor
 using ..Ahorn, Maple
 
 @mapdef Entity "CollabUtils2/MiniHeartDoor" MiniHeartDoor(x::Integer, y::Integer, width::Integer=40, height::Integer=Maple.defaultBlockHeight,
-    requires::Integer=0, startHidden::Bool=false, levelSet::String="SpringCollab2020/1-Beginner", color::String="beginner", doorID::String="")
+    requires::Integer=0, startHidden::Bool=false, levelSet::String="SpringCollab2020/1-Beginner", color::String="beginner", doorID::String="",
+    iconTexture::String="objects/heartdoor/icon")
 
 const placements = Ahorn.PlacementDict(
     "Mini Heart Door (Collab Utils 2 / READ DOCS)" => Ahorn.EntityPlacement(
@@ -77,9 +78,10 @@ function Ahorn.renderAbs(ctx::Ahorn.Cairo.CairoContext, entity::MiniHeartDoor, r
     width = Int(get(entity.data, "width", 40))
     height = get(entity.data, "height", Maple.defaultBlockHeight)
     hearts = Int(get(entity.data, "requires", 0))
+    icon = get(entity.data, "iconTexture", "objects/heartdoor/icon")
 
     edgeSprite = Ahorn.getSprite("objects/heartdoor/edge", "Gameplay")
-    heartSprite = Ahorn.getSprite("objects/heartdoor/icon00", "Gameplay")
+    heartSprite = Ahorn.getSprite(icon * "00", "Gameplay")
 
     Ahorn.drawRectangle(ctx, x, y - height, width, height * 2, wallColor, (0.0, 0.0, 0.0, 0.0))
 

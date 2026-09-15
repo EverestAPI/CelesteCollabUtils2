@@ -34,7 +34,6 @@ heartDoor.placements = {
 local wallColor = {47 / 255, 187 / 255, 255 / 255, 255 / 255}
 local heartPadding = 4
 local edgeTexture = "objects/heartdoor/edge"
-local heartTexture = "objects/heartdoor/icon00"
 
 local function heartsWidth(heartSpriteWidth, hearts)
     return hearts * (heartSpriteWidth + heartPadding) - heartPadding
@@ -56,8 +55,9 @@ function heartDoor.sprite(room, entity)
     local x, y = entity.x or 0, entity.y or 0
     local width = entity.width or 40
     local height = entity.height or 8
-    local roomWidth, roomHeight = room.width, room.height
     local hearts = entity.requires or 0
+
+    local heartTexture = (entity.iconTexture or "objects/heartdoor/icon") .. "00"
 
     local edgeSpriteSample = drawableSprite.fromTexture(edgeTexture, entity)
     local heartSpriteSample = drawableSprite.fromTexture(heartTexture, entity)
@@ -141,7 +141,6 @@ function heartDoor.selection(room, entity)
     local x, y = entity.x or 0, entity.y or 0
     local width = entity.width or 40
     local height = entity.height or 8
-    local roomWidth, roomHeight = room.width, room.height
 
     local mainRectangle = utils.rectangle(x, y, width, height)
 
