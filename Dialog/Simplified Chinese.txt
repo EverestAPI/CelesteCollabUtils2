@@ -44,6 +44,12 @@ modoptions_collab_besttimetodisplayinjournal_chaptertimer= 章节通关时间
 
 modoptions_collab_savebydefaultwhenreturningtolobby= 默认保存进度并返回大厅
 
+modoptions_collab_displaylobbymap= 显示大厅地图
+modoptions_collab_holdtopan= 按住以平移
+modoptions_collab_panlobbymapup= 向上平移大厅地图
+modoptions_collab_panlobbymapdown= 向下平移大厅地图
+modoptions_collab_panlobbymapleft= 向左平移大厅地图
+modoptions_collab_panlobbymapright= 向右平移大厅地图
 collabutils2_assist_skip= 打开心门
 collabutils2_assist_skip_confirm= 这将永久打开心门。{n}你确定吗？
 collabutils2_assist_skip_confirm_yes= 是
@@ -53,4 +59,6 @@ collabutils2_lobbymap_change_destination= 选择目的地
 collabutils2_lobbymap_change_lobby= 选择大厅
 collabutils2_lobbymap_close= 关闭
 collabutils2_lobbymap_confirm= 确认
+collabutils2_lobbymap_hold_to_pan= 按住以平移
+collabutils2_lobbymap_pan= 平移
 collabutils2_lobbymap_zoom= 缩放
