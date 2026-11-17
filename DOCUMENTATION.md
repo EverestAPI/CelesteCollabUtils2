@@ -277,6 +277,23 @@ areaname_collabcreditstags=
 
 3 textures are provided with the mod: `CollabUtils2/chapterCard/tag_golden`, `CollabUtils2/chapterCard/tag_rainbow` and `CollabUtils2/chapterCard/tag_silver`.
 
+#### Side-specific credits/tags
+
+To define credits or tags for a B-Side or C-Side, suffix your map name with `-b` or `-c`:
+
+```
+2021SeasonCollab_1_Spring_map1-b_collabcredits=
+  B-Side by Me!
+2021SeasonCollab_1_Spring_map1-b_collabcreditstags=
+  Modified
+  Remixed
+  Wow!
+```
+
+Keep in mind that you must still have a base definition without your suffix!
+
+In the rare event you want to use specific credits for the A-Side and A-Side only, you can suffix the map name with `-a`, and unless `-b` and `-c` are defined, it'll default to the non-side specific dialog.
+
 #### The "Return to Lobby" option
 
 When using a Chapter Panel Trigger, you can make a "Return to Lobby" button appear in the pause menu. This depends on the "return to lobby mode" you set on the chapter panel trigger:
