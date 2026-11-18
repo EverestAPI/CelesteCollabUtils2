@@ -311,7 +311,7 @@ If you followed the setup at the beginning of this document, the level set shoul
 
 **If you have a heart side** or similar (a level that only unlocks after you beat all other maps in the lobby), name the bin `ZZ-HeartSide.bin` and place it along with the other maps in the lobby; it will be hidden from the journal until it's unlocked (all mini hearts in the lobby have been collected), and will be displayed separately (much like Farewell in the vanilla journal).
 
-**If your collab uses chapter icons to represent difficulties and you want them to be ordered in the journal**, make all your icons start with numbers. For example, `1-easy.png`, `2-medium.png` and `3-hard.png`.
+**If your collab uses chapter icons to represent difficulties and you want them to be ordered in the journal**, make all your icons start with numbers. For example, `1-easy.png`, `2-medium.png` and `3-hard.png`. The sorting is alphabetical, so if you have more than 10 items you wish to be ordered, prepend the numbers below 10 with 0, eg. `01-...`, `02-...`, ... `09-...`, `10-...` and so on.
 
 #### More customization for the journal
 
