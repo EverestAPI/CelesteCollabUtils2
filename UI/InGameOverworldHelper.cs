@@ -621,10 +621,21 @@ namespace Celeste.Mod.CollabUtils2.UI {
             return orig(self);
         }
 
+        private static string AreaModeToSuffix(AreaMode mode) {
+            return mode switch {
+                AreaMode.Normal => "_a",
+                AreaMode.BSide => "_b",
+                AreaMode.CSide => "_c",
+                _ => ""
+            };
+        }
+
         private static bool ShouldModChapterPanelSwap(OuiChapterPanel self)
             => Engine.Scene == overworldWrapper?.Scene && (gymSubmenuSelected(self)
                 || Dialog.Has(collabInGameForcedArea.Name + "_collabcredits")
+                || Dialog.Has(collabInGameForcedArea.Name + AreaModeToSuffix(self.Area.Mode) + "_collabcredits") 
                 || Dialog.Has(collabInGameForcedArea.Name + "_collabcreditstags")
+                || Dialog.Has(collabInGameForcedArea.Name + AreaModeToSuffix(self.Area.Mode) + "_collabcreditstags")
                 || CollabModule.Instance.SaveData.SessionsPerLevel.ContainsKey(self.Area.SID));
 
         private static void OnChapterPanelSwap(On.Celeste.OuiChapterPanel.orig_Swap orig, OuiChapterPanel self) {
@@ -640,9 +651,16 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 activeGymTech = CollabMapDataProcessor.GymLevels[collabInGameForcedArea.SID].Tech;
             } else {
                 string areaName = collabInGameForcedArea.Name;
-                panelCollabCredits = FancyText.Parse(Dialog.Get(areaName + "_collabcredits").Replace("{break}", "{n}"), int.MaxValue, int.MaxValue, defaultColor: Color.Black);
+                string areaNameSuffixed = areaName + AreaModeToSuffix(self.Area.Mode);
+                string creditsLine = Dialog.Has(areaNameSuffixed + "_collabcredits")
+                    ? areaNameSuffixed + "_collabcredits"
+                    : areaName + "_collabcredits";
+                
+                panelCollabCredits = FancyText.Parse(Dialog.Get(creditsLine).Replace("{break}", "{n}"), int.MaxValue, int.MaxValue, defaultColor: Color.Black);
 
-                if (Dialog.Has(areaName + "_collabcreditstags")) {
+                if (Dialog.Has(areaNameSuffixed + "_collabcreditstags")) {
+                    panelCollabCreditsTags = CreditsTag.Parse(Dialog.Get(areaNameSuffixed + "_collabcreditstags"));
+                } else if (Dialog.Has(areaName + "_collabcreditstags")) {
                     panelCollabCreditsTags = CreditsTag.Parse(Dialog.Get(areaName + "_collabcreditstags"));
                 } else {
                     panelCollabCreditsTags = new List<CreditsTag>();
@@ -864,7 +882,8 @@ namespace Celeste.Mod.CollabUtils2.UI {
                 return;
             }
 
-            bool hasCredits = Dialog.Has(collabInGameForcedArea.Name + "_collabcredits");
+            bool hasCredits =
+                Dialog.Has(collabInGameForcedArea.Name + "_collabcredits");
 
             // panel height is 730 pixels when completely open, or 450 if there are only tags.
             // Tags should fade out quicker than text, because they are near the bottom of the panel, and it looks bad more quickly when the panel closes.
