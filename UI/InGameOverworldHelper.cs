@@ -623,9 +623,9 @@ namespace Celeste.Mod.CollabUtils2.UI {
 
         private static string AreaModeToSuffix(AreaMode mode) {
             return mode switch {
-                AreaMode.Normal => "-a",
-                AreaMode.BSide => "-b",
-                AreaMode.CSide => "-c",
+                AreaMode.Normal => "_a",
+                AreaMode.BSide => "_b",
+                AreaMode.CSide => "_c",
                 _ => ""
             };
         }
